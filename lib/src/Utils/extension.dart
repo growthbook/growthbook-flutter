@@ -28,7 +28,7 @@ extension ObjectChecker on Object? {
   bool get isMap => this is Map;
 
   /// Check that it is primitive data type or not.
-  bool get isPrimitive => isString || isBoolean || isNumber;
+  bool get isPrimitive => isString || isBoolean || isNumber || isNull;
 
   /// Check that if object is double.
   bool get isDouble => this is double;

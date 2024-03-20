@@ -14,4 +14,10 @@ class DataSourceMock extends FeaturesFlowDelegate {
     _isSuccess = true;
     _isError = false;
   }
+
+  @override
+  void featuresFetchFailed(Object? error) {
+    _isError = true;
+    _isSuccess = false;
+  }
 }

@@ -41,13 +41,15 @@ Integration is super easy:
 Now you can start/stop tests, adjust coverage and variation weights, and apply a winning variation to 100% of traffic, all within the Growth Book App without deploying code changes to your site.
 
 ```dart
-final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
+final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
   apiKey: "<API_KEY>",
+  sseUrl: <GrowthBook_SSEURL/API_KEY>,
   attributes: {
     /// Specify attributes.
   },
   growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
   hostURL: '<GrowthBook_URL>',
+  backroundSync: Bool?
 ).initialize();
 
 ```
@@ -55,20 +57,18 @@ final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
 There are additional properties which can be setup at the time of initialization
 
 ```dart
-    final GrowthBookSDK newSdkInstance = GBSDKBuilderApp(
+    final GrowthBookSDK newSdkInstance =await GBSDKBuilderApp(
     apiKey: "<API_KEY>",
+    sseUrl: <GrowthBook_SSEURL/API_KEY>,
     attributes: {
      /// Specify user attributes.
     },
+    client: NetworkClient(), // Provide network dispatcher.
     growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
     hostURL: '<GrowthBook_URL>',
-).setNetworkDispatcher(
-  // set network dispatcher.
-)
-   .setForcedVariations({})
-   . // Set forced variations
-   setQAMode(true)// Set qamode
-   .initialize();
+    forcedVariations: {} // Optional provide force variation.
+    qaMode: true, // Set qamode
+).initialize();
 
 ```
 
@@ -112,16 +112,21 @@ There are additional properties which can be setup at the time of initialization
 class GBContext {
   GBContext({
     this.apiKey,
+    this.sseUrl,
     this.hostURL,
     this.enabled,
     this.attributes,
     this.forcedVariation,
     this.qaMode,
     this.trackingCallBack,
+    this.backgroundSync,
   });
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
+  
+  /// SSE URL
+  String? sseUrl;
 
   /// Host URL for GrowthBook
   String? hostURL;
@@ -144,6 +149,9 @@ class GBContext {
   /// Keys are unique identifiers for the features and the values are Feature objects.
   /// Feature definitions - To be pulled from API / Cache
   GBFeatures features = <String, GBFeature>{};
+
+  ///Disable background streaming connection
+  bool? backgroundSync;
 }
 ```
 
@@ -178,6 +186,14 @@ class GBFeatureRule {
     this.weights,
     this.nameSpace,
     this.hashAttribute,
+    this.hashVersion,
+    this.range,
+    this.ranges,
+    this.meta,
+    this.filters,
+    this.seed,
+    this.name,
+    this.phase,
   });
 
   /// Optional targeting condition
@@ -203,6 +219,31 @@ class GBFeatureRule {
 
   /// What user attribute should be used to assign variations (defaults to id)
   String? hashAttribute;
+  
+  /// The hash version to use (default to 1)
+  int? hashVersion;
+
+  /// A more precise version of coverage
+  GBBucketRange? range;
+
+  /// Ranges for experiment variations
+  @Tuple2Converter()
+  List<GBBucketRange>? ranges;
+
+  /// Meta info about the experiment variations
+  List<GBVariationMeta>? meta;
+
+  /// Array of filters to apply to the rule
+  List<GBFilter>? filters;
+
+  /// Seed to use for hashing
+  String? seed;
+
+  /// Human-readable name for the experiment
+  String? name;
+
+  /// The phase id of the experiment
+  String? phase;
 }
 
 
@@ -269,6 +310,13 @@ class GBExperiment {
     this.active = true,
     this.coverage,
     this.force,
+    this.hashVersion,
+    this.ranges,
+    this.meta,
+    this.filters,
+    this.seed,
+    this.name,
+    this.phase,
   });
 
   /// The globally unique tracking key for the experiment
@@ -300,6 +348,27 @@ class GBExperiment {
 
   ///Check if experiment is not active.
   bool get deactivated => !active;
+
+  /// The hash version to use (default to 1)
+  int? hashVersion;
+
+  /// Array of ranges, one per variation
+  List<GBBucketRange>? ranges;
+
+  /// Meta info about the variations
+  List<GBVariationMeta>? meta;
+
+  /// Array of filters to apply
+  List<GBFilter>? filters;
+
+  /// The hash seed to use
+  String? seed;
+
+  /// Human-readable name for the experiment
+  String? name;
+
+  /// Id of the current experiment phase
+  String? phase;
 }
 
 /// The result of running an Experiment given a specific Context
@@ -308,8 +377,14 @@ class GBExperimentResult {
     this.inExperiment,
     this.variationID,
     this.value,
+    this.hashUsed,
     this.hasAttributes,
     this.hashValue,
+    this.featureId,
+    this.key,
+    this.name,
+    this.bucket,
+    this.passthrough,
   });
 
   /// Whether or not the user is part of the experiment
@@ -321,12 +396,77 @@ class GBExperimentResult {
   /// The array value of the assigned variation
   dynamic value;
 
+  bool? hashUsed;
+
   /// The user attribute used to assign a variation
   String? hasAttributes;
 
+  String? featureId;
+
   /// The value of that attribute
   String? hashValue;
+
+  /// The unique key for the assigned variation
+  String? key;
+
+  /// The human-readable name of the assigned variation
+  String? name;
+
+  /// The hash value used to assign a variation (double from 0 to 1)
+  double? bucket;
+
+  /// Used for holdout groups
+  bool? passthrough;
 }
+
+The `inExperiment` flag will be false if the user was excluded from being part of the experiment for any reason (e.g. failed targeting conditions).
+
+The `hashUsed` flag will only be true if the user was randomly assigned a variation. If the user was forced into a specific variation instead, this flag will be false.
+
+/// Meta info about the variations
+class GBVariationMeta {
+  /// Used to implement holdout groups
+  final bool? passthrough;
+
+  /// A unique key for this variation
+  final String? key;
+
+  /// A human-readable name for this variation
+  final String? name;
+
+  GBVariationMeta({
+    this.passthrough,
+    this.key,
+    this.name,
+  });
+}
+
+
+///Used for remote feature evaluation to trigger the `TrackingCallback`
+class GBTrackData {
+  final Experiment experiment;
+  final ExperimentResult result;
+
+  GBTrackData({
+    required this.experiment,
+    required this.result,
+  });
+}
+
+```
+## Streaming updates
+
+To enable streaming updates set backgroundSync variable to "true" and add streaming updates URL
+```dart
+
+final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
+  apiKey: "<API_KEY>",
+  sseUrl: "<GrowthBook_SSEURL/API_KEY>",
+  attributes: {
+    /// Specify attributes.
+  },
+  growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
+  backgroundSync: true,).initializer();
 
 ```
 

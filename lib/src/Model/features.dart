@@ -1,5 +1,7 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:tuple/tuple.dart';
 
 part 'features.g.dart';
 
@@ -34,6 +36,15 @@ class GBFeatureRule {
     this.weights,
     this.namespace,
     this.hashAttribute,
+    this.hashVersion,
+    this.range,
+    this.ranges,
+    this.meta,
+    this.filters,
+    this.seed,
+    this.name,
+    this.phase,
+    this.tracks,
   });
 
   /// Optional targeting condition
@@ -59,6 +70,36 @@ class GBFeatureRule {
 
   /// What user attribute should be used to assign variations (defaults to id)
   String? hashAttribute;
+
+  // new properties v0.4.0
+  /// The hash version to use (default to 1)
+  int? hashVersion;
+
+  /// A more precise version of coverage
+  @Tuple2Converter()
+  GBBucketRange? range;
+
+  /// Ranges for experiment variations
+  @Tuple2Converter()
+  List<GBBucketRange>? ranges;
+
+  /// Meta info about the experiment variations
+  List<GBVariationMeta>? meta;
+
+  /// Array of filters to apply to the rule
+  List<GBFilter>? filters;
+
+  /// Seed to use for hashing
+  String? seed;
+
+  /// Human-readable name for the experiment
+  String? name;
+
+  /// The phase id of the experiment
+  String? phase;
+
+  /// Array of tracking calls to fire
+  GBTrackData? tracks;
 
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureRuleFromJson(value);

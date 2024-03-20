@@ -1,5 +1,6 @@
 library growthbook_sdk_flutter;
 
+export 'src/Annotation/gb_features_deserializer.dart';
 export 'src/Evaluator/condition_evaluator.dart';
 export 'src/Evaluator/experiment_evaluator.dart';
 export 'src/Evaluator/feature_evaluator.dart';
@@ -10,5 +11,4 @@ export 'src/Helper/state_helper.dart';
 export 'src/Model/model.dart';
 export 'src/Network/network.dart';
 export 'src/Utils/utils.dart';
-export 'src/annotation/gb_features_deserializer.dart';
 export 'src/growth_book_sdk.dart';

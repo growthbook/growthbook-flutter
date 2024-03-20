@@ -17,20 +17,25 @@ void main() {
       final passedScenarios = <String>[];
 
       for (final item in evaluateCondition) {
+        final testContext = GBContextTest.fromMap(item[1]);
         final testData = GBFeaturesTest.fromMap(item[1]);
+
         final attributes = testData.attributes;
         final gbContext = GBContext(
-            enabled: true,
-            qaMode: false,
-            attributes: attributes,
-            forcedVariation: {},
-            trackingCallBack: (_, __) {});
+          sseUrl: null,
+          encryptionKey: null,
+          enabled: true,
+          qaMode: false,
+          attributes: attributes,
+          forcedVariation: testContext.forcedVariations,
+          trackingCallBack: (_, __) {},
+          backgroundSync: false,
+        );
         if (testData.features != null) {
           gbContext.features = testData.features!;
         }
 
-        final evaluator = GBFeatureEvaluator();
-        final result = evaluator.evaluateFeature(gbContext, item[2]);
+        final result = GBFeatureEvaluator.evaluateFeature(gbContext, item[2]);
         final expectedResult = GBFeatureResultTest.fromMap(item[3]);
 
         final status = item[0].toString() +

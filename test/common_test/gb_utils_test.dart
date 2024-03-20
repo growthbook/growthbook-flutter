@@ -22,8 +22,14 @@ void main() {
       for (final item in evaluateCondition) {
         final testContext = item[0];
         final experiment = item[1];
+        final hashVersion = double.parse(item[2].toString());
+        final seed = item[3];
 
-        final result = GBUtils().hash(testContext);
+        final result = GBUtils.hash(
+          value: testContext,
+          version: hashVersion,
+          seed: seed,
+        );
 
         final status = item[0].toString() +
             '\nExpected Result - ' +
@@ -84,8 +90,11 @@ void main() {
                 .map((e) => double.parse(e.toString()))
                 .toList();
           }
-          final bucketRange = GBUtils().getBucketRanges(
-              numVariation, double.parse(coverage.toString()), weights ?? []);
+          final bucketRange = GBUtils.getBucketRanges(
+            numVariation,
+            double.parse(coverage.toString()),
+            weights ?? [],
+          );
 
           /// For status.
           final status = item[0].toString() +
@@ -139,7 +148,7 @@ void main() {
           ///
           final rangeData = getPairedData(comparer);
 
-          var result = GBUtils().chooseVariation(hash!, rangeData);
+          var result = const GBUtils().chooseVariation(hash!, rangeData);
 
           if (localItem[3].toString() == result.toString()) {
             passedScenarios.add(item.toString());
@@ -163,7 +172,7 @@ void main() {
         if ((item as Object?).isArray) {
           final localItem = item as List;
           final numVariation = double.parse(localItem[0].toString());
-          final result = GBUtils().getEqualWeights(numVariation.toInt());
+          final result = GBUtils.getEqualWeights(numVariation.toInt());
           final status = "Expected Result - " +
               item[1].toString() +
               "\nActual result - " +
@@ -205,8 +214,8 @@ void main() {
       for (var item in evaluateConditions) {
         final userId = item[1];
         final array = item[2];
-        final nameSpace = GBUtils().getGBNameSpace(array);
-        final result = GBUtils().inNamespace(userId, nameSpace!);
+        final nameSpace = GBUtils.getGBNameSpace(array);
+        final result = GBUtils.inNamespace(userId, nameSpace!);
         final status = item[0].toString() +
             "\nExpected Result - " +
             item[3].toString() +
@@ -223,5 +232,47 @@ void main() {
           'Passed Test ${passedScenarios.length} out of ${evaluateConditions.length}');
       expect(failedScenarios.length, 0);
     });
+
+    test('TestDecrypt', () {
+      try {
+        var testCases = GBTestHelper.getDecryptData();
+        if (testCases == null) return;
+
+        for (var jsonElement in testCases) {
+          var test = jsonElement.arrayObject;
+          var payload = test[1] as String?;
+          var key = test[2] as String?;
+          if (payload == null || key == null) {
+            continue;
+          }
+          var expectedElem = test[3];
+
+          try {
+            if (expectedElem is String) {
+              var actual = DecryptionUtils.decrypt(payload, key).trim();
+              expect(actual, expectedElem);
+            }
+          } on DecryptionException catch (error) {
+            customLogger("message ${error.errorMessage}");
+
+            if (expectedElem == null) {
+              expect(true, isTrue);
+            }
+          } catch (error) {
+            fail("An unexpected error occurred: $error");
+          }
+        }
+      } catch (error) {
+        customLogger("An unexpected error occurred: $error");
+      }
+    });
+  });
+
+  test('TestPaddedVersionString', () {
+    const startValue = "v1.2.3-rc.1+build123";
+    const expectedValue = "    1-    2-    3-rc-    1";
+    final endValue = GBUtils.paddedVersionString(startValue);
+
+    expect(endValue, expectedValue);
   });
 }
