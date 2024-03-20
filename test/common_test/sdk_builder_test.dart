@@ -124,9 +124,9 @@ void main() {
         backgroundSync: false,
       ).initialize();
 
-      final encryptedFeatures =
+      const encryptedFeatures =
           "vMSg2Bj/IurObDsWVmvkUg==.L6qtQkIzKDoE2Dix6IAKDcVel8PHUnzJ7JjmLjFZFQDqidRIoCxKmvxvUj2kTuHFTQ3/NJ3D6XhxhXXv2+dsXpw5woQf0eAgqrcxHrbtFORs18tRXRZza7zqgzwvcznx";
-      final expectedResult =
+      const expectedResult =
           '{"testfeature1":{"defaultValue":true,"rules":[{"condition":{"id":"1234"},"force":false}]}}';
 
       sdkInstance.setEncryptedFeatures(

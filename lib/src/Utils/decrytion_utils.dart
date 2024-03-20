@@ -41,6 +41,7 @@ class AESCryptor {
       PaddedBlockCipherParameters<CipherParameters?, CipherParameters?> paddingParams =
           PaddedBlockCipherParameters<CipherParameters?, CipherParameters?>(params, null);
 
+      // ignore: deprecated_member_use
       final cipher = PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESFastEngine()));
       cipher.init(false, paddingParams);
 

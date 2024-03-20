@@ -1,5 +1,4 @@
-import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:meta/meta.dart';
+import 'package:flutter/foundation.dart';
 
 /// Data class for SSE events
 @immutable

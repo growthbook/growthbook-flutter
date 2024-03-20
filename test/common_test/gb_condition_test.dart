@@ -21,12 +21,7 @@ void main() {
           final evaluator = GBConditionEvaluator();
           final result =
               evaluator.evaluateCondition(localItem[2], localItem[1]);
-          final status = localItem[0].toString() +
-              "\nExpected Result - " +
-              localItem[3].toString() +
-              "\nActual result - " +
-              result.toString() +
-              "\n\n";
+          final status = "${localItem[0]}\nExpected Result - ${localItem[3]}\nActual result - $result\n\n";
           if (localItem[3].toString() == result.toString()) {
             passedScenarios.add(status);
           } else {

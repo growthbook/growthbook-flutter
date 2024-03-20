@@ -37,16 +37,7 @@ void main() {
 
           final result = GBExperimentEvaluator.evaluateExperiment(
               context: gbContext, experiment: experiment);
-          final status = item[0].toString() +
-              "\nExpected Result - " +
-              item[3].toString() +
-              " & " +
-              item[4].toString() +
-              "\nActual result - " +
-              result.value.toString() +
-              " & " +
-              "${result.inExperiment}" +
-              "\n\n";
+          final status = "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
 
           if (item[3].toString() == result.value.toString() &&
               item[4].toString() == result.inExperiment.toString() &&

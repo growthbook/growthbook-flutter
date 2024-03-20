@@ -28,7 +28,7 @@ GrowthBook is an open source feature flagging and experimentation platform that 
 
 1. Add GrowthBook SDK as dependency in your pubspec.yaml file.
 ```yaml
-growthbook_sdk_flutter: ^1.1.0
+growthbook_sdk_flutter: ^latest-version
 ```
 
 ## Integration

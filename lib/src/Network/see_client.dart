@@ -5,6 +5,7 @@ import 'package:growthbook_sdk_flutter/src/Network/sse_model.dart';
 
 import 'package:dio/dio.dart';
 
+// ignore: constant_identifier_names
 enum SSERequestType { GET, POST }
 
 class SSEManager {
@@ -75,7 +76,7 @@ class SSEManager {
                   break;
                 case 'data':
                   currentSSEModel.data =
-                      (currentSSEModel.data ?? '') + value + '\n';
+                      '${currentSSEModel.data ?? ''}$value\n';
                   break;
                 case 'id':
                   currentSSEModel.id = value;
@@ -85,14 +86,14 @@ class SSEManager {
               }
             },
             onError: (e, s) {
-              print('---ERROR---');
-              print(e);
+              log('---ERROR---');
+              log(e);
               streamController.addError(e, s);
             },
           );
     } catch (e, s) {
-      print('---ERROR---');
-      print(e);
+      log('---ERROR---');
+      log(e.toString());
       streamController.addError(e, s);
     }
 

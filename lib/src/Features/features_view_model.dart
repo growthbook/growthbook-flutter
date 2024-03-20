@@ -121,7 +121,7 @@ class FeatureViewModel {
       return;
     }
 
-    if (encryptionKey == null || encryptionKey!.isEmpty) {
+    if (encryptionKey.isEmpty) {
       logError("Encryption key is missing.");
       return;
     }
@@ -130,7 +130,7 @@ class FeatureViewModel {
       final crypto = Crypto();
       final extractedFeatures = crypto.getFeaturesFromEncryptedFeatures(
         encryptedString,
-        encryptionKey!,
+        encryptionKey,
       );
 
       if (extractedFeatures != null) {

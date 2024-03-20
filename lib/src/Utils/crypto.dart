@@ -16,7 +16,7 @@ class Crypto implements CryptoProtocol {
   @override
   Uint8List encrypt(Uint8List key, Uint8List iv, Uint8List plainText) {
     // Define AES block size
-    final int kCCBlockSizeAES128 = 16;
+    const int kCCBlockSizeAES128 = 16;
 
     // Ensure key size and IV size are correct
     if (![16, 24, 32].contains(key.length) || iv.length != kCCBlockSizeAES128) {
@@ -24,6 +24,7 @@ class Crypto implements CryptoProtocol {
     }
 
     // Create AES block cipher with PKCS7 padding
+    // ignore: deprecated_member_use
     BlockCipher cipher = CBCBlockCipher(AESFastEngine());
     ParametersWithIV<KeyParameter> params = ParametersWithIV(KeyParameter(key), iv);
 
@@ -42,7 +43,7 @@ class Crypto implements CryptoProtocol {
   @override
   Uint8List decrypt(Uint8List key, Uint8List iv, Uint8List cypherText) {
     // Define AES block size
-    final int kCCBlockSizeAES128 = 16;
+    const int kCCBlockSizeAES128 = 16;
 
     // Ensure key size, IV size, and cypherText size are correct
     if (![16, 24, 32].contains(key.length) ||
@@ -52,6 +53,7 @@ class Crypto implements CryptoProtocol {
     }
 
     // Create AES block cipher with PKCS7 padding
+    // ignore: deprecated_member_use
     BlockCipher cipher = CBCBlockCipher(AESFastEngine());
     ParametersWithIV<KeyParameter> params = ParametersWithIV(KeyParameter(key), iv);
 
@@ -71,27 +73,25 @@ class Crypto implements CryptoProtocol {
   Map<String, GBFeature>? getFeaturesFromEncryptedFeatures(
       String encryptedString, String encryptionKey) {
     final List<String> arrayEncryptedString = encryptedString.split('.');
-    final String? iv = arrayEncryptedString.first;
-    final String? cipherText = arrayEncryptedString.last;
+    final String iv = arrayEncryptedString.first;
+    final String cipherText = arrayEncryptedString.last;
 
-    if (iv != null && cipherText != null) {
-      final Uint8List keyBase64 = base64Decode(encryptionKey);
-      final Uint8List ivBase64 = base64Decode(iv);
-      final Uint8List cipherTextBase64 = base64Decode(cipherText);
-      try {
-        final List<int> plainTextBuffer =
-        decrypt(keyBase64, ivBase64, cipherTextBase64);
-        final Map<String, dynamic> decodedMap =
-        jsonDecode(utf8.decode(plainTextBuffer));
-        final Map<String, GBFeature> features = decodedMap.map((key, value) {
-          return MapEntry(key, GBFeature.fromJson(value));
-        });
-        return features;
-      } catch (e) {
-        log('Error decrypting: $e');
-      }
+    final Uint8List keyBase64 = base64Decode(encryptionKey);
+    final Uint8List ivBase64 = base64Decode(iv);
+    final Uint8List cipherTextBase64 = base64Decode(cipherText);
+    try {
+      final List<int> plainTextBuffer =
+      decrypt(keyBase64, ivBase64, cipherTextBase64);
+      final Map<String, dynamic> decodedMap =
+      jsonDecode(utf8.decode(plainTextBuffer));
+      final Map<String, GBFeature> features = decodedMap.map((key, value) {
+        return MapEntry(key, GBFeature.fromJson(value));
+      });
+      return features;
+    } catch (e) {
+      log('Error decrypting: $e');
     }
-    return null;
+      return null;
   }
 }
 
