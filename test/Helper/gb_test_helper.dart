@@ -24,6 +24,10 @@ class GBTestHelper {
     return testData['feature'];
   }
 
+  static List? getDecryptData() {
+    return testData?['decrypt']?.toList();
+  }
+
   static List getBucketRangeData() {
     return testData['getBucketRange'];
   }
@@ -98,6 +102,7 @@ class GBContextTest {
     this.enabled = true,
     this.forcedVariations,
   });
+
   dynamic attributes;
   bool qaMode;
   bool enabled;
@@ -117,6 +122,7 @@ class GBExperimentResultTest {
     this.variationId,
     this.value,
     this.hashAttribute,
+    this.hashUsed,
     this.hashValue,
   });
 
@@ -132,6 +138,8 @@ class GBExperimentResultTest {
   /// The user attribute used to assign a variation
   String? hashAttribute;
 
+  bool? hashUsed;
+
   ///  The value of that attribute
   String? hashValue;
 
@@ -141,6 +149,7 @@ class GBExperimentResultTest {
         inExperiment: map['inExperiment'],
         variationId: map['variationId'],
         hashAttribute: map['hashAttribute'],
-        hashValue: map['hashValue'],
+        hashUsed: map['hashUsed'],
+        hashValue: map['hashValue']?.toString(),
       );
 }

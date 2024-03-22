@@ -1,33 +1,50 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
+
+typedef FeatureFetchSuccessCallBack = void Function(
+  FeaturedDataModel featuredDataModel,
+);
 
 abstract class FeaturesFlowDelegate {
   void featuresFetchedSuccessfully(GBFeatures gbFeatures);
+  void featuresFetchFailed(GBError? error);
 }
 
 class FeatureDataSource {
-  FeatureDataSource(
-      {required this.context, required this.client, required this.onError});
+  FeatureDataSource({
+    required this.context,
+    required this.client,
+  });
   final GBContext context;
   final BaseClient client;
-  final OnError onError;
 
-  Future<FeaturedDataModel> fetchFeatures() async {
-    final api = context.hostURL! + Constant.featurePath + context.apiKey!;
-    await client.consumeGetRequest(api, onSuccess, onError);
-    setUpModel();
-    return model;
-  }
+  Future<void> fetchFeatures(
+    FeatureFetchSuccessCallBack onSuccess,
+    OnError onError,
+    String key, {
+    FeatureRefreshStrategy featureRefreshStrategy =
+        FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
+  }) async {
+    final api = FeatureURLBuilder.buildUrl(key, context.apiKey!);
+    final apiSse = FeatureURLBuilder.buildUrl(key, context.apiKey!,
+        featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS);
 
-  late FeaturedDataModel model;
-  late Map<String, dynamic> data;
-
-  /// Assign response to local variable [data]
-  void onSuccess(response) {
-    data = response;
-  }
-
-  /// Initialize [model] from the [data]
-  void setUpModel() {
-    model = FeaturedDataModel.fromJson(data);
+    featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS
+        ? await client.consumeSseConnections(
+            context.hostURL!,
+            apiSse,
+            (response) => onSuccess(
+              FeaturedDataModel.fromJson(response),
+            ),
+            onError,
+          )
+        : await client.consumeGetRequest(
+            context.hostURL!,
+            api,
+            (response) => onSuccess(
+              FeaturedDataModel.fromJson(response),
+            ),
+            onError,
+          );
   }
 }
