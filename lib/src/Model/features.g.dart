@@ -25,4 +25,30 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
           .toList(),
       namespace: json['namespace'] as List<dynamic>?,
       hashAttribute: json['hashAttribute'] as String?,
+      hashVersion: json['hashVersion'] as int?,
+      range:
+          _$JsonConverterFromJson<Map<String, dynamic>, Tuple2<double, double>>(
+              json['range'], const Tuple2Converter().fromJson),
+      ranges: (json['ranges'] as List<dynamic>?)
+          ?.map((e) =>
+              const Tuple2Converter().fromJson(e as Map<String, dynamic>))
+          .toList(),
+      meta: (json['meta'] as List<dynamic>?)
+          ?.map((e) => GBVariationMeta.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      filters: (json['filters'] as List<dynamic>?)
+          ?.map((e) => GBFilter.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      seed: json['seed'] as String?,
+      name: json['name'] as String?,
+      phase: json['phase'] as String?,
+      tracks: json['tracks'] == null
+          ? null
+          : GBTrackData.fromJson(json['tracks'] as Map<String, dynamic>),
     );
+
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);
