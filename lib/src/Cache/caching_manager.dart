@@ -39,7 +39,7 @@ class CachingManager {
   }
 
   String getTargetFile(String fileName) {
-    String? directoryPath = _cacheDirectory.path;
+    String directoryPath = _cacheDirectory.path;
 
     String targetFolderPath = '$directoryPath/GrowthBook-Cache';
 
