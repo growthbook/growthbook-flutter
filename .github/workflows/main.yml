@@ -21,11 +21,3 @@ jobs:
         run: flutter test
       - name: Format code
         run: dart format --fix .
-      - name: Check Publish Warnings
-        run: dart pub publish --dry-run
-      - name: Publish
-        uses: k-paxian/dart-package-publisher@master
-        with:
-          credentialJson: ${{ secrets.CREDENTIAL_JSON }}
-          flutter: true
-          skipTests: true
