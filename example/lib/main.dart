@@ -45,7 +45,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   /// Initialization of controllers.
   late TabController _tabController;
   final userAttr = {"id": Platform.isIOS ? "foo" : "foo_bar"};
-  late final GrowthBookSDK gb;
+  GrowthBookSDK? gb;
   @override
   void initState() {
     super.initState();
@@ -54,22 +54,21 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     initializeSDK();
   }
 
-  void initializeSDK() {
-    gb = GBSDKBuilderApp(
-            apiKey: kReleaseMode ? '<PROD_KEY>' : '<DEV_KEY>',
-            hostURL: '<HOST_URL>',
-            attributes: userAttr,
-            growthBookTrackingCallBack: (experiment, experimentResult) {
-              /// Track feature.
-            })
-        .initialize()
-      ..afterFetch = () {
-        setState(() {});
-      };
+  void initializeSDK() async {
+    gb = await GBSDKBuilderApp(
+      apiKey: kReleaseMode ? '<PROD_KEY>' : '<DEV_KEY>',
+      hostURL: 'https://example.growthbook.io/',
+      attributes: userAttr,
+      growthBookTrackingCallBack: (exp, rst) {},
+      gbFeatures: {
+        'some-feature': GBFeature(defaultValue: true),
+      },
+    ).initialize();
+    setState(() {});
   }
 
   Widget _getRightWidget() {
-    if (gb.feature('random').on!) {
+    if (gb?.feature('some-feature').on! ?? false) {
       return TabBar(
         isScrollable: true,
         tabs: tabs,
@@ -107,13 +106,6 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(tabNames[i]),
-                        ElevatedButton(
-                          onPressed: () {
-                            //
-                            gb.features.forEach((key, value) {});
-                          },
-                          child: const Text('Press'),
-                        )
                       ],
                     ),
                   ),

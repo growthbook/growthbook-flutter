@@ -14,9 +14,11 @@ jobs:
         with:
           flutter-version: '3.16.2'
       - name: Install dependencies
-        run: flutter pub get && dart run build_runner build --delete-conflicting-outputs
+        run: flutter pub get
       - name: Pub upgrade
         run: flutter pub upgrade --major-versions
+      - name: Build runner
+        run: dart run build_runner build --delete-conflicting-outputs
       - name: Run tests
         run: flutter test
       - name: Format code
