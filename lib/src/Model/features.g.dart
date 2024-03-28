@@ -45,6 +45,9 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       tracks: json['tracks'] == null
           ? null
           : GBTrackData.fromJson(json['tracks'] as Map<String, dynamic>),
+      parentConditions: (json['parentConditions'] as List<dynamic>?)
+          ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Value? _$JsonConverterFromJson<Json, Value>(

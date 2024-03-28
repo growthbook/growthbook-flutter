@@ -11,6 +11,9 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
       variations: json['variations'] as List<dynamic>? ?? const [],
       namespace: json['namespace'] as List<dynamic>?,
       condition: json['condition'],
+      parentConditions: (json['parentConditions'] as List<dynamic>?)
+          ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
+          .toList(),
       hashAttribute: json['hashAttribute'] as String?,
       weights: json['weights'] as List<dynamic>?,
       active: json['active'] as bool? ?? true,

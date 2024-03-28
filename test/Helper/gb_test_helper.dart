@@ -98,18 +98,21 @@ class GBFeatureResultTest {
 class GBContextTest {
   GBContextTest({
     this.attributes,
+    this.features,
     this.qaMode = false,
     this.enabled = true,
     this.forcedVariations,
   });
 
   dynamic attributes;
+  Map<String, dynamic>? features;
   bool qaMode;
   bool enabled;
   Map<String, dynamic>? forcedVariations;
 
   factory GBContextTest.fromMap(Map<String, dynamic> map) => GBContextTest(
         attributes: map['attributes'],
+        features: map['features'],
         qaMode: map['qaMode'] ?? false,
         enabled: map['enabled'] ?? true,
         forcedVariations: map['forcedVariations'],

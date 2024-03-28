@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -12,6 +13,7 @@ class GBExperiment {
     this.variations = const [],
     this.namespace,
     this.condition,
+    this.parentConditions,
     this.hashAttribute,
     this.weights,
     this.active = true,
@@ -49,6 +51,11 @@ class GBExperiment {
 
   /// Optional targeting condition
   GBCondition? condition;
+  
+  // Each item defines a prerequisite where a condition must evaluate against a parent feature's
+  // value (identified by id). If gate is true, then this is a blocking feature-level prerequisite;
+  // otherwise it applies to the current rule only.
+  List<GBParentCondition>? parentConditions;
 
   /// All users included in the experiment will be forced into the specific variation index
   int? force;
