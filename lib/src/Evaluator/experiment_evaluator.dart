@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Experiment Evaluator Class

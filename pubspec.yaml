@@ -21,8 +21,5 @@ dev_dependencies:
   flutter_lints: ^3.0.1
   build_runner: ^2.1.11
   analyzer: ^6.2.0
-  json_serializable: ^6.2.0
-
-dependency_overrides:
-  logging: ^1.2.0  
-  watcher: ^1.1.0
+  json_serializable: ^6.7.1
+  build_runner_core: ^7.2.9
