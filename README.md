@@ -469,6 +469,24 @@ final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
   backgroundSync: true,).initializer();
 
 ```
+## ParentCondition
+
+A ParentCondition defines a prerequisite. It consists of a parent feature's id (`String`), a condition (`GBCondition`),  and an optional gate (`bool`) flag.
+
+Instead of evaluating against attributes, the condition evaluates against the returned value of the parent feature. The condition will always reference a "value" property. Here is an example of a gating prerequisite where the parent feature must be toggled on:
+```dart
+
+{
+  "id": "parent-feature",
+  "condition": {
+    "value": {
+      "$exists": true
+    }
+  },
+  "gate": true
+}
+
+```
 
 ## License
 

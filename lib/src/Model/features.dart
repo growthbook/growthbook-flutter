@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tuple/tuple.dart';
@@ -45,10 +46,16 @@ class GBFeatureRule {
     this.name,
     this.phase,
     this.tracks,
+    this.parentConditions,
   });
 
   /// Optional targeting condition
   GBCondition? condition;
+
+  // Each item defines a prerequisite where a condition must evaluate against a parent feature's
+  // value (identified by id). If gate is true, then this is a blocking feature-level prerequisite;
+  // otherwise it applies to the current rule only.
+  List<GBParentCondition>? parentConditions;
 
   /// What percent of users should be included in the experiment (between 0 and 1, inclusive)
   double? coverage;
@@ -118,7 +125,13 @@ enum GBFeatureSource {
   force("force"),
 
   /// Experiment Value for the Feature is being processed.
-  experiment("experiment");
+  experiment("experiment"),
+
+  // CyclicPrerequisite Value for the Feature is being processed
+  cyclicPrerequisite("cyclicPrerequisite"),
+
+  // Prerequisite Value for the Feature is being processed
+  prerequisite("prerequisite");
 
   const GBFeatureSource(this.name);
   final String name;

@@ -8,8 +8,9 @@ class GBFeatureEvaluator {
   static GBFeatureResult evaluateFeature(GBContext context, String featureKey) {
     /// If we are not able to find feature on the basis of the passed featureKey
     /// then we are going to return unKnownFeature.
-    final targetFeature = context.features[featureKey];
-    if (targetFeature == null) {
+
+    final targetFeature = context.features.containsKey(featureKey);
+    if (!targetFeature) {
       return _prepareResult(
         value: null,
         source: GBFeatureSource.unknownFeature,
@@ -17,11 +18,38 @@ class GBFeatureEvaluator {
     }
 
     // Loop through the feature rules (if any)
-    final rules = targetFeature.rules;
+    final rules = context.features[featureKey]?.rules;
 
     // Return if rules is not provided.
     if (rules != null && rules.isNotEmpty) {
       for (var rule in rules) {
+        if (rule.parentConditions != null) {
+          for (var parentCondition in rule.parentConditions!) {
+            final parentResult = evaluateFeature(context, parentCondition.id);
+            if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
+              // break out for cyclic prerequisites
+
+              return _prepareResult(
+                  value: parentResult,
+                  source: GBFeatureSource.cyclicPrerequisite);
+            }
+            final evalCondition = GBConditionEvaluator().evaluateCondition(
+                context.attributes ?? {}, parentCondition.condition);
+
+            // blocking prerequisite eval failed: feature evaluation fails
+
+            if (!evalCondition) {
+              if (parentCondition.gate!) {
+                return _prepareResult(
+                    value: parentResult.value,
+                    source: GBFeatureSource.prerequisite);
+              }
+              // non-blocking prerequisite eval failed: break out of parentConditions loop, jump to the next rule
+              continue;
+            }
+          }
+        }
+
         /// If the rule has a condition and it evaluates to false,
         /// skip this rule and continue to the next one.
 
@@ -74,14 +102,15 @@ class GBFeatureEvaluator {
           );
         } else {
           final exp = GBExperiment(
-            key: rule.key ?? featureKey,
-            variations: rule.variations ?? [],
-            coverage: rule.coverage,
-            weights: rule.weights,
-            hashAttribute: rule.hashAttribute,
-            namespace: rule.namespace,
-            force: rule.force,
-          );
+              key: rule.key ?? featureKey,
+              variations: rule.variations ?? [],
+              coverage: rule.coverage,
+              weights: rule.weights,
+              hashAttribute: rule.hashAttribute,
+              namespace: rule.namespace,
+              force: rule.force,
+              condition: rule.condition,
+              parentConditions: rule.parentConditions);
 
           final result = GBExperimentEvaluator.evaluateExperiment(
             context: context,
@@ -104,7 +133,7 @@ class GBFeatureEvaluator {
     }
     // Return (value = defaultValue or null, source = defaultValue)
     return _prepareResult(
-      value: targetFeature.defaultValue,
+      value: context.features[featureKey]?.defaultValue,
       source: GBFeatureSource.defaultValue,
     );
   }

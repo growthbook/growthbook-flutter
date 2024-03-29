@@ -195,6 +195,32 @@ class GBExperimentEvaluator {
 
     context.trackingCallBack?.call(experiment, result);
 
+    if (experiment.parentConditions != null) {
+      for (var parentCondition in experiment.parentConditions!) {
+        final parentResult =
+            GBFeatureEvaluator.evaluateFeature(context, parentCondition.id);
+        if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
+          // break out for cyclic prerequisites
+          return _getExperimentResult(
+            gbContext: context,
+            experiment: experiment,
+            variationIndex: -1,
+            inExperiment: false,
+          );
+        }
+        final evaled = GBConditionEvaluator().evaluateCondition(
+            context.attributes ?? {}, parentCondition.condition);
+        if (!evaled) {
+          return _getExperimentResult(
+            gbContext: context,
+            experiment: experiment,
+            variationIndex: -1,
+            inExperiment: false,
+          );
+        }
+      }
+    }
+
     return result;
   }
 
@@ -204,7 +230,7 @@ class GBExperimentEvaluator {
     required GBExperiment experiment,
     required variationIndex,
     required inExperiment,
-    required hashUsed,
+    hashUsed,
   }) {
     bool inExperiment = true;
     // Check whether variationIndex lies within bounds of variations size
