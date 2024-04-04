@@ -15,11 +15,15 @@ class GBExperiment {
     this.condition,
     this.parentConditions,
     this.hashAttribute,
+    this.fallbackAttribute,
     this.weights,
     this.active = true,
     this.coverage,
     this.force,
     this.hashVersion,
+    this.disableStickyBucketing,
+    this.bucketVersion,
+    this.minBucketVersion,
     this.ranges,
     this.meta,
     this.filters,
@@ -39,6 +43,8 @@ class GBExperiment {
 
   /// All users included in the experiment will be forced into the specific variation index
   String? hashAttribute;
+
+  String? fallbackAttribute;
 
   /// How to weight traffic between variations. Must add to 1.
   List? weights;
@@ -66,6 +72,12 @@ class GBExperiment {
   //new properties v0.4.0
   /// The hash version to use (default to 1)
   int? hashVersion;
+
+  bool? disableStickyBucketing;
+
+  int? bucketVersion;
+
+  int? minBucketVersion;
 
   /// Array of ranges, one per variation
   @Tuple2Converter()
@@ -105,6 +117,7 @@ class GBExperimentResult {
     this.name,
     this.bucket,
     this.passthrough,
+    this.stickyBucketUsed,
   });
 
   /// Whether or not the user is part of the experiment
@@ -138,6 +151,8 @@ class GBExperimentResult {
 
   /// Used for holdout groups
   bool? passthrough;
+
+  bool? stickyBucketUsed;
 
   factory GBExperimentResult.fromJson(Map<String, dynamic> value) =>
       _$GBExperimentResultFromJson(value);

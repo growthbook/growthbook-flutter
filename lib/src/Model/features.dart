@@ -37,7 +37,11 @@ class GBFeatureRule {
     this.weights,
     this.namespace,
     this.hashAttribute,
+    this.fallbackAttribute,
     this.hashVersion,
+    this.disableStickyBucketing,
+    this.bucketVersion,
+    this.minBucketVersion,
     this.range,
     this.ranges,
     this.meta,
@@ -78,9 +82,17 @@ class GBFeatureRule {
   /// What user attribute should be used to assign variations (defaults to id)
   String? hashAttribute;
 
+  String? fallbackAttribute;
+
   // new properties v0.4.0
   /// The hash version to use (default to 1)
   int? hashVersion;
+
+  bool? disableStickyBucketing;
+
+  int? bucketVersion;
+
+  int? minBucketVersion;
 
   /// A more precise version of coverage
   @Tuple2Converter()

@@ -1,4 +1,6 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 
 /// Defines the GrowthBook context.
 class GBContext {
@@ -10,6 +12,9 @@ class GBContext {
     this.enabled,
     this.attributes,
     this.forcedVariation,
+    this.stickyBucketAssignmentDocs,
+    this.stickyBucketIdentifierAttributes,
+    this.stickyBucketService,
     this.qaMode,
     this.trackingCallBack,
     this.features = const {},
@@ -36,6 +41,12 @@ class GBContext {
 
   /// Force specific experiments to always assign a specific variation (used for QA).
   Map<String, dynamic>? forcedVariation;
+
+  Map<StickyAttributeKey, StickyAssignmentsDocument>? stickyBucketAssignmentDocs;
+
+  List<String>? stickyBucketIdentifierAttributes;
+
+  StickyBucketService? stickyBucketService;
 
   /// If true, random assignment is disabled and only explicitly forced variations are used.
   bool? qaMode;

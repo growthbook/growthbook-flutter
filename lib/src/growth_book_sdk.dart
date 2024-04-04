@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
 typedef VoidCallback = void Function();
@@ -121,6 +122,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       context: context,
       experiment: experiment,
     );
+  }
+
+  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
+    return _context.stickyBucketAssignmentDocs ?? {};
   }
 
   /// Replaces the Map of user attributes that are used to assign variations
