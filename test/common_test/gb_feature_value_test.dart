@@ -22,7 +22,6 @@ void main() {
 
         final attributes = testData.attributes;
         final gbContext = GBContext(
-          sseUrl: null,
           encryptionKey: null,
           enabled: true,
           qaMode: false,

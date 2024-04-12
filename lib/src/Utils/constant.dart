@@ -11,11 +11,16 @@ class Constant {
   static String idAttribute = 'id';
 
   /// Identifier for Caching Feature Data in Internal Storage File
-  static String featureCache = 'FeatureCache';
+  static String featureCache = 'featureCache';
 
   /// Context Path for Fetching Feature Details - Web Service
-  static String featurePath = 'api/features/';
+  static String featurePath = 'api/features';
+
+  /// SSE path
+  static String eventsPath = "sub";
 }
+
+typedef CacheRefreshHandler = void Function(bool);
 
 /// Triple Tuple for GrowthBook Namespaces
 /// It has ID, StartRange & EndRange

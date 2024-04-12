@@ -4,7 +4,6 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 class GBContext {
   GBContext({
     this.apiKey,
-    this.sseUrl,
     this.encryptionKey,
     this.hostURL,
     this.enabled,
@@ -18,9 +17,6 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
-
-  /// SSE URL
-  String? sseUrl;
 
   /// Encryption key for encrypted features.
   String? encryptionKey;

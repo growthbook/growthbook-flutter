@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
@@ -42,7 +41,6 @@ class DioClient extends BaseClient {
     try {
       final data = await dio.get(path);
       onSuccess(data.data);
-      log("hmm looks ${data.data}");
     } catch (e, s) {
       onError(e, s);
     }
