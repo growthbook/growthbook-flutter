@@ -1,3 +1,6 @@
+# 3.3.0+0
+- cache manager and set refresh handler
+
 # 3.2.0+0
 - parentConditions property to GBExperiment and GBFeature
 

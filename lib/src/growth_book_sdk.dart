@@ -11,7 +11,6 @@ class GBSDKBuilderApp {
   GBSDKBuilderApp({
     required this.hostURL,
     required this.apiKey,
-    this.sseUrl,
     required this.growthBookTrackingCallBack,
     this.attributes = const <String, dynamic>{},
     this.qaMode = false,
@@ -20,6 +19,7 @@ class GBSDKBuilderApp {
     this.client,
     this.gbFeatures = const {},
     this.onInitializationFailure,
+    this.refreshHandler,
     this.backgroundSync,
   }) : assert(
           hostURL.endsWith('/'),
@@ -27,7 +27,6 @@ class GBSDKBuilderApp {
         );
 
   final String apiKey;
-  final String? sseUrl;
   final String hostURL;
   final bool enable;
   final bool qaMode;
@@ -39,10 +38,11 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool? backgroundSync;
 
+  CacheRefreshHandler? refreshHandler;
+
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
       apiKey: apiKey,
-      sseUrl: sseUrl,
       hostURL: hostURL,
       enabled: enable,
       qaMode: qaMode,
@@ -56,9 +56,15 @@ class GBSDKBuilderApp {
       context: gbContext,
       client: client,
       onInitializationFailure: onInitializationFailure,
+      refreshHandler: refreshHandler,
     );
     await gb.refresh();
     return gb;
+  }
+
+  GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
+    this.refreshHandler = refreshHandler;
+    return this;
   }
 }
 
@@ -70,8 +76,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     OnInitializationFailure? onInitializationFailure,
     required GBContext context,
     BaseClient? client,
+    CacheRefreshHandler? refreshHandler,
   })  : _context = context,
         _onInitializationFailure = onInitializationFailure,
+        _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient();
 
   final GBContext _context;
@@ -79,6 +87,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final BaseClient _baseClient;
 
   final OnInitializationFailure? _onInitializationFailure;
+
+  final CacheRefreshHandler? _refreshHandler;
 
   /// The complete data regarding features & attributes etc.
   GBContext get context => _context;
@@ -89,11 +99,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   @override
   void featuresFetchedSuccessfully(GBFeatures gbFeatures) {
     _context.features = gbFeatures;
+    _refreshHandler!(true);
   }
 
   @override
   void featuresFetchFailed(GBError? error) {
     _onInitializationFailure?.call(error);
+    _refreshHandler!(false);
   }
 
   Future<void> refresh() async {
@@ -106,7 +118,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         context: _context,
       ),
     );
-    await featureViewModel.fetchFeature(context.sseUrl);
+    await featureViewModel.fetchFeature();
   }
 
   GBFeatureResult feature(String id) {
