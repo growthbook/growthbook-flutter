@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 
 abstract class StickyBucketService {
@@ -10,30 +11,15 @@ abstract class StickyBucketService {
   Future<void> saveAssignments(StickyAssignmentsDocument doc);
 
   Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
-      Map<String, String> attributes) async {
-    var docs = <String, StickyAssignmentsDocument>{};
-    await Future.wait(attributes.entries.map((entry) async {
-      var doc = await getAssignments(entry.key, entry.value);
-      if (doc != null) {
-        var key = '${doc.attributeName}||${doc.attributeValue}';
-        docs[key] = doc;
-      }
-    }));
-    return docs;
-  }
-}
-
-abstract class LocalStorageCompat {
-  Future<String?> getItem(String key);
-  Future<void> setItem(String key, String value);
+      Map<String, String> attributes);
 }
 
 class LocalStorageStickyBucketService extends StickyBucketService {
   String prefix;
-  LocalStorageCompat? localStorage;
+  CachingManager? localStorage;
 
   LocalStorageStickyBucketService(
-      {this.prefix = 'gbStickyBuckets__', this.localStorage});
+      {this.prefix = 'gbStickyBuckets__', this.localStorage});   
 
   @override
   Future<StickyAssignmentsDocument?> getAssignments(
@@ -42,12 +28,9 @@ class LocalStorageStickyBucketService extends StickyBucketService {
     StickyAssignmentsDocument? doc;
     try {
       if (localStorage != null) {
-        final raw = await localStorage!.getItem(prefix + key) ?? '{}';
-        final data = json.decode(raw);
-        if (data['attributeName'] != null &&
-            data['attributeValue'] != null &&
-            data['assignments'] != null) {
-          doc = StickyAssignmentsDocument.fromJson(data);
+        final data = localStorage!.getContent('$prefix$key');
+        if(data != null){
+        doc = StickyAssignmentsDocument.fromJson(data);
         }
       }
     } catch (e) {
@@ -61,10 +44,24 @@ class LocalStorageStickyBucketService extends StickyBucketService {
     final key = '${doc.attributeName}||${doc.attributeValue}';
     try {
       if (localStorage != null) {
-        await localStorage!.setItem(prefix + key, json.encode(doc.toJson()));
+        localStorage!.saveContent('$prefix$key', json.encode(doc.toJson()));
       }
     } catch (e) {
       // Ignore localStorage errors
     }
+  }
+
+    @override
+      Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) async {
+    Map<String, StickyAssignmentsDocument> docs = {};
+     attributes.forEach((key, value) async {
+      var doc = await getAssignments(key, value);
+      if (doc != null) {
+        String docKey = '${doc.attributeName}||${doc.attributeValue}';
+        docs[docKey] = doc;
+      }
+    });
+    return docs;
   }
 }

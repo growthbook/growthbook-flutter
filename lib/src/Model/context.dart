@@ -14,10 +14,11 @@ class GBContext {
     this.stickyBucketAssignmentDocs,
     this.stickyBucketIdentifierAttributes,
     this.stickyBucketService,
+    this.remoteEval,
     this.qaMode,
     this.trackingCallBack,
     this.features = const {},
-    this.backgroundSync,
+    this.backgroundSync
   });
 
   /// Registered API key for GrowthBook SDK.
@@ -43,6 +44,8 @@ class GBContext {
   List<String>? stickyBucketIdentifierAttributes;
 
   StickyBucketService? stickyBucketService;
+
+  bool? remoteEval;
 
   /// If true, random assignment is disabled and only explicitly forced variations are used.
   bool? qaMode;

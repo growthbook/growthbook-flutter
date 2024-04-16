@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit
@@ -71,28 +72,25 @@ class GBUtils {
   }
 
   /// Returns an array of double with numVariations items that are all equal and
-  /// sum to 1. For example, getEqualWeights(2) would return [0.5, 0.5].
+  /// sum to 1. For example, getEqualWeights(2) would return [0.5, 0.5]
+
   static List<double> getEqualWeights(int numVariations) {
-    List<double> weights = <double>[];
-
-    if (numVariations >= 1) {
-      weights = List.filled(numVariations, 1 / numVariations);
-    }
-
-    return weights;
+    if (numVariations <= 0) return [];
+    return List.filled(numVariations, 1.0 / numVariations);
   }
 
   ///This converts and experiment's coverage and variation weights into an array
   /// of bucket ranges.
   static List<GBBucketRange> getBucketRanges(
-      int numVariations, double coverage, List<double> weights) {
+      int numVariations, double coverage, List<double>? weights) {
     // Clamp the value of coverage to between 0 and 1 inclusive.
     double targetCoverage = coverage.clamp(0, 1);
 
     // Default to equal weights if the weights don't match the number of variations.
-    var targetWeights = weights;
-    if (weights.length != numVariations) {
-      targetWeights = getEqualWeights(numVariations);
+    final equal = getEqualWeights(numVariations);
+    var targetWeights = weights ?? equal;
+    if (targetWeights.length != numVariations) {
+      targetWeights = equal;
     }
 
     // Default to equal weights if the sum is not equal 1 (or close enough when
@@ -100,7 +98,7 @@ class GBUtils {
     final weightsSum =
         targetWeights.fold<double>(0, (prev, element) => prev + element);
     if (weightsSum < 0.99 || weightsSum > 1.01) {
-      targetWeights = getEqualWeights(numVariations);
+      targetWeights = equal;
     }
 
     // Convert weights to ranges and return
@@ -126,12 +124,10 @@ class GBUtils {
   }
 
   int chooseVariation(double n, List<GBBucketRange> ranges) {
-    var counter = 0;
-    for (final range in ranges) {
-      if (n >= range.item1 && n < range.item2) {
-        return counter;
+    for (int index = 0; index < ranges.length; index++) {
+      if (inRange(n, ranges[index])) {
+        return index;
       }
-      counter++;
     }
     return -1;
   }
@@ -236,5 +232,39 @@ class GBUtils {
 
     // Then, join back together into a single string
     return parts.join('-');
+  }
+
+  static List<String> getHashAttribute({
+    required GBContext context,
+    String? attr,
+    String? fallback,
+    required Map<String, dynamic> attributeOverrides,
+  }) {
+    String hashAttribute = attr ?? 'id';
+    String hashValue = '';
+
+    if (attributeOverrides.containsKey(hashAttribute) &&
+        attributeOverrides[hashAttribute] != null) {
+      hashValue = attributeOverrides[hashAttribute];
+    } else if (context.attributes!.containsKey(hashAttribute) &&
+        context.attributes?[hashAttribute] != null) {
+      hashValue = context.attributes?[hashAttribute];
+    }
+
+    if (hashValue.isEmpty && fallback != null) {
+      if (attributeOverrides.containsKey(fallback) &&
+          attributeOverrides[fallback] != null) {
+        hashValue = attributeOverrides[fallback];
+      } else if (context.attributes!.containsKey(fallback) &&
+          context.attributes?[fallback] != null) {
+        hashValue = context.attributes?[fallback];
+      }
+
+      if (hashValue.isNotEmpty) {
+        hashAttribute = fallback;
+      }
+    }
+
+    return [hashAttribute, hashValue];
   }
 }

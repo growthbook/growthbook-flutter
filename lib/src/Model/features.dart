@@ -29,6 +29,7 @@ class GBFeature {
 @JsonSerializable(createToJson: false)
 class GBFeatureRule {
   GBFeatureRule({
+    this.id,
     this.condition,
     this.coverage,
     this.force,
@@ -52,6 +53,8 @@ class GBFeatureRule {
     this.tracks,
     this.parentConditions,
   });
+
+  String? id;
 
   /// Optional targeting condition
   GBCondition? condition;
@@ -82,16 +85,20 @@ class GBFeatureRule {
   /// What user attribute should be used to assign variations (defaults to id)
   String? hashAttribute;
 
+  /// When using sticky bucketing, can be used as a fallback to assign variations
   String? fallbackAttribute;
 
   // new properties v0.4.0
   /// The hash version to use (default to 1)
   int? hashVersion;
 
+  /// If true, sticky bucketing will be disabled for this experiment. (Note: sticky bucketing is only available if a StickyBucketingService is provided in the Context)
   bool? disableStickyBucketing;
 
+  /// An sticky bucket version number that can be used to force a re-bucketing of users (default to '0')
   int? bucketVersion;
 
+  /// Any users with a sticky bucket version less than this will be excluded from the experiment
   int? minBucketVersion;
 
   /// A more precise version of coverage

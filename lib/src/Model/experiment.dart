@@ -44,6 +44,7 @@ class GBExperiment {
   /// All users included in the experiment will be forced into the specific variation index
   String? hashAttribute;
 
+  /// When using sticky bucketing, can be used as a fallback to assign variations
   String? fallbackAttribute;
 
   /// How to weight traffic between variations. Must add to 1.
@@ -71,12 +72,15 @@ class GBExperiment {
 
   //new properties v0.4.0
   /// The hash version to use (default to 1)
-  int? hashVersion;
+  double? hashVersion;
 
+  /// If true, sticky bucketing will be disabled for this experiment. (Note: sticky bucketing is only available if a StickyBucketingService is provided in the Context)
   bool? disableStickyBucketing;
 
+  /// An sticky bucket version number that can be used to force a re-bucketing of users (default to `0`)
   int? bucketVersion;
-
+  
+  /// Any users with a sticky bucket version less than this will be excluded from the experiment
   int? minBucketVersion;
 
   /// Array of ranges, one per variation
@@ -129,6 +133,7 @@ class GBExperimentResult {
   /// The array value of the assigned variation
   dynamic value;
 
+  /// If a hash was used to assign a variation
   bool? hashUsed;
 
   /// The user attribute used to assign a variation
@@ -137,6 +142,7 @@ class GBExperimentResult {
   /// The value of that attribute
   String? hashValue;
 
+  /// The id of the feature (if any) that the experiment came from
   String? featureId;
 
   //new properties v0.4.0
@@ -152,6 +158,7 @@ class GBExperimentResult {
   /// Used for holdout groups
   bool? passthrough;
 
+  /// If sticky bucketing was used to assign a variation
   bool? stickyBucketUsed;
 
   factory GBExperimentResult.fromJson(Map<String, dynamic> value) =>

@@ -20,7 +20,7 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
       active: json['active'] as bool? ?? true,
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'] as int?,
-      hashVersion: json['hashVersion'] as int?,
+      hashVersion: (json['hashVersion'] as num?)?.toDouble(),
       disableStickyBucketing: json['disableStickyBucketing'] as bool?,
       bucketVersion: json['bucketVersion'] as int?,
       minBucketVersion: json['minBucketVersion'] as int?,

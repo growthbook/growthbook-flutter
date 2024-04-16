@@ -9,6 +9,6 @@ part of 'gb_parent_condition.dart';
 GBParentCondition _$GBParentConditionFromJson(Map<String, dynamic> json) =>
     GBParentCondition(
       id: json['id'] as String,
-      condition: json['condition'] as Object,
+      condition: json['condition'] as Map<String, dynamic>,
       gate: json['gate'] as bool?,
     );
