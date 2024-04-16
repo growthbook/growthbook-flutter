@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
-import 'package:growthbook_sdk_flutter/src/Network/see_client.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
@@ -23,14 +21,14 @@ class FeatureViewModel {
   // Caching Manager
   final CachingManager manager = CachingManager();
 
-  Future<void> fetchFeature(String? sseURL) async {
-    if (sseURL != null) {
+  Future<void> fetchFeature() async {
+    GBFeatures? receivedData = manager.getData(Constant.featureCache);
+
+    if (receivedData == null) {
       if (backgroundSync ?? false) {
         await source.fetchFeatures(
           featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-          (data) => delegate.featuresFetchedSuccessfully(
-            data.features,
-          ),
+          (data) => delegate.featuresFetchedSuccessfully(data.features),
           (e, s) => delegate.featuresFetchFailed(
             GBError(
               error: e,
@@ -40,36 +38,25 @@ class FeatureViewModel {
           encryptionKey,
         );
       } else {
-        // Unsubscribe from SSE
-        SSEManager.unsubscribeFromSSE();
-        ((e, s) {
-          delegate.featuresFetchFailed(
+        await source.fetchFeatures(
+          (data) {
+            delegate.featuresFetchedSuccessfully(
+              data.features,
+            );
+            cacheFeatures(data);
+          },
+          (e, s) => delegate.featuresFetchFailed(
             GBError(
-              error: DioException(
-                type: DioExceptionType.unknown,
-                requestOptions: RequestOptions(path: '', baseUrl: ''),
-                response: null,
-                error:
-                'SocketException: Failed host lookup: \'cdn.growthbook.io\' (OS Error: nodename nor servname provided, or not known, errno = 8)',
-              ),
+              error: e,
               stackTrace: s.toString(),
             ),
-          );
-        })(null, null); // Call the anonymous function with appropriate parameters
+          ),
+          encryptionKey,
+        );
       }
     } else {
-      await source.fetchFeatures(
-        (data) => delegate.featuresFetchedSuccessfully(
-          data.features,
-        ),
-        (e, s) => delegate.featuresFetchFailed(
-          GBError(
-            error: e,
-            stackTrace: s.toString(),
-          ),
-        ),
-        encryptionKey,
-      );
+      final data = FeaturedDataModel.fromJson(receivedData);
+      delegate.featuresFetchedSuccessfully(data.features);
     }
   }
 
@@ -157,5 +144,10 @@ class FeatureViewModel {
 
   void logError(String message) {
     log("Failed to parse data. $message");
+  }
+
+  void cacheFeatures(FeaturedDataModel data) {
+    final GBFeatures features = data.features;
+    manager.putData(Constant.featureCache, features);
   }
 }

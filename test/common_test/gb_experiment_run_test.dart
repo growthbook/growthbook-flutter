@@ -26,7 +26,6 @@ void main() {
           final gbContext = GBContext(
             apiKey: '',
             hostURL: '',
-            sseUrl: null,
             enabled: testContext.enabled,
             attributes: attr,
             forcedVariation: testContext.forcedVariations,

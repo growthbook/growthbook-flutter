@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 
@@ -11,25 +12,26 @@ void main() {
     const testApiKey = '<API_KEY>';
     const attr = <String, String>{};
     const testHostURL = 'https://example.growthbook.io/';
-    const testSseUrl = "https://host.com/sub/4r23r324f23";
     const client = MockNetworkClient();
+
+    CachingManager manager = CachingManager();
+
+    var isRefreshed = false;
 
     test("- default", () async {
       final sdk = await GBSDKBuilderApp(
         apiKey: testApiKey,
-        sseUrl: testSseUrl,
         hostURL: testHostURL,
         attributes: attr,
         client: client,
         growthBookTrackingCallBack: (experiment, experimentResult) {},
         backgroundSync: false,
-      ).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
-
-      /// Test sse URL
-      expect(sdk.context.sseUrl, testSseUrl);
 
       /// Feature mode
       expect(sdk.context.enabled, true);
@@ -42,6 +44,8 @@ void main() {
 
       /// Test passed attr.
       expect(sdk.context.attributes, attr);
+
+      manager.clearCache();
     });
 
     test('- qa mode', () async {
@@ -49,7 +53,6 @@ void main() {
 
       final sdk = await GBSDKBuilderApp(
         apiKey: testApiKey,
-        sseUrl: testSseUrl,
         qaMode: true,
         client: client,
         forcedVariations: variations,
@@ -57,16 +60,17 @@ void main() {
         attributes: attr,
         growthBookTrackingCallBack: (exp, result) {},
         backgroundSync: false,
-      ).initialize();
+      ).setRefreshHandler((refreshHandler) {}).initialize();
       expect(sdk.context.enabled, true);
       expect(sdk.context.qaMode, true);
+
+      manager.clearCache();
     });
 
     test('- with initialization assertion cause of wrong host url', () async {
       expect(
         () => GBSDKBuilderApp(
           apiKey: testApiKey,
-          sseUrl: testSseUrl,
           hostURL: "https://example.growthbook.io",
           client: client,
           growthBookTrackingCallBack: (_, __) {},
@@ -74,23 +78,25 @@ void main() {
         ),
         throwsAssertionError,
       );
+      manager.clearCache();
     });
 
     test('- with network client', () async {
       GrowthBookSDK sdk = await GBSDKBuilderApp(
-              apiKey: testApiKey,
-              sseUrl: testSseUrl,
-              hostURL: testHostURL,
-              attributes: attr,
-              client: client,
-              growthBookTrackingCallBack: (exp, result) {},
-              backgroundSync: false,
+        apiKey: testApiKey,
+        hostURL: testHostURL,
+        attributes: attr,
+        client: client,
+        growthBookTrackingCallBack: (exp, result) {},
+        backgroundSync: false,
       )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
           .initialize();
       final featureValue = sdk.feature('fwrfewrfe');
       expect(featureValue.source, GBFeatureSource.unknownFeature);
       final result = sdk.run(GBExperiment(key: "fwrfewrfe"));
       expect(result.variationID, 0);
+      manager.clearCache();
     });
 
     test(
@@ -98,31 +104,30 @@ void main() {
       () async {
         GrowthBookSDK sdk = await GBSDKBuilderApp(
           apiKey: testApiKey,
-          sseUrl: testSseUrl,
           hostURL: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
           growthBookTrackingCallBack: (exp, result) {},
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           backgroundSync: false,
-        ).initialize();
+        ).setRefreshHandler((refreshHandler) {}).initialize();
         final featureValue = sdk.feature('some-feature');
         expect(featureValue.value, true);
 
         final result = sdk.run(GBExperiment(key: "some-feature"));
         expect(result.variationID, 0);
+        manager.clearCache();
       },
     );
 
     test('- testEncrypt', () async {
       final sdkInstance = await GBSDKBuilderApp(
         hostURL: testHostURL,
-        sseUrl: testSseUrl,
         apiKey: testApiKey,
         growthBookTrackingCallBack: (exp, result) {},
         attributes: attr,
         backgroundSync: false,
-      ).initialize();
+      ).setRefreshHandler((refreshHandler) {}).initialize();
 
       const encryptedFeatures =
           "vMSg2Bj/IurObDsWVmvkUg==.L6qtQkIzKDoE2Dix6IAKDcVel8PHUnzJ7JjmLjFZFQDqidRIoCxKmvxvUj2kTuHFTQ3/NJ3D6XhxhXXv2+dsXpw5woQf0eAgqrcxHrbtFORs18tRXRZza7zqgzwvcznx";
@@ -146,6 +151,7 @@ void main() {
         sdkInstance.features["testfeature1"]?.rules?[0].force,
         equals(features["testfeature1"]?["rules"]?[0]["force"]),
       );
+      manager.clearCache();
     });
     test(
       '- onInitializationFailure callback test',
@@ -154,7 +160,6 @@ void main() {
 
         await GBSDKBuilderApp(
           apiKey: testApiKey,
-          sseUrl: testSseUrl,
           hostURL: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
@@ -162,11 +167,14 @@ void main() {
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        ).initialize();
+        )
+            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+            .initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
         expect(error?.stackTrace != null, true);
+        manager.clearCache();
       },
     );
   });

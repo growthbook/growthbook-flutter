@@ -1,86 +1,39 @@
 import 'dart:developer';
-import 'dart:io';
 
-enum CacheDirectory {
-  applicationSupport,
-  caches,
-  documents,
-  library,
-}
-
-extension CacheDirectoryExtension on CacheDirectory {
-  String get path {
-    switch (this) {
-      case CacheDirectory.applicationSupport:
-        return 'application_support';
-      case CacheDirectory.caches:
-        return 'caches';
-      case CacheDirectory.documents:
-        return 'documents';
-      case CacheDirectory.library:
-        return 'library';
-    }
-  }
-}
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 class CachingManager {
+  // Create a static and final instance of the CachingManager class.
   static final CachingManager _instance = CachingManager._internal();
 
+  // Define a private constructor.
+  CachingManager._internal();
+
+  // Create a factory constructor that returns the singleton instance.
   factory CachingManager() {
     return _instance;
   }
 
-  CachingManager._internal();
+  // A map to hold the cached data.
+  final Map<String, dynamic> _cache = {};
 
-  late CacheDirectory _cacheDirectory;
-
-  void updateCacheDirectory(CacheDirectory directory) {
-    _cacheDirectory = directory;
+  // Method to put data into the cache.
+  void putData(String key, dynamic data) {
+    // Store the data in the cache using the key.
+    _cache[key] = data;
+    log("_cache[key] ${_cache[key]}");
+    final test = _cache[key];
+    log(test.runtimeType.toString());
   }
 
-  String getTargetFile(String fileName) {
-    String directoryPath = _cacheDirectory.path;
-
-    String targetFolderPath = '$directoryPath/GrowthBook-Cache';
-
-    Directory(targetFolderPath).createSync(recursive: true);
-
-    String file = fileName.replaceAll('.txt', '');
-
-    return '$targetFolderPath/$file.txt';
+  // Method to get data from the cache.
+  GBFeatures? getData(String key) {
+    // Retrieve the data from the cache using the key.
+    return _cache[key];
   }
 
-  void putData(String fileName, List<int> content) {
-    saveContent(fileName, content);
-  }
-
-  void saveContent(String fileName, List<int> content) {
-    File file = File(getTargetFile(fileName));
-    file.writeAsBytesSync(content);
-  }
-
-  List<int>? getContent(String fileName) {
-    File file = File(getTargetFile(fileName));
-    if (file.existsSync()) {
-      return file.readAsBytesSync();
-    }
-    return null;
-  }
-
+  // Method to clear the cache (optional).
   void clearCache() {
-    String? directoryPath = _cacheDirectory.path;
-
-    String targetFolderPath = '$directoryPath/GrowthBook-Cache';
-    Directory targetFolder = Directory(targetFolderPath);
-
-    if (targetFolder.existsSync()) {
-      try {
-        targetFolder.deleteSync(recursive: true);
-      } catch (e) {
-        log('Failed to clear cache: $e');
-      }
-    } else {
-      log('Cache directory does not exist. Nothing to clear.');
-    }
+    _cache.clear();
   }
 }

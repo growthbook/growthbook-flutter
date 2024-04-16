@@ -6,7 +6,6 @@ import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_ser
 class GBContext {
   GBContext({
     this.apiKey,
-    this.sseUrl,
     this.encryptionKey,
     this.hostURL,
     this.enabled,
@@ -23,9 +22,6 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
-
-  /// SSE URL
-  String? sseUrl;
 
   /// Encryption key for encrypted features.
   String? encryptionKey;
