@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
 typedef VoidCallback = void Function();
@@ -59,6 +61,7 @@ class GBSDKBuilderApp {
       refreshHandler: refreshHandler,
     );
     await gb.refresh();
+    await gb.refreshStickyBucketService();
     return gb;
   }
 
@@ -80,7 +83,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   })  : _context = context,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
-        _baseClient = client ?? DioClient();
+        _baseClient = client ?? DioClient(),
+        _attributeOverrides = {};
 
   final GBContext _context;
 
@@ -89,6 +93,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final OnInitializationFailure? _onInitializationFailure;
 
   final CacheRefreshHandler? _refreshHandler;
+
+  Map<String, dynamic> _attributeOverrides;
 
   /// The complete data regarding features & attributes etc.
   GBContext get context => _context;
@@ -135,9 +141,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     );
   }
 
+  Map<StickyAttributeKey, StickyAssignmentsDocument>
+      getStickyBucketAssignmentDocs() {
+    return _context.stickyBucketAssignmentDocs ?? {};
+  }
+
   /// Replaces the Map of user attributes that are used to assign variations
   void setAttributes(Map<String, dynamic> attributes) {
     context.attributes = attributes;
+  }
+
+  void setAttributeOverrides(dynamic overrides) {
+    _attributeOverrides = json.decode(overrides);
+    refreshStickyBucketService();
   }
 
   void setEncryptedFeatures(String encryptedString, String encryptionKey,
@@ -150,6 +166,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
     if (features != null) {
       _context.features = features;
+    }
+  }
+
+  Future<void> refreshStickyBucketService() async {
+    if (context.stickyBucketService != null) {
+      final featureEvaluator =
+          GBFeatureEvaluator(attributeOverrides: _attributeOverrides);
+      await featureEvaluator.refreshStickyBuckets(context);
     }
   }
 }

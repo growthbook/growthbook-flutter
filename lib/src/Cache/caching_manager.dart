@@ -2,7 +2,14 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
-class CachingManager {
+abstract class CachingLayer {
+
+  GBFeatures? getContent(String key);
+  void saveContent(String key, String value);
+}
+
+
+class CachingManager extends CachingLayer {
   // Create a static and final instance of the CachingManager class.
   static final CachingManager _instance = CachingManager._internal();
 
@@ -17,17 +24,29 @@ class CachingManager {
   // A map to hold the cached data.
   final Map<String, dynamic> _cache = {};
 
+  getData(String fileName){
+    return getContent(fileName);
+  }
+
+  void putData(String fileName, dynamic content){
+    saveContent(fileName, content);
+  }
+
   // Method to put data into the cache.
-  void putData(String key, dynamic data) {
+  @override
+  void saveContent(String key, dynamic value) {
     // Store the data in the cache using the key.
-    _cache[key] = data;
+    _cache[key] = value;
     log("_cache[key] ${_cache[key]}");
     final test = _cache[key];
     log(test.runtimeType.toString());
   }
 
+
+
   // Method to get data from the cache.
-  GBFeatures? getData(String key) {
+  @override
+  GBFeatures? getContent(String key) {
     // Retrieve the data from the cache using the key.
     return _cache[key];
   }

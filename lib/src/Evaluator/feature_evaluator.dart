@@ -5,6 +5,10 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 /// Returns Calculated Feature Result against that key
 
 class GBFeatureEvaluator {
+  final Map<String, dynamic> attributeOverrides;
+
+  GBFeatureEvaluator({required this.attributeOverrides});
+
   static GBFeatureResult evaluateFeature(GBContext context, String featureKey) {
     /// If we are not able to find feature on the basis of the passed featureKey
     /// then we are going to return unKnownFeature.
@@ -157,5 +161,52 @@ class GBFeatureEvaluator {
         source: source,
         experiment: experiment,
         experimentResult: experimentResult);
+  }
+
+  Future<void> refreshStickyBuckets(GBContext context) async {
+    if (context.stickyBucketService == null) {
+      return;
+    }
+
+    var attributes = getStickyBucketAttributes(context);
+    context.stickyBucketAssignmentDocs =
+        await context.stickyBucketService?.getAllAssignments(attributes);
+  }
+
+  Map<String, String> getStickyBucketAttributes(GBContext context) {
+    var attributes = <String, String>{};
+
+    context.stickyBucketIdentifierAttributes =
+        context.stickyBucketIdentifierAttributes != null
+            ? deriveStickyBucketIdentifierAttributes(context)
+            : context.stickyBucketIdentifierAttributes;
+
+    context.stickyBucketIdentifierAttributes?.forEach((attr) {
+      var hashValue = GBUtils.getHashAttribute(
+          context: context, attributeOverrides: attributeOverrides, attr: attr);
+      attributes[attr] = hashValue[1];
+    });
+
+    return attributes;
+  }
+
+  List<String> deriveStickyBucketIdentifierAttributes(
+      GBContext context) {
+    var attributes = <String>{};
+    var features = context.features;
+    for (var id in features.keys) {
+      var feature = features[id];
+      var rules = feature?.rules;
+      rules?.forEach((rule) {
+        var variations = rule.variations;
+        variations?.forEach((variation) {
+          attributes.add(rule.hashAttribute ?? "id");
+          if (rule.fallbackAttribute != null) {
+            attributes.add(rule.fallbackAttribute!);
+          }
+        });
+      });
+    }
+    return attributes.toList();
   }
 }

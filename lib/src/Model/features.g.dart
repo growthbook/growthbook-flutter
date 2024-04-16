@@ -15,6 +15,7 @@ GBFeature _$GBFeatureFromJson(Map<String, dynamic> json) => GBFeature(
 
 GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
     GBFeatureRule(
+      id: json['id'] as String?,
       condition: json['condition'],
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'],
@@ -25,7 +26,11 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
           .toList(),
       namespace: json['namespace'] as List<dynamic>?,
       hashAttribute: json['hashAttribute'] as String?,
+      fallbackAttribute: json['fallbackAttribute'] as String?,
       hashVersion: json['hashVersion'] as int?,
+      disableStickyBucketing: json['disableStickyBucketing'] as bool?,
+      bucketVersion: json['bucketVersion'] as int?,
+      minBucketVersion: json['minBucketVersion'] as int?,
       range:
           _$JsonConverterFromJson<Map<String, dynamic>, Tuple2<double, double>>(
               json['range'], const Tuple2Converter().fromJson),

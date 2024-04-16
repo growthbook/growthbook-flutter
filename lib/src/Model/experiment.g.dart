@@ -15,11 +15,15 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
           .toList(),
       hashAttribute: json['hashAttribute'] as String?,
+      fallbackAttribute: json['fallbackAttribute'] as String?,
       weights: json['weights'] as List<dynamic>?,
       active: json['active'] as bool? ?? true,
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'] as int?,
-      hashVersion: json['hashVersion'] as int?,
+      hashVersion: (json['hashVersion'] as num?)?.toDouble(),
+      disableStickyBucketing: json['disableStickyBucketing'] as bool?,
+      bucketVersion: json['bucketVersion'] as int?,
+      minBucketVersion: json['minBucketVersion'] as int?,
       ranges: (json['ranges'] as List<dynamic>?)
           ?.map((e) =>
               const Tuple2Converter().fromJson(e as Map<String, dynamic>))
@@ -48,4 +52,5 @@ GBExperimentResult _$GBExperimentResultFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       bucket: (json['bucket'] as num?)?.toDouble(),
       passthrough: json['passthrough'] as bool?,
+      stickyBucketUsed: json['stickyBucketUsed'] as bool?,
     );
