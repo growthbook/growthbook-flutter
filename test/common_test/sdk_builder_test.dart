@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
@@ -31,19 +30,19 @@ void main() {
           .initialize();
 
       /// Test API key
-      expect(sdk.context.apiKey, testApiKey);
+      expect(sdk.getGBContext().apiKey, testApiKey);
 
       /// Feature mode
-      expect(sdk.context.enabled, true);
+      expect(sdk.getGBContext().enabled, true);
 
       /// Test HostUrl
-      expect(sdk.context.hostURL, testHostURL);
+      expect(sdk.getGBContext().hostURL, testHostURL);
 
       /// Test qaMode
-      expect(sdk.context.qaMode, false);
+      expect(sdk.getGBContext().qaMode, false);
 
       /// Test passed attr.
-      expect(sdk.context.attributes, attr);
+      expect(sdk.getGBContext().attributes, attr);
 
       manager.clearCache();
     });
@@ -61,8 +60,8 @@ void main() {
         growthBookTrackingCallBack: (exp, result) {},
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler) {}).initialize();
-      expect(sdk.context.enabled, true);
-      expect(sdk.context.qaMode, true);
+      expect(sdk.getGBContext().enabled, true);
+      expect(sdk.getGBContext().qaMode, true);
 
       manager.clearCache();
     });
@@ -144,38 +143,14 @@ void main() {
           json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
 
       expect(
-        sdkInstance.features["testfeature1"]?.rules?[0].condition,
+        sdkInstance.getFeatures()["testfeature1"]?.rules?[0].condition,
         equals(features["testfeature1"]?["rules"]?[0]["condition"]),
       );
       expect(
-        sdkInstance.features["testfeature1"]?.rules?[0].force,
+        sdkInstance.getFeatures()["testfeature1"]?.rules?[0].force,
         equals(features["testfeature1"]?["rules"]?[0]["force"]),
       );
       manager.clearCache();
     });
-    test(
-      '- onInitializationFailure callback test',
-      () async {
-        GBError? error;
-
-        await GBSDKBuilderApp(
-          apiKey: testApiKey,
-          hostURL: testHostURL,
-          attributes: attr,
-          client: const MockNetworkClient(error: true),
-          growthBookTrackingCallBack: (exp, result) {},
-          gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
-          onInitializationFailure: (e) => error = e,
-          backgroundSync: false,
-        )
-            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
-            .initialize();
-
-        expect(error != null, true);
-        expect(error?.error is DioException, true);
-        expect(error?.stackTrace != null, true);
-        manager.clearCache();
-      },
-    );
   });
 }

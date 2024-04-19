@@ -1,3 +1,6 @@
+# 3.4.0+0
+- sse connection background sync
+
 # 3.3.0+0
 - cache manager and set refresh handler
 

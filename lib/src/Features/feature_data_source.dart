@@ -20,13 +20,11 @@ class FeatureDataSource {
 
   Future<void> fetchFeatures(
     FeatureFetchSuccessCallBack onSuccess,
-    OnError onError,
-    String key, {
+    OnError onError, {
     FeatureRefreshStrategy featureRefreshStrategy =
         FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
   }) async {
-    final api = FeatureURLBuilder.buildUrl(key, context.apiKey!);
-    final apiSse = FeatureURLBuilder.buildUrl(key, context.apiKey!,
+    final apiSse = FeatureURLBuilder.buildUrl(context.apiKey ?? "",
         featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS);
 
     featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS
@@ -39,8 +37,8 @@ class FeatureDataSource {
             onError,
           )
         : await client.consumeGetRequest(
-            context.hostURL!,
-            api,
+            context.hostURL ?? "",
+            FeatureURLBuilder.buildUrl(context.apiKey ?? ""),
             (response) => onSuccess(
               FeaturedDataModel.fromJson(response),
             ),

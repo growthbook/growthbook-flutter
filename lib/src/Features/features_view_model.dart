@@ -10,50 +10,48 @@ class FeatureViewModel {
   FeatureViewModel({
     required this.delegate,
     required this.source,
-    required this.encryptionKey,
+    this.encryptionKey,
     this.backgroundSync,
   });
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
-  final String encryptionKey;
+  String? encryptionKey;
   final bool? backgroundSync;
 
   // Caching Manager
   final CachingManager manager = CachingManager();
 
+  Future<void> connectBackgroundSync() async {
+    await source.fetchFeatures(
+      featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
+      (data) => delegate.featuresFetchedSuccessfully(data.features),
+      (e, s) => delegate.featuresFetchFailed(
+        GBError(
+          error: e,
+          stackTrace: s.toString(),
+        ),
+      ),
+    );
+  }
+
   Future<void> fetchFeature() async {
     GBFeatures? receivedData = manager.getData(Constant.featureCache);
 
     if (receivedData == null) {
-      if (backgroundSync ?? false) {
-        await source.fetchFeatures(
-          featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-          (data) => delegate.featuresFetchedSuccessfully(data.features),
-          (e, s) => delegate.featuresFetchFailed(
-            GBError(
-              error: e,
-              stackTrace: s.toString(),
-            ),
+      await source.fetchFeatures(
+        (data) {
+          delegate.featuresFetchedSuccessfully(
+            data.features,
+          );
+          cacheFeatures(data);
+        },
+        (e, s) => delegate.featuresFetchFailed(
+          GBError(
+            error: e,
+            stackTrace: s.toString(),
           ),
-          encryptionKey,
-        );
-      } else {
-        await source.fetchFeatures(
-          (data) {
-            delegate.featuresFetchedSuccessfully(
-              data.features,
-            );
-            cacheFeatures(data);
-          },
-          (e, s) => delegate.featuresFetchFailed(
-            GBError(
-              error: e,
-              stackTrace: s.toString(),
-            ),
-          ),
-          encryptionKey,
-        );
-      }
+        ),
+      );
     } else {
       final data = FeaturedDataModel.fromJson(receivedData);
       delegate.featuresFetchedSuccessfully(data.features);
@@ -108,7 +106,7 @@ class FeatureViewModel {
       return;
     }
 
-    if (encryptionKey.isEmpty) {
+    if (encryptionKey != null && encryptionKey!.isEmpty) {
       logError("Encryption key is missing.");
       return;
     }
@@ -117,7 +115,7 @@ class FeatureViewModel {
       final crypto = Crypto();
       final extractedFeatures = crypto.getFeaturesFromEncryptedFeatures(
         encryptedString,
-        encryptionKey,
+        encryptionKey ?? "",
       );
 
       if (extractedFeatures != null) {
