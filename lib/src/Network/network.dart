@@ -54,7 +54,7 @@ class DioClient extends BaseClient {
     OnError onError,
   ) async {
     try {
-      final dio = Dio()..options.baseUrl = baseUrl;
+      final dio = _dio..options.baseUrl = baseUrl;
       final Response<ResponseBody> resp = await dio.get(
         path,
         options: Options(responseType: ResponseType.stream),
