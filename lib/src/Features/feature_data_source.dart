@@ -7,6 +7,7 @@ typedef FeatureFetchSuccessCallBack = void Function(
 
 abstract class FeaturesFlowDelegate {
   void featuresFetchedSuccessfully(GBFeatures gbFeatures);
+  void featuresAPIModelSuccessfully(FeaturedDataModel model);
   void featuresFetchFailed(GBError? error);
 }
 

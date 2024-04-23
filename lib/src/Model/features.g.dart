@@ -13,10 +13,15 @@ GBFeature _$GBFeatureFromJson(Map<String, dynamic> json) => GBFeature(
       defaultValue: json['defaultValue'],
     );
 
+Map<String, dynamic> _$GBFeatureToJson(GBFeature instance) => <String, dynamic>{
+      'rules': instance.rules,
+      'defaultValue': instance.defaultValue,
+    };
+
 GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
     GBFeatureRule(
       id: json['id'] as String?,
-      condition: json['condition'],
+      condition: json['condition'] as Map<String, dynamic>?,
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'],
       variations: json['variations'] as List<dynamic>?,
@@ -31,12 +36,12 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       disableStickyBucketing: json['disableStickyBucketing'] as bool?,
       bucketVersion: json['bucketVersion'] as int?,
       minBucketVersion: json['minBucketVersion'] as int?,
-      range:
-          _$JsonConverterFromJson<Map<String, dynamic>, Tuple2<double, double>>(
-              json['range'], const Tuple2Converter().fromJson),
+      range: (json['range'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList(),
       ranges: (json['ranges'] as List<dynamic>?)
           ?.map((e) =>
-              const Tuple2Converter().fromJson(e as Map<String, dynamic>))
+              (e as List<dynamic>).map((e) => (e as num).toDouble()).toList())
           .toList(),
       meta: (json['meta'] as List<dynamic>?)
           ?.map((e) => GBVariationMeta.fromJson(e as Map<String, dynamic>))
@@ -47,16 +52,37 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       seed: json['seed'] as String?,
       name: json['name'] as String?,
       phase: json['phase'] as String?,
-      tracks: json['tracks'] == null
-          ? null
-          : GBTrackData.fromJson(json['tracks'] as Map<String, dynamic>),
+      tracks: (json['tracks'] as List<dynamic>?)
+          ?.map((e) => GBTrackData.fromJson(e as Map<String, dynamic>))
+          .toList(),
       parentConditions: (json['parentConditions'] as List<dynamic>?)
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
-Value? _$JsonConverterFromJson<Json, Value>(
-  Object? json,
-  Value? Function(Json json) fromJson,
-) =>
-    json == null ? null : fromJson(json as Json);
+Map<String, dynamic> _$GBFeatureRuleToJson(GBFeatureRule instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'condition': instance.condition,
+      'parentConditions': instance.parentConditions,
+      'coverage': instance.coverage,
+      'force': instance.force,
+      'variations': instance.variations,
+      'key': instance.key,
+      'weights': instance.weights,
+      'namespace': instance.namespace,
+      'hashAttribute': instance.hashAttribute,
+      'fallbackAttribute': instance.fallbackAttribute,
+      'hashVersion': instance.hashVersion,
+      'disableStickyBucketing': instance.disableStickyBucketing,
+      'bucketVersion': instance.bucketVersion,
+      'minBucketVersion': instance.minBucketVersion,
+      'range': instance.range,
+      'ranges': instance.ranges,
+      'meta': instance.meta,
+      'filters': instance.filters,
+      'seed': instance.seed,
+      'name': instance.name,
+      'phase': instance.phase,
+      'tracks': instance.tracks,
+    };

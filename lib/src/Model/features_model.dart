@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'features_model.g.dart';
 
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class FeaturedDataModel {
   FeaturedDataModel({required this.features});
 
@@ -13,4 +13,7 @@ class FeaturedDataModel {
 
   factory FeaturedDataModel.fromJson(Map<String, dynamic> json) =>
       _$FeaturedDataModelFromJson(json);
+
+  Map<String, dynamic> toJson() =>
+   _$FeaturedDataModelToJson(this);     
 }

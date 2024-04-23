@@ -43,7 +43,6 @@ Now you can start/stop tests, adjust coverage and variation weights, and apply a
 ```dart
 final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
   apiKey: "<API_KEY>",
-  sseUrl: <GrowthBook_SSEURL/API_KEY>,
   attributes: {
     /// Specify attributes.
   },
@@ -57,9 +56,8 @@ final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
 There are additional properties which can be setup at the time of initialization
 
 ```dart
-    final GrowthBookSDK newSdkInstance =await GBSDKBuilderApp(
+    final GrowthBookSDK newSdkInstance = GBSDKBuilderApp(
     apiKey: "<API_KEY>",
-    sseUrl: <GrowthBook_SSEURL/API_KEY>,
     attributes: {
      /// Specify user attributes.
     },
@@ -68,7 +66,10 @@ There are additional properties which can be setup at the time of initialization
     hostURL: '<GrowthBook_URL>',
     forcedVariations: {} // Optional provide force variation.
     qaMode: true, // Set qamode
-).initialize();
+);
+newSdkInstance.setStickyBucketService(stickyBucketService: GBStickyBucketingService());
+
+await newSdkInstance.initialize();
 
 ```
 
@@ -112,7 +113,6 @@ There are additional properties which can be setup at the time of initialization
 class GBContext {
   GBContext({
     this.apiKey,
-    this.sseUrl,
     this.hostURL,
     this.enabled,
     this.attributes,
@@ -124,9 +124,6 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
-  
-  /// SSE URL
-  String? sseUrl;
 
   /// Host URL for GrowthBook
   String? hostURL;
@@ -461,7 +458,6 @@ To enable streaming updates set backgroundSync variable to "true" and add stream
 
 final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
   apiKey: "<API_KEY>",
-  sseUrl: "<GrowthBook_SSEURL/API_KEY>",
   attributes: {
     /// Specify attributes.
   },
@@ -487,6 +483,10 @@ Instead of evaluating against attributes, the condition evaluates against the re
 }
 
 ```
+
+## Sticky Bucketing
+
+Sticky bucketing ensures that users see the same experiment variant, even when user session, user login status, or experiment parameters change. See the [Sticky Bucketing docs](/app/sticky-bucketing) for more information. If your organization and experiment supports sticky bucketing, you must implement an instance of the `GBStickyBucketingService` to use Sticky Bucketing.
 
 ## License
 

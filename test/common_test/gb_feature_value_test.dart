@@ -17,16 +17,16 @@ void main() {
       final passedScenarios = <String>[];
 
       for (final item in evaluateCondition) {
-        final testContext = GBContextTest.fromMap(item[1]);
+
+
         final testData = GBFeaturesTest.fromMap(item[1]);
 
-        final attributes = testData.attributes;
         final gbContext = GBContext(
           encryptionKey: null,
           enabled: true,
           qaMode: false,
-          attributes: attributes,
-          forcedVariation: testContext.forcedVariations,
+          attributes: testData.attributes,
+          forcedVariation: testData.forcedVariations,
           trackingCallBack: (_, __) {},
           backgroundSync: false,
         );
@@ -34,10 +34,15 @@ void main() {
           gbContext.features = testData.features!;
         }
 
-        final result = GBFeatureEvaluator.evaluateFeature(gbContext, item[2]);
+        final result = FeatureEvaluator(
+                attributeOverrides: {},
+                context: gbContext,
+                featureKey: item[2])
+            .evaluateFeature();
         final expectedResult = GBFeatureResultTest.fromMap(item[3]);
 
-        final status = "${item[0]}\nValue expected- ${expectedResult.value}\nValue actual- ${result.value}\nOn  expected -${expectedResult.on}\nOn  actual -${result.on}\nOff  expected -${expectedResult.off}\nOff actual -${result.off}\nSource  expected -${expectedResult.source}\nSource  actual -${result.source?.name.toString()}\nExperiment  expected -${expectedResult.experiment?.key.toString()}\nExperiment  actual -${result.experiment?.key}\nExperimentResult expected -${expectedResult.experimentResult?.variationId.toString()}\nExperimentResult  actual -${result.experimentResult?.variationID.toString()}\n\n";
+        final status =
+            "${item[0]}\nValue expected- ${expectedResult.value}\nValue actual- ${result.value}\nOn  expected -${expectedResult.on}\nOn  actual -${result.on}\nOff  expected -${expectedResult.off}\nOff actual -${result.off}\nSource  expected -${expectedResult.source}\nSource  actual -${result.source?.name.toString()}\nExperiment  expected -${expectedResult.experiment?.key.toString()}\nExperiment  actual -${result.experiment?.key}\nExperimentResult expected -${expectedResult.experimentResult?.variationId.toString()}\nExperimentResult  actual -${result.experimentResult?.variationID.toString()}\n\n";
         if (result.value.toString() == expectedResult.value.toString() &&
             result.on.toString() == expectedResult.on.toString() &&
             result.off.toString() == expectedResult.off.toString() &&

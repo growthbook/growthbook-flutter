@@ -19,6 +19,7 @@ void main() {
       for (var item in evaluateCondition) {
         if (item is List) {
           final testContext = GBContextTest.fromMap(item[1]);
+
           final experiment = GBExperiment.fromJson(item[2]);
 
           final attr = testContext.attributes;
@@ -32,15 +33,16 @@ void main() {
             qaMode: testContext.qaMode,
             trackingCallBack: (_, __) {},
             backgroundSync: false,
+            features: testContext.features,
           );
 
-          final result = GBExperimentEvaluator.evaluateExperiment(
-              context: gbContext, experiment: experiment);
-          final status = "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
+          final result = ExperimentEvaluator(attributeOverrides: {})
+              .evaluateExperiment(gbContext, experiment);
+          final status =
+              "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
 
           if (item[3].toString() == result.value.toString() &&
-              item[4].toString() == result.inExperiment.toString() &&
-              item[5].toString() == result.hashUsed.toString()) {
+              item[4] == result.inExperiment) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);

@@ -2,12 +2,11 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:tuple/tuple.dart';
 
 part 'features.g.dart';
 
 /// A Feature object consists of possible values plus rules for how to assign values to users.
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFeature {
   GBFeature({
     this.rules,
@@ -23,10 +22,12 @@ class GBFeature {
 
   factory GBFeature.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFeatureToJson(this); 
 }
 
 /// Rule object consists of various definitions to apply to calculate feature value
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFeatureRule {
   GBFeatureRule({
     this.id,
@@ -89,7 +90,7 @@ class GBFeatureRule {
   String? fallbackAttribute;
 
   // new properties v0.4.0
-  /// The hash version to use (default to 1)
+  /// The hash version to use
   int? hashVersion;
 
   /// If true, sticky bucketing will be disabled for this experiment. (Note: sticky bucketing is only available if a StickyBucketingService is provided in the Context)
@@ -125,10 +126,13 @@ class GBFeatureRule {
   String? phase;
 
   /// Array of tracking calls to fire
-  GBTrackData? tracks;
+  // GBTrackData? tracks;
+  List<GBTrackData>? tracks;
 
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureRuleFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);     
 }
 
 /// Enum For defining feature value source.

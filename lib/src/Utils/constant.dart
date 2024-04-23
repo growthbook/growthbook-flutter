@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tuple/tuple.dart';
@@ -27,18 +28,20 @@ typedef CacheRefreshHandler = void Function(bool);
 typedef GBNameSpace = Tuple3<String, double, double>;
 
 /// Double Tuple for GrowthBook Ranges
-typedef GBBucketRange = Tuple2<double, double>;
+typedef GBBucketRange = List<double>;
 
 /// Type Alias for Feature in GrowthBook
 /// Represents json response in this case.
 typedef GBFeatures = Map<String, GBFeature>;
 
 /// Type Alias for Condition Element in GrowthBook Rules
-typedef GBCondition = Object;
+typedef GBCondition = Map<String, dynamic>;
 
 /// Handler for Refresh Cache Request
 /// It updates back whether cache was refreshed or not
 typedef GBCacheRefreshHandler = void Function(bool);
+
+typedef GBStickyBucketingService = LocalStorageStickyBucketService;
 
 /// A function that takes experiment and result as arguments.
 typedef TrackingCallBack = void Function(GBExperiment, GBExperimentResult);
@@ -59,13 +62,13 @@ class GBError {
 }
 
 /// Object used for mutual exclusion and filtering users out of experiments based on random hashes
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFilter {
   GBFilter({
     required this.seed,
     required this.ranges,
     required this.attribute,
-    required this.hashVersion,
+    this.hashVersion = 2,
   });
 
   final String seed;
@@ -75,14 +78,15 @@ class GBFilter {
 
   final String? attribute;
 
-  final int? hashVersion;
+  final int hashVersion;
 
-  factory GBFilter.fromJson(Map<String, dynamic> value) =>
-      _$GBFilterFromJson(value);
+  factory GBFilter.fromJson(Map<String, dynamic> value) => _$GBFilterFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFilterToJson(this);
 }
 
 /// Meta info about the variations
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBVariationMeta {
   GBVariationMeta({
     this.key,
@@ -96,12 +100,13 @@ class GBVariationMeta {
 
   final bool? passthrough;
 
-  factory GBVariationMeta.fromJson(Map<String, dynamic> value) =>
-      _$GBVariationMetaFromJson(value);
+  factory GBVariationMeta.fromJson(Map<String, dynamic> value) => _$GBVariationMetaFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBVariationMetaToJson(this);
 }
 
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBTrackData {
   GBTrackData({
     required this.experiment,
@@ -112,6 +117,7 @@ class GBTrackData {
 
   final GBExperimentResult experimentResult;
 
-  factory GBTrackData.fromJson(Map<String, dynamic> value) =>
-      _$GBTrackDataFromJson(value);
+  factory GBTrackData.fromJson(Map<String, dynamic> value) => _$GBTrackDataFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBTrackDataToJson(this);
 }

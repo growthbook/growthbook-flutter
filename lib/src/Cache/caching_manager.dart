@@ -1,58 +1,101 @@
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 abstract class CachingLayer {
-
-  GBFeatures? getContent(String key);
-  void saveContent(String key, String value);
+  Future<Uint8List?> getContent({required String fileName});
+  Future<void> saveContent({
+    required String fileName,
+    required Uint8List content,
+  });
 }
 
-
 class CachingManager extends CachingLayer {
-  // Create a static and final instance of the CachingManager class.
   static final CachingManager _instance = CachingManager._internal();
-
-  // Define a private constructor.
   CachingManager._internal();
 
-  // Create a factory constructor that returns the singleton instance.
   factory CachingManager() {
     return _instance;
   }
 
-  // A map to hold the cached data.
-  final Map<String, dynamic> _cache = {};
-
-  getData(String fileName){
-    return getContent(fileName);
+  Future<Uint8List?> getData({required String fileName}) {
+    return getContent(fileName: fileName);
   }
 
-  void putData(String fileName, dynamic content){
-    saveContent(fileName, content);
+  void putData({
+    required String fileName,
+    required Uint8List content,
+  }) {
+    saveContent(fileName: fileName, content: content);
   }
 
-  // Method to put data into the cache.
   @override
-  void saveContent(String key, dynamic value) {
-    // Store the data in the cache using the key.
-    _cache[key] = value;
-    log("_cache[key] ${_cache[key]}");
-    final test = _cache[key];
-    log(test.runtimeType.toString());
+  Future<void> saveContent({
+    required String fileName,
+    required Uint8List content,
+  }) async {
+    final fileManager = File(await getTargetFile(fileName));
+    if (fileManager.existsSync()) {
+      try {
+        fileManager.deleteSync();
+      } catch (e) {
+        log('Failed to remove file: $e');
+      }
+    }
+    try {
+      fileManager.writeAsBytesSync(content);
+      log('Content saved successfully to: $fileName');
+    } catch (e) {
+      log('Failed to save content: $e');
+    }
   }
 
+  Future<String> getTargetFile(String fileName) async {
+    final cacheDirectoryPath = localPath;
+    String targetFolderPath = '$cacheDirectoryPath/GrowthBook-Cache';
+    var fileManager = Directory(targetFolderPath);
+    if (!fileManager.existsSync()) {
+      try {
+        fileManager.createSync(recursive: true);
+      } catch (e) {
+        log('Failed to create directory: $e');
+      }
+    }
+    String file = fileName.replaceAll('.txt', '');
 
+    return '$targetFolderPath/$file.txt';
+  }
 
-  // Method to get data from the cache.
+  String get localPath => Directory.systemTemp.path;
+
   @override
-  GBFeatures? getContent(String key) {
-    // Retrieve the data from the cache using the key.
-    return _cache[key];
+  Future<Uint8List?> getContent({required String fileName}) async {
+    try {
+      final filePath = await getTargetFile(fileName);
+      File file = File(filePath);
+      if (await file.exists()) {
+        return await file.readAsBytes();
+      }
+    } catch (e) {
+      log('Failed to get content: $e');
+    }
+    return null;
   }
 
-  // Method to clear the cache (optional).
-  void clearCache() {
-    _cache.clear();
+  Future<void> clearCache() async {
+    String cacheDirectoryPath = localPath;
+    String targetFolderPath = '$cacheDirectoryPath/GrowthBook-Cache';
+    final fileManager = Directory(targetFolderPath);
+
+    if (fileManager.existsSync()) {
+      try {
+        fileManager.deleteSync(recursive: true);
+      } catch (e) {
+        log('Failed to clear cache: $e');
+      }
+    } else {
+      log('Cache directory does not exist. Nothing to clear.');
+    }
   }
 }

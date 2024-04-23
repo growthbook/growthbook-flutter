@@ -11,3 +11,8 @@ FeaturedDataModel _$FeaturedDataModelFromJson(Map<String, dynamic> json) =>
       features: const GBFeaturesConverter()
           .fromJson(json['features'] as Map<String, dynamic>),
     );
+
+Map<String, dynamic> _$FeaturedDataModelToJson(FeaturedDataModel instance) =>
+    <String, dynamic>{
+      'features': const GBFeaturesConverter().toJson(instance.features),
+    };

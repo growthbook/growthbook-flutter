@@ -12,3 +12,10 @@ GBParentCondition _$GBParentConditionFromJson(Map<String, dynamic> json) =>
       condition: json['condition'] as Map<String, dynamic>,
       gate: json['gate'] as bool?,
     );
+
+Map<String, dynamic> _$GBParentConditionToJson(GBParentCondition instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'condition': instance.condition,
+      'gate': instance.gate,
+    };

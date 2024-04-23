@@ -16,18 +16,15 @@ void main() {
       final failedScenarios = <String>[];
       final passedScenarios = <String>[];
       for (final item in evaluateCondition) {
-        if (item is List) {
-          final localItem = item;
-          final evaluator = GBConditionEvaluator();
-          final result =
-              evaluator.evaluateCondition(localItem[2], localItem[1]);
-          final status = "${localItem[0]}\nExpected Result - ${localItem[3]}\nActual result - $result\n\n";
-          if (localItem[3].toString() == result.toString()) {
-            passedScenarios.add(status);
-          } else {
-            failedScenarios.add(status);
-            failedIndex.add(index);
-          }
+        final evaluator = GBConditionEvaluator();
+        final result = evaluator.evaluateCondition(item[2], item[1]);
+        final status =
+            "${item[0]}\nExpected Result - ${item[3]}\nActual result - $result\n\n";
+        if (item[3].toString() == result.toString()) {
+          passedScenarios.add(status);
+        } else {
+          failedScenarios.add(status);
+          failedIndex.add(index);
         }
         index++;
       }
