@@ -1,3 +1,8 @@
+# 3.5.0+0
+- generating padded version strings
+- extension StringComparison for comparing strings lexicographically
+- Sticky Bucket logic
+
 # 3.4.0+0
 - sse connection background sync
 

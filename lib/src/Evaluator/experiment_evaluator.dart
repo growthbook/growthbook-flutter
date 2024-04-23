@@ -1,265 +1,435 @@
+import 'dart:developer';
+
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 
-/// Experiment Evaluator Class
-/// Takes Context & Experiment & returns Experiment Result
-class GBExperimentEvaluator {
-  /// Takes Context & Experiment & returns Experiment Result
+class ExperimentEvaluator {
+  Map<String, dynamic> attributeOverrides;
 
-  static GBExperimentResult evaluateExperiment({
-    required GBContext context,
-    required GBExperiment experiment,
-  }) {
-    /// If experiment.variations has fewer than 2 variations, return immediately
-    ///  (not in experiment, variationId 0)
-    ///
-    /// If context.enabled is false, return immediately (not in experiment, variationId 0)
-    if (experiment.variations.length < 2 || !context.enabled!) {
+  ExperimentEvaluator({required this.attributeOverrides});
+
+  // Takes Context and Experiment and returns ExperimentResult
+  GBExperimentResult evaluateExperiment(
+      GBContext context, GBExperiment experiment) {
+    // Check if experiment.variations has fewer than 2 variations
+    if (experiment.variations.length < 2 || context.enabled != true) {
+      // Return an ExperimentResult indicating not in experiment and variationId 0
       return _getExperimentResult(
         experiment: experiment,
-        gbContext: context,
+        context: context,
         variationIndex: -1,
-        inExperiment: false,
         hashUsed: false,
       );
     }
 
-    /// If context.forcedVariations[experiment.trackingKey] is defined,
-    /// return immediately (not in experiment, forced variation)
-    final forcedVariation = context.forcedVariation?[experiment.key];
+    if (context.forcedVariation != null &&
+        context.forcedVariation!.containsKey(experiment.key)) {
+      // Retrieve the forced variation for the experiment key
+      if (context.forcedVariation != null &&
+          context.forcedVariation?[experiment.key] != null) {
+        int forcedVariationIndex =
+            int.parse(context.forcedVariation![experiment.key].toString());
 
-    Map<String, dynamic>? forcedVariations = context.forcedVariation;
-    if (forcedVariations != null &&
-        forcedVariations.containsKey(experiment.key)) {
-      if (forcedVariations[experiment.key] is int) {
-        int forcedVariationIndex = forcedVariations[experiment.key] as int;
+        // Return the experiment result using the forced variation index and indicating that no hash was used
         return _getExperimentResult(
+          context: context,
           experiment: experiment,
-          gbContext: context,
           variationIndex: forcedVariationIndex,
-          inExperiment: true,
           hashUsed: false,
         );
       }
     }
 
-    /// If experiment.action is set to false, return immediately
-    /// (not in experiment, variationId 0)
-    if (experiment.deactivated) {
+    if (!experiment.active) {
       return _getExperimentResult(
+        context: context,
         experiment: experiment,
-        gbContext: context,
         variationIndex: -1,
-        inExperiment: false,
         hashUsed: false,
       );
     }
 
-    // Get the user hash attribute and value (context.attributes[experiment.hashAttribute || "id"])
-    // and if empty, return immediately (not in experiment, variationId 0)
-    final attributeValue = context
-        .attributes?[experiment.hashAttribute ?? Constant.idAttribute]
-        ?.toString();
-    if (attributeValue == null || attributeValue.toString().isEmpty) {
+    final hashAttributeAndValue = GBUtils.getHashAttribute(
+      context: context,
+      attr: experiment.hashAttribute,
+      fallback: (context.stickyBucketService != null &&
+              !(experiment.disableStickyBucketing ?? true))
+          ? experiment.fallbackAttribute
+          : null,
+      attributeOverrides: attributeOverrides,
+    );
+
+    final hashAttribute = hashAttributeAndValue[0];
+    final hashValue = hashAttributeAndValue[1];
+
+// TODO: check if "null" might be the case
+    if (hashValue.isEmpty || hashValue == "null") {
+      log('Skip because missing hashAttribute');
       return _getExperimentResult(
+        context: context,
         experiment: experiment,
-        gbContext: context,
-        variationIndex: forcedVariation,
-        inExperiment: true,
+        variationIndex: -1,
         hashUsed: false,
       );
     }
 
-    if (experiment.filters != null) {
-      if (GBUtils.isFilteredOut(experiment.filters, context.attributes)) {
+    int assigned = -1;
+    bool foundStickyBucket = false;
+    bool stickyBucketVersionIsBlocked = false;
+
+    if (context.stickyBucketService != null &&
+        !(experiment.disableStickyBucketing ?? true)) {
+      final stickyBucketResult = getStickyBucketVariation(
+        context,
+        experiment.key,
+        experiment.bucketVersion ?? 0,
+        experiment.minBucketVersion ?? 0,
+        experiment.meta ?? [],
+      );
+      foundStickyBucket = stickyBucketResult.variation >= 0;
+      assigned = stickyBucketResult.variation;
+      stickyBucketVersionIsBlocked =
+          stickyBucketResult.versionIsBlocked ?? false;
+    }
+
+    if (!foundStickyBucket) {
+      if (experiment.filters != null) {
+        if (GBUtils.isFilteredOut(
+            experiment.filters!, context, attributeOverrides)) {
+          log('Skip because of filters');
+          return _getExperimentResult(
+            context: context,
+            experiment: experiment,
+            variationIndex: -1,
+            hashUsed: false,
+          );
+        }
+      } else if (experiment.namespace != null) {
+        final namespace = GBUtils.getGBNameSpace(experiment.namespace ?? []);
+        if (namespace != null) {
+          if (!GBUtils.inNamespace(hashValue, namespace)) {
+            log('Skip because of namespace');
+            return _getExperimentResult(
+              context: context,
+              experiment: experiment,
+              variationIndex: -1,
+              hashUsed: false,
+            );
+          }
+        }
+      }
+
+      if (experiment.condition != null &&
+          !GBConditionEvaluator()
+              .evaluateCondition(context.attributes!, experiment.condition!)) {
         return _getExperimentResult(
-          gbContext: context,
+          context: context,
           experiment: experiment,
           variationIndex: -1,
-          inExperiment: false,
           hashUsed: false,
         );
       }
-    }
 
-    /// If experiment.namespace is set, check if hash value is included in the
-    ///  range and if not, return immediately (not in experiment, variationId 0)
-    if (experiment.namespace != null) {
-      var namespace = GBUtils.getGBNameSpace(experiment.namespace!);
-      if (namespace != null &&
-          !GBUtils.inNamespace(attributeValue, namespace)) {
-        return _getExperimentResult(
-          experiment: experiment,
-          gbContext: context,
-          variationIndex: -1,
-          inExperiment: false,
-          hashUsed: false,
-        );
+      if (experiment.parentConditions != null) {
+        for (final parentCondition in experiment.parentConditions!) {
+          final parentResult = FeatureEvaluator(
+            context: context,
+            featureKey: parentCondition.id,
+            attributeOverrides: parentCondition.condition,
+          ).evaluateFeature();
+
+          if (parentResult.source?.name ==
+              GBFeatureSource.cyclicPrerequisite.name) {
+            return _getExperimentResult(
+              context: context,
+              experiment: experiment,
+              variationIndex: -1,
+              hashUsed: false,
+            );
+          }
+
+          final evalObj = {'value': parentResult.value};
+          final evalCondition = GBConditionEvaluator().evaluateCondition(
+            evalObj,
+            parentCondition.condition,
+          );
+
+          if (!evalCondition) {
+            log("Feature blocked by prerequisite");
+            return _getExperimentResult(
+              context: context,
+              experiment: experiment,
+              variationIndex: -1,
+              hashUsed: false,
+            );
+          }
+        }
       }
     }
-
-    // If experiment.condition is set and the condition evaluates to false,
-    // return immediately (not in experiment, variationId 0)
-    if (experiment.condition != null) {
-      final attr = context.attributes;
-      if (!GBConditionEvaluator()
-          .evaluateCondition(attr!, experiment.condition!)) {
-        return _getExperimentResult(
-          experiment: experiment,
-          gbContext: context,
-          variationIndex: -1,
-          inExperiment: false,
-          hashUsed: false,
-        );
-      }
-    }
-
-    /// Default variation weights and coverage if not specified
-    var weights = experiment.weights;
-    if (weights == null) {
-      // Default weights to an even split between all variations
-      experiment.weights =
-          GBUtils.getEqualWeights(experiment.variations.length);
-    }
-
-    // Default coverage 1.
-    final coverage = experiment.coverage ?? 1.0;
-    experiment.coverage = coverage;
-
-    /// Calculate bucket ranges for the variations
-    /// Convert weights/coverage to ranges
-    final List<GBBucketRange> bucketRange = GBUtils.getBucketRanges(
-        experiment.variations.length,
-        coverage,
-        experiment.weights != null
-            ? experiment.weights!
-                .map((e) => double.parse(e.toString()))
-                .toList()
-            : []);
 
     final hash = GBUtils.hash(
-        value: attributeValue,
-        seed: experiment.seed ?? experiment.key ?? '',
-        version: (experiment.hashVersion ?? 1).toDouble());
+      seed: experiment.seed ?? experiment.key,
+      value: hashValue,
+      version: experiment.hashVersion?.toInt() ?? 1,
+    );
+
     if (hash == null) {
+      log('Skip because of invalid hash version');
       return _getExperimentResult(
+        context: context,
         experiment: experiment,
-        gbContext: context,
         variationIndex: -1,
-        inExperiment: false,
-        hashUsed: false,
-      );
-    }
-    final assigned = const GBUtils().chooseVariation(hash, bucketRange);
-    // If not assigned a variation (assigned === -1), return immediately (not in experiment, variationId 0)
-    if (assigned == -1) {
-      return _getExperimentResult(
-        experiment: experiment,
-        gbContext: context,
-        variationIndex: -1,
-        inExperiment: false,
         hashUsed: false,
       );
     }
 
-    /// If experiment.force is set, return immediately (not in experiment,
-    /// variationId experiment.force)
-    final forceExp = experiment.force;
-    if (forceExp != null) {
+    if (!foundStickyBucket) {
+      final ranges = experiment.ranges ??
+          GBUtils.getBucketRanges(
+            experiment.variations.length,
+            experiment.coverage ?? 1.0,
+            experiment.weights,
+          );
+      assigned = const GBUtils().chooseVariation(hash, ranges);
+    }
+
+    if (stickyBucketVersionIsBlocked) {
+      log('Skip because sticky bucket version is blocked');
       return _getExperimentResult(
+        context: context,
         experiment: experiment,
-        variationIndex: forceExp,
-        gbContext: context,
-        inExperiment: true,
+        variationIndex: -1,
+        hashUsed: false,
+        bucket: null,
+        stickyBucketUsed: true,
+      );
+    }
+
+    if (assigned < 0) {
+      log('Skip because of coverage');
+      return _getExperimentResult(
+        context: context,
+        experiment: experiment,
+        variationIndex: -1,
         hashUsed: false,
       );
     }
 
-    // If context.qaMode is true, return immediately (not in experiment, variationId 0)
-    if (context.qaMode ?? false) {
+    if (experiment.force != null) {
       return _getExperimentResult(
+        context: context,
         experiment: experiment,
-        gbContext: context,
+        variationIndex: experiment.force!,
+        hashUsed: false,
+      );
+    }
+
+    if (context.qaMode) {
+      return _getExperimentResult(
+        context: context,
+        experiment: experiment,
         variationIndex: -1,
-        inExperiment: false,
         hashUsed: false,
       );
     }
 
     final result = _getExperimentResult(
-      variationIndex: assigned,
+      context: context,
       experiment: experiment,
-      gbContext: context,
-      inExperiment: true,
+      variationIndex: assigned,
       hashUsed: true,
+      bucket: hash,
+      stickyBucketUsed: foundStickyBucket,
     );
 
-    context.trackingCallBack?.call(experiment, result);
+    if (context.stickyBucketService != null &&
+        !(experiment.disableStickyBucketing ?? true)) {
+      final stickyBucketDoc = generateStickyBucketAssignmentDoc(
+        context,
+        hashAttribute,
+        hashValue,
+        {
+          getStickyBucketExperimentKey(
+              experiment.key, experiment.bucketVersion ?? 0): result.key
+        },
+      );
 
-    if (experiment.parentConditions != null) {
-      for (var parentCondition in experiment.parentConditions!) {
-        final parentResult =
-            GBFeatureEvaluator.evaluateFeature(context, parentCondition.id);
-        if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
-          // break out for cyclic prerequisites
-          return _getExperimentResult(
-            gbContext: context,
-            experiment: experiment,
-            variationIndex: -1,
-            inExperiment: false,
-          );
-        }
-        final evaled = GBConditionEvaluator().evaluateCondition(
-            context.attributes ?? {}, parentCondition.condition);
-        if (!evaled) {
-          return _getExperimentResult(
-            gbContext: context,
-            experiment: experiment,
-            variationIndex: -1,
-            inExperiment: false,
-          );
-        }
+      if (stickyBucketDoc.hasChanged) {
+        context.stickyBucketAssignmentDocs ??= {};
+        context.stickyBucketAssignmentDocs![stickyBucketDoc.key] =
+            stickyBucketDoc.doc;
+        context.stickyBucketService?.saveAssignments(stickyBucketDoc.doc);
       }
+    }
+
+    if (!ExperimentHelper.shared.isTracked(experiment, result)) {
+      context.trackingCallBack!(experiment, result);
     }
 
     return result;
   }
 
-  ///  This is a helper method to create an ExperimentResult object.
-  static GBExperimentResult _getExperimentResult({
-    required GBContext gbContext,
+  GBExperimentResult _getExperimentResult({
+    required GBContext context,
     required GBExperiment experiment,
-    required variationIndex,
-    required inExperiment,
-    hashUsed,
+    int variationIndex = 0,
+    required bool hashUsed,
+    String? featureId,
+    double? bucket,
+    bool? stickyBucketUsed,
   }) {
     bool inExperiment = true;
+
+    int targetVariationIndex = variationIndex;
+
     // Check whether variationIndex lies within bounds of variations size
-    variationIndex ??= -1;
-    if (variationIndex < 0 || variationIndex >= experiment.variations.length) {
+    if (targetVariationIndex < 0 ||
+        targetVariationIndex >= experiment.variations.length) {
       // Set to 0
-      variationIndex = 0;
+      targetVariationIndex = 0;
       inExperiment = false;
     }
+    final hashResult = GBUtils.getHashAttribute(
+      context: context,
+      attr: experiment.hashAttribute,
+      fallback: (context.stickyBucketService != null &&
+              !(experiment.disableStickyBucketing ?? true))
+          ? experiment.fallbackAttribute
+          : null,
+      attributeOverrides: attributeOverrides,
+    );
 
-    dynamic targetValue = 0;
+    String hashAttribute = hashResult[0];
+    dynamic hashValue = hashResult[1];
 
-    // check whether variations are non empty - then only query array against index
-    if (experiment.variations.isNotEmpty) {
-      targetValue = experiment.variations[variationIndex];
-    }
-
-    // Hash Attribute - used for Experiment Calculations
-    final hashAttribute = experiment.hashAttribute ?? Constant.idAttribute;
-    // Hash Value against hash attribute
-    final hashValue = gbContext.attributes?[hashAttribute]?.toString() ?? '';
+    // Retrieve experiment metadata
+    List<GBVariationMeta> experimentMeta = experiment.meta ?? [];
+    GBVariationMeta? meta = (experimentMeta.length > targetVariationIndex)
+        ? experimentMeta[targetVariationIndex]
+        : null;
 
     return GBExperimentResult(
       inExperiment: inExperiment,
-      variationID: variationIndex,
-      value: targetValue,
-      hashUsed: hashUsed,
-      hasAttributes: hashAttribute,
+      variationID: targetVariationIndex,
+      value: (experiment.variations.length > targetVariationIndex)
+          ? experiment.variations[targetVariationIndex]
+          : {},
+      hashAttribute: hashAttribute,
       hashValue: hashValue,
+      key: meta?.key ?? '$targetVariationIndex',
+      featureId: featureId,
+      hashUsed: hashUsed,
+      stickyBucketUsed: stickyBucketUsed ?? false,
+      name: meta?.name,
+      bucket: bucket,
+      passthrough: meta?.passthrough,
     );
   }
+
+  StickyBucketResult getStickyBucketVariation(
+    GBContext context,
+    String experimentKey,
+    int experimentBucketVersion,
+    int minExperimentBucketVersion,
+    List<GBVariationMeta> meta,
+  ) {
+    // Get the assignment key for the given experiment key and version.
+    final assignmentKey =
+        getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
+    // Fetch all sticky bucket assignments from the context.
+    final assignments = getStickyBucketAssignments(context);
+
+    // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
+    if (minExperimentBucketVersion > 0) {
+      for (int version = 0; version <= minExperimentBucketVersion; version++) {
+        final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
+        if (assignments.containsKey(blockedKey)) {
+          // A blocked version was found.
+          return StickyBucketResult(-1, true);
+        }
+      }
+    }
+
+    // Retrieve the variation key using the assignmentKey.
+    final variationKey = assignments[assignmentKey];
+
+    // Return (-1, null) if no assignment was found.
+    if (variationKey == null) {
+      return StickyBucketResult(-1, null);
+    }
+
+    // Find the index of the variation that matches the variation key.
+    final variationIndex =
+        meta.indexWhere((variationMeta) => variationMeta.key == variationKey);
+
+    // Return (-1, null) if no matching variation was found.
+    if (variationIndex == -1) {
+      return StickyBucketResult(-1, null);
+    }
+
+    // Return the found variation and no blocked version.
+    return StickyBucketResult(variationIndex, null);
+  }
+
+  Map<String, String> getStickyBucketAssignments(GBContext context) {
+    final mergedAssignments = <String, String>{};
+
+    context.stickyBucketAssignmentDocs?.values.forEach((doc) {
+      mergedAssignments.addAll(doc.assignments);
+    });
+
+    return mergedAssignments;
+  }
+
+  String getStickyBucketExperimentKey(
+      String experimentKey, int experimentBucketVersion) {
+    return '${experimentKey}__$experimentBucketVersion';
+  }
+
+  StickyBucketDocumentChange generateStickyBucketAssignmentDoc(
+    GBContext context,
+    String attributeName,
+    String attributeValue,
+    Map<String, String> newAssignments,
+  ) {
+    // Generate the key using attribute name and value.
+    final key = '$attributeName||$attributeValue';
+
+    // Get the existing assignments from the context.
+    final existingAssignments =
+        context.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
+
+    // Merge existing assignments with the new assignments.
+    final mergedAssignments = {...existingAssignments, ...newAssignments};
+
+    // Check if the merged assignments are different from the existing assignments.
+    final hasChanged =
+        mergedAssignments.toString() != existingAssignments.toString();
+
+    // Create a new document with the merged assignments.
+    final doc = StickyAssignmentsDocument(
+      attributeName: attributeName,
+      attributeValue: attributeValue,
+      assignments: mergedAssignments,
+    );
+
+    // Return the key, document, and whether the document has changed.
+    return StickyBucketDocumentChange(key, doc, hasChanged);
+  }
+}
+
+class StickyBucketDocumentChange {
+  final String key;
+  final StickyAssignmentsDocument doc;
+  final bool hasChanged;
+
+  StickyBucketDocumentChange(this.key, this.doc, this.hasChanged);
+}
+
+class StickyBucketResult {
+  final int variation;
+  final bool? versionIsBlocked;
+
+  StickyBucketResult(this.variation, this.versionIsBlocked);
 }

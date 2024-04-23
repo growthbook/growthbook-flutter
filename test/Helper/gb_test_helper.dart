@@ -46,20 +46,23 @@ class GBTestHelper {
 }
 
 class GBFeaturesTest {
-  GBFeaturesTest({this.features, this.attributes});
-  final GBFeatures? features;
-  final dynamic attributes;
+  GBFeaturesTest({this.features, this.attributes, this.forcedVariations});
+  final Map<String, GBFeature>? features;
+  final Map<String, dynamic>? attributes;
+  final dynamic forcedVariations;
 
   factory GBFeaturesTest.fromMap(Map<String, dynamic> map) {
     return GBFeaturesTest(
         attributes: map['attributes'],
-        features:
-            (map['features'] as Map<String, dynamic>? ?? {}).map((key, value) {
-          return MapEntry(
-            key,
-            GBFeature.fromJson(value),
-          );
-        }));
+        forcedVariations: map['forcedVariations'],
+        features: map['features'] != null
+            ? (map['features'] as Map).map((key, value) {
+                return MapEntry(
+                  key,
+                  GBFeature.fromJson(value),
+                );
+              })
+            : null);
   }
 }
 
@@ -98,21 +101,22 @@ class GBFeatureResultTest {
 class GBContextTest {
   GBContextTest({
     this.attributes,
-    this.features,
+    this.features = const <String, GBFeature>{},
     this.qaMode = false,
     this.enabled = true,
     this.forcedVariations,
   });
 
   dynamic attributes;
-  Map<String, dynamic>? features;
+  Map<String, GBFeature> features;
   bool qaMode;
   bool enabled;
   Map<String, dynamic>? forcedVariations;
 
   factory GBContextTest.fromMap(Map<String, dynamic> map) => GBContextTest(
         attributes: map['attributes'],
-        features: map['features'],
+        features: (map['features'] as Map<String, dynamic>?)?.map((key, value) =>
+      MapEntry(key, GBFeature.fromJson(value as Map<String, dynamic>))) ?? <String, GBFeature>{},
         qaMode: map['qaMode'] ?? false,
         enabled: map['enabled'] ?? true,
         forcedVariations: map['forcedVariations'],

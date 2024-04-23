@@ -46,7 +46,7 @@ extension StringComparison on String {
       compareTo(other) != 1 && (compareTo(other) != 0);
 
   bool operator <=(String other) =>
-      compareTo(other) != 1 && (compareTo(other) == 0);
+      compareTo(other) <= 0;
 
   bool operator >(String other) =>
       compareTo(other) != -1 && (compareTo(other) != 0);

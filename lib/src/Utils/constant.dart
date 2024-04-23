@@ -27,14 +27,14 @@ typedef CacheRefreshHandler = void Function(bool);
 typedef GBNameSpace = Tuple3<String, double, double>;
 
 /// Double Tuple for GrowthBook Ranges
-typedef GBBucketRange = Tuple2<double, double>;
+typedef GBBucketRange = List<double>;
 
 /// Type Alias for Feature in GrowthBook
 /// Represents json response in this case.
 typedef GBFeatures = Map<String, GBFeature>;
 
 /// Type Alias for Condition Element in GrowthBook Rules
-typedef GBCondition = Object;
+typedef GBCondition = Map<String, dynamic>;
 
 /// Handler for Refresh Cache Request
 /// It updates back whether cache was refreshed or not
@@ -65,7 +65,7 @@ class GBFilter {
     required this.seed,
     required this.ranges,
     required this.attribute,
-    required this.hashVersion,
+    this.hashVersion = 2,
   });
 
   final String seed;
@@ -75,7 +75,7 @@ class GBFilter {
 
   final String? attribute;
 
-  final int? hashVersion;
+  final int hashVersion;
 
   factory GBFilter.fromJson(Map<String, dynamic> value) =>
       _$GBFilterFromJson(value);

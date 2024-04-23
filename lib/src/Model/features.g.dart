@@ -16,7 +16,7 @@ GBFeature _$GBFeatureFromJson(Map<String, dynamic> json) => GBFeature(
 GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
     GBFeatureRule(
       id: json['id'] as String?,
-      condition: json['condition'],
+      condition: json['condition'] as Map<String, dynamic>?,
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'],
       variations: json['variations'] as List<dynamic>?,
@@ -31,12 +31,12 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       disableStickyBucketing: json['disableStickyBucketing'] as bool?,
       bucketVersion: json['bucketVersion'] as int?,
       minBucketVersion: json['minBucketVersion'] as int?,
-      range:
-          _$JsonConverterFromJson<Map<String, dynamic>, Tuple2<double, double>>(
-              json['range'], const Tuple2Converter().fromJson),
+      range: (json['range'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList(),
       ranges: (json['ranges'] as List<dynamic>?)
           ?.map((e) =>
-              const Tuple2Converter().fromJson(e as Map<String, dynamic>))
+              (e as List<dynamic>).map((e) => (e as num).toDouble()).toList())
           .toList(),
       meta: (json['meta'] as List<dynamic>?)
           ?.map((e) => GBVariationMeta.fromJson(e as Map<String, dynamic>))
@@ -47,16 +47,10 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       seed: json['seed'] as String?,
       name: json['name'] as String?,
       phase: json['phase'] as String?,
-      tracks: json['tracks'] == null
-          ? null
-          : GBTrackData.fromJson(json['tracks'] as Map<String, dynamic>),
+      tracks: (json['tracks'] as List<dynamic>?)
+          ?.map((e) => GBTrackData.fromJson(e as Map<String, dynamic>))
+          .toList(),
       parentConditions: (json['parentConditions'] as List<dynamic>?)
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
-
-Value? _$JsonConverterFromJson<Json, Value>(
-  Object? json,
-  Value? Function(Json json) fromJson,
-) =>
-    json == null ? null : fromJson(json as Json);

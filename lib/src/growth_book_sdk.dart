@@ -31,7 +31,7 @@ class GBSDKBuilderApp {
   final String apiKey;
   final String hostURL;
   final bool? enable;
-  final bool? qaMode;
+  final bool qaMode;
   final String? encryptionKey;
   final Map<String, dynamic>? attributes;
   final Map<String, int> forcedVariations;
@@ -124,6 +124,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshHandler!(false);
   }
 
+  GBContext get context => gbContext;
+
+  dynamic get features => gbContext.features;
+
   /// Manually Refresh Cache
   Future<void> refreshCache() async {
     await featuresViewModel.fetchFeature();
@@ -135,20 +139,22 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    return GBFeatureEvaluator.evaluateFeature(
-      gbContext,
-      id,
-    );
+    return FeatureEvaluator(
+      context: gbContext,
+      featureKey: id,
+      attributeOverrides: attributeOverrides,
+    ).evaluateFeature();
   }
-  
+
   GBFeatures getFeatures() {
     return gbContext.features;
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    return GBExperimentEvaluator.evaluateExperiment(
-      context: gbContext,
-      experiment: experiment,
+    return ExperimentEvaluator(attributeOverrides: attributeOverrides)
+        .evaluateExperiment(
+      gbContext,
+      experiment,
     );
   }
 
@@ -164,7 +170,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   void setAttributeOverrides(dynamic overrides) {
     attributeOverrides = json.decode(overrides);
-    refreshStickyBucketService();
+    refreshStickyBucketService(null);
   }
 
   void setEncryptedFeatures(String encryptedString, String encryptionKey,
@@ -180,11 +186,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  Future<void> refreshStickyBucketService() async {
-    if (gbContext.stickyBucketService != null) {
+  Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
+      if (context.stickyBucketService != null) {
       final featureEvaluator =
-          GBFeatureEvaluator(attributeOverrides: attributeOverrides);
-      await featureEvaluator.refreshStickyBuckets(gbContext);
+          FeatureEvaluator(attributeOverrides: attributeOverrides, context: context, featureKey: "");
+      await featureEvaluator.refreshStickyBuckets(context, data);
     }
+  }
+
+  @override
+   void featuresAPIModelSuccessfully(FeaturedDataModel model) {
+    refreshStickyBucketService(model);
   }
 }

@@ -1,6 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'experiment.g.dart';
@@ -9,7 +8,7 @@ part 'experiment.g.dart';
 @JsonSerializable(createToJson: false)
 class GBExperiment {
   GBExperiment({
-    this.key,
+    required this.key,
     this.variations = const [],
     this.namespace,
     this.condition,
@@ -33,7 +32,7 @@ class GBExperiment {
   });
 
   /// The globally unique tracking key for the experiment
-  String? key;
+  String key;
 
   /// The different variations to choose between
   List variations = [];
@@ -48,7 +47,7 @@ class GBExperiment {
   String? fallbackAttribute;
 
   /// How to weight traffic between variations. Must add to 1.
-  List? weights;
+  List<double>? weights;
 
   /// If set to false, always return the control (first variation)
   bool active;
@@ -84,7 +83,7 @@ class GBExperiment {
   int? minBucketVersion;
 
   /// Array of ranges, one per variation
-  @Tuple2Converter()
+  // @Tuple2Converter()
   List<GBBucketRange>? ranges;
 
   /// Meta info about the variations
@@ -110,14 +109,14 @@ class GBExperiment {
 @JsonSerializable(createToJson: false)
 class GBExperimentResult {
   GBExperimentResult({
-    this.inExperiment,
+    required this.inExperiment,
     this.variationID,
     this.value,
     this.hashUsed,
-    this.hasAttributes,
+    this.hashAttribute,
     this.hashValue,
     this.featureId,
-    this.key,
+    required this.key,
     this.name,
     this.bucket,
     this.passthrough,
@@ -125,7 +124,7 @@ class GBExperimentResult {
   });
 
   /// Whether or not the user is part of the experiment
-  bool? inExperiment;
+  bool inExperiment;
 
   /// The array index of the assigned variation
   int? variationID;
@@ -137,7 +136,7 @@ class GBExperimentResult {
   bool? hashUsed;
 
   /// The user attribute used to assign a variation
-  String? hasAttributes;
+  String? hashAttribute;
 
   /// The value of that attribute
   String? hashValue;
@@ -147,7 +146,7 @@ class GBExperimentResult {
 
   //new properties v0.4.0
   /// The unique key for the assigned variation
-  String? key;
+  String key;
 
   /// The human-readable name of the assigned variation
   String? name;

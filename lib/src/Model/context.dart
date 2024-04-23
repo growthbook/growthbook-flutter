@@ -15,9 +15,9 @@ class GBContext {
     this.stickyBucketIdentifierAttributes,
     this.stickyBucketService,
     this.remoteEval,
-    this.qaMode,
+    this.qaMode = false,
     this.trackingCallBack,
-    this.features = const {},
+    this.features = const <String, GBFeature>{},
     this.backgroundSync
   });
 
@@ -48,14 +48,14 @@ class GBContext {
   bool? remoteEval;
 
   /// If true, random assignment is disabled and only explicitly forced variations are used.
-  bool? qaMode;
+  bool qaMode;
 
   /// A function that takes experiment and result as arguments.
   TrackingCallBack? trackingCallBack;
 
   /// Keys are unique identifiers for the features and the values are Feature objects.
   /// Feature definitions - To be pulled from API / Cache
-  GBFeatures features = <String, GBFeature>{};
+  GBFeatures features;
 
   ///Disable background streaming connection
   bool? backgroundSync;

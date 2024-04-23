@@ -41,45 +41,45 @@ class GBConditionEvaluator {
   /// - attributes : User Attributes
   /// - condition : to be evaluated
 
-  bool evaluateCondition(Map<String, dynamic> attributes, Object conditionOBJ) {
+  bool evaluateCondition(
+      Map<String, dynamic> attributes, Map<String, dynamic> conditionOBJ) {
     if (conditionOBJ.isArray) {
       return false;
-    } else {
-      conditionOBJ as Map;
+    }
 
-      /// If conditionObj has a key $or, return evalOr(attributes, condition["$or"])
-      var targetItems = conditionOBJ["\$or"];
-      if (targetItems != null) {
-        return evalOr(attributes, targetItems);
-      }
+    /// If conditionObj has a key $or, return evalOr(attributes, condition["$or"])
+    var targetItems = conditionOBJ["\$or"];
+    if (targetItems != null) {
+      return evalOr(attributes, targetItems);
+    }
 
-      /// If conditionObj has a key $nor, return !evalOr(attributes, condition["$nor"])
-      targetItems = conditionOBJ["\$nor"];
-      if (targetItems != null) {
-        return !evalOr(attributes, targetItems);
-      }
+    /// If conditionObj has a key $nor, return !evalOr(attributes, condition["$nor"])
+    targetItems = conditionOBJ["\$nor"];
+    if (targetItems != null) {
+      return !evalOr(attributes, targetItems);
+    }
 
-      /// If conditionObj has a key $and, return !evalAnd(attributes, condition["$and"])
-      targetItems = conditionOBJ["\$and"];
-      if (targetItems != null) {
-        return evalAnd(attributes, targetItems);
-      }
+    /// If conditionObj has a key $and, return !evalAnd(attributes, condition["$and"])
+    targetItems = conditionOBJ["\$and"];
+    if (targetItems != null) {
+      return evalAnd(attributes, targetItems);
+    }
 
-      // If conditionObj has a key $not, return !evalCondition(attributes, condition["$not"])
-      var targetItem = conditionOBJ["\$not"];
-      if (targetItem != null) {
-        return !evaluateCondition(attributes, targetItem);
-      }
-      // Loop through the conditionObj key/value pairs
-      for (final key in conditionOBJ.keys) {
-        final element = getPath(attributes, key);
-        final value = conditionOBJ[key];
-        if (!evalConditionValue(value, element)) {
-          return false;
-        }
+    // If conditionObj has a key $not, return !evalCondition(attributes, condition["$not"])
+    var targetItem = conditionOBJ["\$not"];
+    if (targetItem != null) {
+      return !evaluateCondition(attributes, targetItem);
+    }
+    // Loop through the conditionObj key/value pairs
+    for (final key in conditionOBJ.keys) {
+      final element = getPath(attributes, key);
+      final value = conditionOBJ[key];
+
+      if (!evalConditionValue(value, element)) {
+        return false;
       }
     }
-    // Return true
+
     return true;
   }
 
@@ -242,7 +242,6 @@ class GBConditionEvaluator {
       }
     }
 
-    /// Return true
     return true;
   }
 

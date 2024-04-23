@@ -10,10 +10,10 @@ GBFilter _$GBFilterFromJson(Map<String, dynamic> json) => GBFilter(
       seed: json['seed'] as String,
       ranges: (json['ranges'] as List<dynamic>)
           .map((e) =>
-              const Tuple2Converter().fromJson(e as Map<String, dynamic>))
+              (e as List<dynamic>).map((e) => (e as num).toDouble()).toList())
           .toList(),
       attribute: json['attribute'] as String?,
-      hashVersion: json['hashVersion'] as int?,
+      hashVersion: json['hashVersion'] as int? ?? 2,
     );
 
 GBVariationMeta _$GBVariationMetaFromJson(Map<String, dynamic> json) =>

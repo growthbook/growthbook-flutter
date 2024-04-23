@@ -43,7 +43,6 @@ Now you can start/stop tests, adjust coverage and variation weights, and apply a
 ```dart
 final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
   apiKey: "<API_KEY>",
-  sseUrl: <GrowthBook_SSEURL/API_KEY>,
   attributes: {
     /// Specify attributes.
   },
@@ -59,7 +58,6 @@ There are additional properties which can be setup at the time of initialization
 ```dart
     final GrowthBookSDK newSdkInstance =await GBSDKBuilderApp(
     apiKey: "<API_KEY>",
-    sseUrl: <GrowthBook_SSEURL/API_KEY>,
     attributes: {
      /// Specify user attributes.
     },
@@ -124,9 +122,6 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
-  
-  /// SSE URL
-  String? sseUrl;
 
   /// Host URL for GrowthBook
   String? hostURL;
@@ -461,7 +456,6 @@ To enable streaming updates set backgroundSync variable to "true" and add stream
 
 final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
   apiKey: "<API_KEY>",
-  sseUrl: "<GrowthBook_SSEURL/API_KEY>",
   attributes: {
     /// Specify attributes.
   },
