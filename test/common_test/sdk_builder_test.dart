@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
@@ -151,5 +152,29 @@ void main() {
       );
       manager.clearCache();
     });
+    test(
+      '- onInitializationFailure callback test',
+      () async {
+        GBError? error;
+
+        await GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: attr,
+          client: const MockNetworkClient(error: true),
+          growthBookTrackingCallBack: (exp, result) {},
+          gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
+          onInitializationFailure: (e) => error = e,
+          backgroundSync: false,
+        )
+            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+            .initialize();
+
+        expect(error != null, true);
+        expect(error?.error is DioException, true);
+        expect(error?.stackTrace != null, true);
+        manager.clearCache();
+      },
+    );
   });
 }

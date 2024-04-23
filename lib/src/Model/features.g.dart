@@ -13,6 +13,11 @@ GBFeature _$GBFeatureFromJson(Map<String, dynamic> json) => GBFeature(
       defaultValue: json['defaultValue'],
     );
 
+Map<String, dynamic> _$GBFeatureToJson(GBFeature instance) => <String, dynamic>{
+      'rules': instance.rules,
+      'defaultValue': instance.defaultValue,
+    };
+
 GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
     GBFeatureRule(
       id: json['id'] as String?,
@@ -54,3 +59,30 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
+
+Map<String, dynamic> _$GBFeatureRuleToJson(GBFeatureRule instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'condition': instance.condition,
+      'parentConditions': instance.parentConditions,
+      'coverage': instance.coverage,
+      'force': instance.force,
+      'variations': instance.variations,
+      'key': instance.key,
+      'weights': instance.weights,
+      'namespace': instance.namespace,
+      'hashAttribute': instance.hashAttribute,
+      'fallbackAttribute': instance.fallbackAttribute,
+      'hashVersion': instance.hashVersion,
+      'disableStickyBucketing': instance.disableStickyBucketing,
+      'bucketVersion': instance.bucketVersion,
+      'minBucketVersion': instance.minBucketVersion,
+      'range': instance.range,
+      'ranges': instance.ranges,
+      'meta': instance.meta,
+      'filters': instance.filters,
+      'seed': instance.seed,
+      'name': instance.name,
+      'phase': instance.phase,
+      'tracks': instance.tracks,
+    };

@@ -6,7 +6,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'features.g.dart';
 
 /// A Feature object consists of possible values plus rules for how to assign values to users.
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFeature {
   GBFeature({
     this.rules,
@@ -22,10 +22,12 @@ class GBFeature {
 
   factory GBFeature.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFeatureToJson(this); 
 }
 
 /// Rule object consists of various definitions to apply to calculate feature value
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFeatureRule {
   GBFeatureRule({
     this.id,
@@ -129,6 +131,8 @@ class GBFeatureRule {
 
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureRuleFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);     
 }
 
 /// Enum For defining feature value source.

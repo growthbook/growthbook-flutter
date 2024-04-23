@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tuple/tuple.dart';
@@ -40,6 +41,8 @@ typedef GBCondition = Map<String, dynamic>;
 /// It updates back whether cache was refreshed or not
 typedef GBCacheRefreshHandler = void Function(bool);
 
+typedef GBStickyBucketingService = LocalStorageStickyBucketService;
+
 /// A function that takes experiment and result as arguments.
 typedef TrackingCallBack = void Function(GBExperiment, GBExperimentResult);
 
@@ -59,7 +62,7 @@ class GBError {
 }
 
 /// Object used for mutual exclusion and filtering users out of experiments based on random hashes
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBFilter {
   GBFilter({
     required this.seed,
@@ -77,12 +80,13 @@ class GBFilter {
 
   final int hashVersion;
 
-  factory GBFilter.fromJson(Map<String, dynamic> value) =>
-      _$GBFilterFromJson(value);
+  factory GBFilter.fromJson(Map<String, dynamic> value) => _$GBFilterFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFilterToJson(this);
 }
 
 /// Meta info about the variations
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBVariationMeta {
   GBVariationMeta({
     this.key,
@@ -96,12 +100,13 @@ class GBVariationMeta {
 
   final bool? passthrough;
 
-  factory GBVariationMeta.fromJson(Map<String, dynamic> value) =>
-      _$GBVariationMetaFromJson(value);
+  factory GBVariationMeta.fromJson(Map<String, dynamic> value) => _$GBVariationMetaFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBVariationMetaToJson(this);
 }
 
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBTrackData {
   GBTrackData({
     required this.experiment,
@@ -112,6 +117,7 @@ class GBTrackData {
 
   final GBExperimentResult experimentResult;
 
-  factory GBTrackData.fromJson(Map<String, dynamic> value) =>
-      _$GBTrackDataFromJson(value);
+  factory GBTrackData.fromJson(Map<String, dynamic> value) => _$GBTrackDataFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBTrackDataToJson(this);
 }

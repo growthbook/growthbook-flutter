@@ -1,3 +1,6 @@
+# 3.6.0+0
+- onInitializationFailure callback
+
 # 3.5.0+0
 - generating padded version strings
 - extension StringComparison for comparing strings lexicographically

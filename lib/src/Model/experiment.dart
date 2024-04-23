@@ -5,7 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'experiment.g.dart';
 
 /// Defines a single experiment
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBExperiment {
   GBExperiment({
     required this.key,
@@ -106,7 +106,7 @@ class GBExperiment {
 }
 
 /// The result of running an Experiment given a specific Context
-@JsonSerializable(createToJson: false)
+@JsonSerializable()
 class GBExperimentResult {
   GBExperimentResult({
     required this.inExperiment,

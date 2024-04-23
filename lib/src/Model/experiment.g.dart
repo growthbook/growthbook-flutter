@@ -41,6 +41,31 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
       phase: json['phase'] as String?,
     );
 
+Map<String, dynamic> _$GBExperimentToJson(GBExperiment instance) =>
+    <String, dynamic>{
+      'key': instance.key,
+      'variations': instance.variations,
+      'namespace': instance.namespace,
+      'hashAttribute': instance.hashAttribute,
+      'fallbackAttribute': instance.fallbackAttribute,
+      'weights': instance.weights,
+      'active': instance.active,
+      'coverage': instance.coverage,
+      'condition': instance.condition,
+      'parentConditions': instance.parentConditions,
+      'force': instance.force,
+      'hashVersion': instance.hashVersion,
+      'disableStickyBucketing': instance.disableStickyBucketing,
+      'bucketVersion': instance.bucketVersion,
+      'minBucketVersion': instance.minBucketVersion,
+      'ranges': instance.ranges,
+      'meta': instance.meta,
+      'filters': instance.filters,
+      'seed': instance.seed,
+      'name': instance.name,
+      'phase': instance.phase,
+    };
+
 GBExperimentResult _$GBExperimentResultFromJson(Map<String, dynamic> json) =>
     GBExperimentResult(
       inExperiment: json['inExperiment'] as bool,
@@ -56,3 +81,19 @@ GBExperimentResult _$GBExperimentResultFromJson(Map<String, dynamic> json) =>
       passthrough: json['passthrough'] as bool?,
       stickyBucketUsed: json['stickyBucketUsed'] as bool?,
     );
+
+Map<String, dynamic> _$GBExperimentResultToJson(GBExperimentResult instance) =>
+    <String, dynamic>{
+      'inExperiment': instance.inExperiment,
+      'variationID': instance.variationID,
+      'value': instance.value,
+      'hashUsed': instance.hashUsed,
+      'hashAttribute': instance.hashAttribute,
+      'hashValue': instance.hashValue,
+      'featureId': instance.featureId,
+      'key': instance.key,
+      'name': instance.name,
+      'bucket': instance.bucket,
+      'passthrough': instance.passthrough,
+      'stickyBucketUsed': instance.stickyBucketUsed,
+    };

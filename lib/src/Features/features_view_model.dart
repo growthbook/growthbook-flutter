@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -10,15 +11,14 @@ class FeatureViewModel {
   FeatureViewModel({
     required this.delegate,
     required this.source,
-    this.encryptionKey,
+    required this.encryptionKey,
     this.backgroundSync,
   });
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
-  String? encryptionKey;
+  final String encryptionKey;
   final bool? backgroundSync;
 
-  // Caching Manager
   final CachingManager manager = CachingManager();
 
   Future<void> connectBackgroundSync() async {
@@ -35,7 +35,8 @@ class FeatureViewModel {
   }
 
   Future<void> fetchFeature() async {
-    GBFeatures? receivedData = manager.getData(Constant.featureCache);
+    final receivedData =
+        await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData == null) {
       await source.fetchFeatures(
@@ -53,7 +54,9 @@ class FeatureViewModel {
         ),
       );
     } else {
-      final data = FeaturedDataModel.fromJson(receivedData);
+      String receivedDataJson = utf8.decode(receivedData);
+      final receivedDataJsonMap = json.decode(receivedDataJson);
+      final data = FeaturedDataModel.fromJson(receivedDataJsonMap);
       delegate.featuresFetchedSuccessfully(data.features);
     }
   }
@@ -61,7 +64,6 @@ class FeatureViewModel {
   void prepareFeaturesData(dynamic data) {
     try {
       final Map<String, dynamic>? jsonPetitions = jsonDecode(data);
-
       switch (jsonPetitions) {
         case null:
           log("JSON is null.");
@@ -85,10 +87,11 @@ class FeatureViewModel {
   void handleValidFeatures(dynamic features) {
     switch (features) {
       case Map<String, GBFeature>:
+        delegate.featuresAPIModelSuccessfully(features);
         delegate.featuresFetchedSuccessfully(features);
 
         final featureData = utf8.encode(jsonEncode(features));
-        manager.putData(Constant.featureCache, featureData);
+        manager.putData(fileName: Constant.featureCache, content: featureData);
         break;
 
       default:
@@ -106,7 +109,7 @@ class FeatureViewModel {
       return;
     }
 
-    if (encryptionKey != null && encryptionKey!.isEmpty) {
+    if (encryptionKey.isEmpty) {
       logError("Encryption key is missing.");
       return;
     }
@@ -115,13 +118,13 @@ class FeatureViewModel {
       final crypto = Crypto();
       final extractedFeatures = crypto.getFeaturesFromEncryptedFeatures(
         encryptedString,
-        encryptionKey ?? "",
+        encryptionKey,
       );
 
       if (extractedFeatures != null) {
         delegate.featuresFetchedSuccessfully(extractedFeatures);
         final featureData = utf8.encode(jsonEncode(extractedFeatures));
-        manager.putData(Constant.featureCache, featureData);
+        manager.putData(fileName: Constant.featureCache, content: featureData);
       } else {
         logError("Failed to extract features from encrypted string.");
       }
@@ -145,7 +148,10 @@ class FeatureViewModel {
   }
 
   void cacheFeatures(FeaturedDataModel data) {
-    final GBFeatures features = data.features;
-    manager.putData(Constant.featureCache, features);
+    // final GBFeatures features = data.toJson(); //.features;
+    String jsonString = json.encode(data.toJson());
+    Uint8List bytes = utf8.encode(jsonString);
+
+    manager.putData(fileName: Constant.featureCache, content: bytes);
   }
 }
