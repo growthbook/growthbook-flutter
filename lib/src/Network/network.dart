@@ -16,6 +16,13 @@ abstract class BaseClient {
     OnError onError,
   );
 
+  Future<void> consumePostRequest(
+    String baseUrl,
+    Map<String, dynamic> params,
+    OnSuccess onSuccess,
+    OnError onError,
+  );
+
   Future<void> consumeSseConnections(
     String baseUrl,
     String path,
@@ -39,8 +46,8 @@ class DioClient extends BaseClient {
     final dio = _dio..options.baseUrl = baseUrl;
 
     try {
-      final data = await dio.get(path);
-      onSuccess(data.data);
+      final response = await dio.get(path);
+      onSuccess(response.data);
     } catch (e, s) {
       onError(e, s);
     }
@@ -55,7 +62,6 @@ class DioClient extends BaseClient {
   ) async {
     final dio = _dio..options.baseUrl = baseUrl;
 
-    // Define a function to listen to SSE and handle retries
     Future<void> listenAndRetry() async {
       final Response<ResponseBody> resp = await dio.get(
         path,
@@ -63,7 +69,7 @@ class DioClient extends BaseClient {
       );
 
       // Listen to SSE stream
-      await resp.data?.stream
+      resp.data?.stream
           .cast<List<int>>()
           .transform(const Utf8Decoder())
           .transform(const SseEventTransformer())
@@ -75,24 +81,42 @@ class DioClient extends BaseClient {
                 onSuccess(jsonMap);
               }
             },
-            cancelOnError: true, // Cancel the subscription on error
             onError: (dynamic e, dynamic s) async {
               onError;
-              // Retry listening after a delay
-              await Future.delayed(
-                  const Duration(seconds: 5)); // Adjust the delay as needed
-              await listenAndRetry(); // Recursive call for retry
+              await Future.delayed(const Duration(seconds: 5));
+              await listenAndRetry();
             },
             onDone: () async {
-              print("SSE stream closed. Retrying...");
-              await Future.delayed(
-                  const Duration(seconds: 5)); // Adjust the delay as needed
-              await listenAndRetry(); // Recursive call for retry
+              await Future.delayed(const Duration(seconds: 5));
+              await listenAndRetry();
             },
           );
     }
 
-    // Call the function to start listening with retries
     await listenAndRetry();
+  }
+
+  @override
+  Future<void> consumePostRequest(
+    String baseUrl,
+    Map<String, dynamic> params,
+    OnSuccess onSuccess,
+    OnError onError,
+  ) async {
+    try {
+      Response response = await _dio.post(
+        baseUrl,
+        data: params,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      onSuccess(response.data);
+    } catch (e, s) {
+      onError(e, s);
+    }
   }
 }

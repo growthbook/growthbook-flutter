@@ -1,3 +1,6 @@
+# 3.7.0+0
+- Remote Evaluation
+
 # 3.6.0+0
 - onInitializationFailure callback
 

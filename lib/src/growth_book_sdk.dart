@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
+import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -25,6 +27,7 @@ class GBSDKBuilderApp {
     this.refreshHandler,
     this.stickyBucketService,
     this.backgroundSync,
+    this.remoteEval = false,
   }) : assert(
           hostURL.endsWith('/'),
           'Invalid host url: $hostURL. The hostUrl should be end with `/`, example: `https://example.growthbook.io/`',
@@ -41,6 +44,7 @@ class GBSDKBuilderApp {
   final GBFeatures gbFeatures;
   final OnInitializationFailure? onInitializationFailure;
   final bool? backgroundSync;
+  final bool remoteEval;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
@@ -57,6 +61,7 @@ class GBSDKBuilderApp {
       features: gbFeatures,
       stickyBucketService: stickyBucketService,
       backgroundSync: backgroundSync,
+      remoteEval: remoteEval,
     );
     final gb = GrowthBookSDK._(
       context: gbContext,
@@ -75,8 +80,7 @@ class GBSDKBuilderApp {
     return this;
   }
 
-  GBSDKBuilderApp setStickyBucketService(
-      StickyBucketService? stickyBucketService) {
+  GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
     return this;
   }
@@ -97,6 +101,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _refreshHandler = refreshHandler,
         _gbFeatures = gbFeatures,
         _baseClient = client ?? DioClient(),
+        _forcedFeatures = [],
         _attributeOverrides = {};
 
   final GBContext _context;
@@ -109,6 +114,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final GBFeatures? _gbFeatures;
 
+  List<dynamic> _forcedFeatures;
+
   Map<String, dynamic> _attributeOverrides;
 
   /// The complete data regarding features & attributes etc.
@@ -118,13 +125,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   dynamic get features => _context.features;
 
   @override
-  void featuresFetchedSuccessfully(GBFeatures gbFeatures) {
+  void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote}) {
     _context.features = gbFeatures;
     _refreshHandler!(true);
   }
 
   @override
-  void featuresFetchFailed(GBError? error) {
+  void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (_refreshHandler != null) {
       _refreshHandler!(false);
@@ -145,42 +152,48 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _context.features = _gbFeatures!;
     }
     if (_context.backgroundSync != false) {
-      featureViewModel.connectBackgroundSync();
+      await featureViewModel.connectBackgroundSync();
     }
-    await featureViewModel.fetchFeature();
+    if (_context.remoteEval) {
+      refreshForRemoteEval();
+    } else {
+      await featureViewModel.fetchFeatures(context.getFeaturesURL());
+    }
   }
 
   GBFeatureResult feature(String id) {
-    return FeatureEvaluator(
-            attributeOverrides: _attributeOverrides,
-            context: context,
-            featureKey: id)
+    return FeatureEvaluator(attributeOverrides: _attributeOverrides, context: context, featureKey: id)
         .evaluateFeature();
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    return ExperimentEvaluator(attributeOverrides: _attributeOverrides)
-        .evaluateExperiment(context, experiment);
+    return ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
   }
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument>
-      getStickyBucketAssignmentDocs() {
+  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
   /// Replaces the Map of user attributes that are used to assign variations
   void setAttributes(Map<String, dynamic> attributes) {
-    context.attributes = attributes;
+    _context.attributes = attributes;
     refreshStickyBucketService(null);
   }
 
   void setAttributeOverrides(dynamic overrides) {
     _attributeOverrides = json.decode(overrides);
-    refreshStickyBucketService(null);
+    if (context.stickyBucketService != null) {
+      refreshStickyBucketService(null);
+    }
+    refreshForRemoteEval();
   }
 
-  void setEncryptedFeatures(String encryptedString, String encryptionKey,
-      [CryptoProtocol? subtle]) {
+  /// The setForcedFeatures method updates forced features
+  void setForcedFeatures(List<dynamic> forcedFeatures) {
+    _forcedFeatures = forcedFeatures;
+  }
+
+  void setEncryptedFeatures(String encryptedString, String encryptionKey, [CryptoProtocol? subtle]) {
     CryptoProtocol crypto = subtle ?? Crypto();
     var features = crypto.getFeaturesFromEncryptedFeatures(
       encryptedString,
@@ -192,6 +205,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  void setForcedVariations(Map<String, dynamic> forcedVariations) {
+    _context.forcedVariation = forcedVariations;
+    refreshForRemoteEval();
+  }
+
   @override
   void featuresAPIModelSuccessfully(FeaturedDataModel model) {
     refreshStickyBucketService(model);
@@ -199,11 +217,34 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      final featureEvaluator = FeatureEvaluator(
-          attributeOverrides: _attributeOverrides,
-          context: context,
-          featureKey: "");
+      final featureEvaluator =
+          FeatureEvaluator(attributeOverrides: _attributeOverrides, context: context, featureKey: "");
       await featureEvaluator.refreshStickyBuckets(context, data);
     }
+  }
+
+  Future<void> refreshForRemoteEval() async {
+    if (!context.remoteEval) return;
+    final featureViewModel = FeatureViewModel(
+      backgroundSync: _context.backgroundSync ?? false,
+      encryptionKey: _context.encryptionKey ?? "",
+      delegate: this,
+      source: FeatureDataSource(
+        client: _baseClient,
+        context: _context,
+      ),
+    );
+
+    RemoteEvalModel payload = RemoteEvalModel(
+      attributes: context.attributes,
+      forcedFeatures: _forcedFeatures,
+      forcedVariations: context.forcedVariation,
+    );
+
+    await featureViewModel.fetchFeatures(
+      context.getRemoteEvalUrl(),
+      remoteEval: context.remoteEval,
+      payload: payload,
+    );
   }
 }

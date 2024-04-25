@@ -10,18 +10,16 @@ class DataSourceMock extends FeaturesFlowDelegate {
   bool get isError => _isError;
 
   @override
-  void featuresFetchedSuccessfully(GBFeatures gbFeatures) {
+  void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote}) {
     _isSuccess = true;
     _isError = false;
   }
-  
-  @override
-  void featuresAPIModelSuccessfully(FeaturedDataModel model) {
-    
-  }
 
   @override
-  void featuresFetchFailed(Object? error) {
+  void featuresAPIModelSuccessfully(FeaturedDataModel model) {}
+
+  @override
+  void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _isError = true;
     _isSuccess = false;
   }

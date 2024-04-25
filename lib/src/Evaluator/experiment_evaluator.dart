@@ -2,7 +2,9 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
+import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 class ExperimentEvaluator {
   Map<String, dynamic> attributeOverrides;
@@ -58,7 +60,6 @@ class ExperimentEvaluator {
     final hashAttribute = hashAttributeAndValue[0];
     final hashValue = hashAttributeAndValue[1];
 
-// TODO: check if "null" might be the case
     if (hashValue.isEmpty || hashValue == "null") {
       log('Skip because missing hashAttribute');
       return _getExperimentResult(
@@ -80,6 +81,8 @@ class ExperimentEvaluator {
         experiment.bucketVersion ?? 0,
         experiment.minBucketVersion ?? 0,
         experiment.meta ?? [],
+        experiment.hashAttribute ?? "id",
+        experiment.fallbackAttribute!,
       );
       foundStickyBucket = stickyBucketResult.variation >= 0;
       assigned = stickyBucketResult.variation;
@@ -313,11 +316,13 @@ class ExperimentEvaluator {
     int experimentBucketVersion,
     int minExperimentBucketVersion,
     List<GBVariationMeta> meta,
+    String expHashAttribute,
+    String expFallBackAttribute,
   ) {
     // Get the assignment key for the given experiment key and version.
     final assignmentKey = getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
     // Fetch all sticky bucket assignments from the context.
-    final assignments = getStickyBucketAssignments(context);
+    final assignments = getStickyBucketAssignments(context, expHashAttribute, expFallBackAttribute);
 
     // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
     if (minExperimentBucketVersion > 0) {
@@ -350,12 +355,41 @@ class ExperimentEvaluator {
     return StickyBucketResult(variationIndex, null);
   }
 
-  Map<String, String> getStickyBucketAssignments(GBContext context) {
+  Map<String, String> getStickyBucketAssignments(GBContext context,
+      String? expHashAttribute, String? expFallBackAttribute) {
+    if (context.stickyBucketAssignmentDocs == null) {
+      return {};
+    }
+
+    final hashAttributeAndValue = GBUtils.getHashAttribute(
+        context: context,
+        fallback: null,
+        attributeOverrides: attributeOverrides);
+
+    final hashKey = "${hashAttributeAndValue[0]}||${hashAttributeAndValue[1]}";
+
+    final fallbackAttributeAndValue = GBUtils.getHashAttribute(
+        context: context,
+        attr: null,
+        fallback: expFallBackAttribute,
+        attributeOverrides: attributeOverrides);
+
+    final fallbackKey = (fallbackAttributeAndValue[1].isNotEmpty)
+        ? "${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}"
+        : null;
+
     final mergedAssignments = <String, String>{};
 
-    context.stickyBucketAssignmentDocs?.values.forEach((doc) {
-      mergedAssignments.addAll(doc.assignments);
-    });
+    if (fallbackKey != null &&
+        context.stickyBucketAssignmentDocs![fallbackKey] != null) {
+      mergedAssignments.addAll(
+          context.stickyBucketAssignmentDocs![fallbackKey]!.assignments);
+    }
+
+    if (context.stickyBucketAssignmentDocs![hashKey] != null) {
+      mergedAssignments
+          .addAll(context.stickyBucketAssignmentDocs![hashKey]!.assignments);
+    }
 
     return mergedAssignments;
   }

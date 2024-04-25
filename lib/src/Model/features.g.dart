@@ -32,10 +32,10 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       namespace: json['namespace'] as List<dynamic>?,
       hashAttribute: json['hashAttribute'] as String?,
       fallbackAttribute: json['fallbackAttribute'] as String?,
-      hashVersion: json['hashVersion'] as int?,
+      hashVersion: (json['hashVersion'] as num?)?.toInt(),
       disableStickyBucketing: json['disableStickyBucketing'] as bool?,
-      bucketVersion: json['bucketVersion'] as int?,
-      minBucketVersion: json['minBucketVersion'] as int?,
+      bucketVersion: (json['bucketVersion'] as num?)?.toInt(),
+      minBucketVersion: (json['minBucketVersion'] as num?)?.toInt(),
       range: (json['range'] as List<dynamic>?)
           ?.map((e) => (e as num).toDouble())
           .toList(),
