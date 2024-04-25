@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
+import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 
 class ExperimentHelper {
   // Singleton instance

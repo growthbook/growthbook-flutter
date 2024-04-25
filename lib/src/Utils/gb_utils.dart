@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit

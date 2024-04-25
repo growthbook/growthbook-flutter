@@ -1,6 +1,8 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/converter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'features.g.dart';
@@ -23,7 +25,7 @@ class GBFeature {
   factory GBFeature.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureFromJson(value);
 
-  Map<String, dynamic> toJson() => _$GBFeatureToJson(this); 
+  Map<String, dynamic> toJson() => _$GBFeatureToJson(this);
 }
 
 /// Rule object consists of various definitions to apply to calculate feature value
@@ -103,11 +105,9 @@ class GBFeatureRule {
   int? minBucketVersion;
 
   /// A more precise version of coverage
-  @Tuple2Converter()
   GBBucketRange? range;
 
   /// Ranges for experiment variations
-  @Tuple2Converter()
   List<GBBucketRange>? ranges;
 
   /// Meta info about the experiment variations
@@ -132,7 +132,7 @@ class GBFeatureRule {
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureRuleFromJson(value);
 
-  Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);     
+  Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);
 }
 
 /// Enum For defining feature value source.

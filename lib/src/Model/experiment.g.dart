@@ -21,11 +21,11 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
           .toList(),
       active: json['active'] as bool? ?? true,
       coverage: (json['coverage'] as num?)?.toDouble(),
-      force: json['force'] as int?,
+      force: (json['force'] as num?)?.toInt(),
       hashVersion: (json['hashVersion'] as num?)?.toDouble(),
       disableStickyBucketing: json['disableStickyBucketing'] as bool?,
-      bucketVersion: json['bucketVersion'] as int?,
-      minBucketVersion: json['minBucketVersion'] as int?,
+      bucketVersion: (json['bucketVersion'] as num?)?.toInt(),
+      minBucketVersion: (json['minBucketVersion'] as num?)?.toInt(),
       ranges: (json['ranges'] as List<dynamic>?)
           ?.map((e) =>
               (e as List<dynamic>).map((e) => (e as num).toDouble()).toList())
@@ -64,36 +64,4 @@ Map<String, dynamic> _$GBExperimentToJson(GBExperiment instance) =>
       'seed': instance.seed,
       'name': instance.name,
       'phase': instance.phase,
-    };
-
-GBExperimentResult _$GBExperimentResultFromJson(Map<String, dynamic> json) =>
-    GBExperimentResult(
-      inExperiment: json['inExperiment'] as bool,
-      variationID: json['variationID'] as int?,
-      value: json['value'],
-      hashUsed: json['hashUsed'] as bool?,
-      hashAttribute: json['hashAttribute'] as String?,
-      hashValue: json['hashValue'] as String?,
-      featureId: json['featureId'] as String?,
-      key: json['key'] as String,
-      name: json['name'] as String?,
-      bucket: (json['bucket'] as num?)?.toDouble(),
-      passthrough: json['passthrough'] as bool?,
-      stickyBucketUsed: json['stickyBucketUsed'] as bool?,
-    );
-
-Map<String, dynamic> _$GBExperimentResultToJson(GBExperimentResult instance) =>
-    <String, dynamic>{
-      'inExperiment': instance.inExperiment,
-      'variationID': instance.variationID,
-      'value': instance.value,
-      'hashUsed': instance.hashUsed,
-      'hashAttribute': instance.hashAttribute,
-      'hashValue': instance.hashValue,
-      'featureId': instance.featureId,
-      'key': instance.key,
-      'name': instance.name,
-      'bucket': instance.bucket,
-      'passthrough': instance.passthrough,
-      'stickyBucketUsed': instance.stickyBucketUsed,
     };

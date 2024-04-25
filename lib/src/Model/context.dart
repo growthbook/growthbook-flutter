@@ -14,11 +14,11 @@ class GBContext {
     this.stickyBucketAssignmentDocs,
     this.stickyBucketIdentifierAttributes,
     this.stickyBucketService,
-    this.remoteEval,
+    this.remoteEval = false,
     this.qaMode = false,
     this.trackingCallBack,
     this.features = const <String, GBFeature>{},
-    this.backgroundSync
+    this.backgroundSync,
   });
 
   /// Registered API key for GrowthBook SDK.
@@ -45,7 +45,7 @@ class GBContext {
 
   StickyBucketService? stickyBucketService;
 
-  bool? remoteEval;
+  bool remoteEval;
 
   /// If true, random assignment is disabled and only explicitly forced variations are used.
   bool qaMode;
@@ -59,4 +59,20 @@ class GBContext {
 
   ///Disable background streaming connection
   bool? backgroundSync;
+
+  String? getFeaturesURL() {
+    if (hostURL != null && apiKey != null) {
+      return '${hostURL}api/features/$apiKey';
+    } else {
+      return null;
+    }
+  }
+
+  String? getRemoteEvalUrl() {
+    if (hostURL != null && apiKey != null) {
+      return '${hostURL}api/eval/$apiKey';
+    } else {
+      return null;
+    }
+  }
 }

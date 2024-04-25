@@ -40,7 +40,7 @@ void main() {
       test(
         'success feature-view model.',
         () async {
-          await featureViewModel.fetchFeature();
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
           expect(dataSourceMock.isSuccess, true);
         },
       );
