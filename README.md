@@ -1,6 +1,6 @@
 # GrowthBook SDK for flutter.
 
-![](https://docs.growthbook.io/images/hero2.png)
+![](https://docs.growthbook.io/images/hero-flutter-sdk.png)
 
 
 
