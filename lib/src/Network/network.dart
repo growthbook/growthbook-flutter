@@ -70,7 +70,6 @@ class DioClient extends BaseClient {
         options: Options(responseType: ResponseType.stream),
       );
 
-      // Listen to SSE stream
       resp.data?.stream
           .cast<List<int>>()
           .transform(const Utf8Decoder())
@@ -89,7 +88,7 @@ class DioClient extends BaseClient {
           if (!errorOccurred) {
             errorOccurred = true;
             await Future.delayed(const Duration(seconds: 5));
-            await listenAndRetry(); // Recursive call for retry
+            await listenAndRetry();
           }
         },
         onDone: () async {
