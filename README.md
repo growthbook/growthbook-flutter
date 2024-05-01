@@ -6,7 +6,8 @@
 
 ## Overview
 
-GrowthBook is an open source feature flagging and experimentation platform that makes it easy to adjust what features are shown users, and run A/B tests, without deploying new code. There are two parts to GrowthBook, the GrowthBook Application, and the SDKs which implement this functionality to your code base. This Flutter SDK allows you to use GrowthBook with your Flutter based mobile application.
+GrowthBook is an open source feature flagging and experimentation platform that makes it easy to adjust what features are shown users, and run A/B tests, without deploying new code. There are two parts to GrowthBook, the GrowthBook Application, and the SDKs which implement this functionality to your code base. This Flutter SDK allows you to use GrowthBook with your Flutter based mobile application. 
+
 
 ![](https://camo.githubusercontent.com/b1d9ad56ab51c4ad1417e9a5ad2a8fe63bcc4755e584ec7defef83755c23f923/687474703a2f2f696d672e736869656c64732e696f2f62616467652f706c6174666f726d2d616e64726f69642d3645444238442e7376673f7374796c653d666c6174) ![](https://camo.githubusercontent.com/1fec6f0d044c5e1d73656bfceed9a78fd4121b17e82a2705d2a47f6fd1f0e3e5/687474703a2f2f696d672e736869656c64732e696f2f62616467652f706c6174666f726d2d696f732d4344434443442e7376673f7374796c653d666c6174)
 
@@ -507,6 +508,9 @@ If you would like to implement Sticky Bucketing while using Remote Evaluation, y
 
 Sticky bucketing ensures that users see the same experiment variant, even when user session, user login status, or experiment parameters change. See the [Sticky Bucketing docs](/app/sticky-bucketing) for more information. If your organization and experiment supports sticky bucketing, you must implement an instance of the `GBStickyBucketingService` to use Sticky Bucketing.
 
+## Acknowledgments
+This SDK was originally contributed by the team at [Alippo](http://alippo.com/) and others. You can find the original repo here: [github.com/alippo-com/GrowthBook-SDK-Flutter](https://github.com/alippo-com/GrowthBook-SDK-Flutter)
+
 ## License
 
-This project uses the MIT license. The core GrowthBook app will always remain open and free, although we may add some commercial enterprise add-ons in the future.
+This project uses the MIT license. The core GrowthBook app will always remain open and free, although we have some commercial add-ons in the future.
