@@ -1,3 +1,6 @@
+# 3.8.0+0
+- add StickyBucketing test cases
+
 # 3.7.0+0
 - Remote Evaluation
 

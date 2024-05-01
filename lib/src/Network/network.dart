@@ -62,35 +62,42 @@ class DioClient extends BaseClient {
   ) async {
     final dio = _dio..options.baseUrl = baseUrl;
 
+    bool errorOccurred = false;
+
     Future<void> listenAndRetry() async {
       final Response<ResponseBody> resp = await dio.get(
         path,
         options: Options(responseType: ResponseType.stream),
       );
 
-      // Listen to SSE stream
       resp.data?.stream
           .cast<List<int>>()
           .transform(const Utf8Decoder())
           .transform(const SseEventTransformer())
           .listen(
-            (sseModel) {
-              if (sseModel.name == "features") {
-                String jsonData = sseModel.data ?? "";
-                Map<String, dynamic> jsonMap = jsonDecode(jsonData);
-                onSuccess(jsonMap);
-              }
-            },
-            onError: (dynamic e, dynamic s) async {
-              onError;
-              await Future.delayed(const Duration(seconds: 5));
-              await listenAndRetry();
-            },
-            onDone: () async {
-              await Future.delayed(const Duration(seconds: 5));
-              await listenAndRetry();
-            },
-          );
+        (sseModel) {
+          if (sseModel.name == "features") {
+            String jsonData = sseModel.data ?? "";
+            Map<String, dynamic> jsonMap = jsonDecode(jsonData);
+            onSuccess(jsonMap);
+          }
+        },
+        onError: (dynamic e, dynamic s) async {
+          onError;
+
+          if (!errorOccurred) {
+            errorOccurred = true;
+            await Future.delayed(const Duration(seconds: 5));
+            await listenAndRetry();
+          }
+        },
+        onDone: () async {
+          if (!errorOccurred) {
+            await Future.delayed(const Duration(seconds: 5));
+            await listenAndRetry();
+          }
+        },
+      );
     }
 
     await listenAndRetry();

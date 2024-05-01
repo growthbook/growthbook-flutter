@@ -217,9 +217,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      final featureEvaluator =
-          FeatureEvaluator(attributeOverrides: _attributeOverrides, context: context, featureKey: "");
-      await featureEvaluator.refreshStickyBuckets(context, data);
+      await GBUtils.refreshStickyBuckets(context, data, _attributeOverrides);
     }
   }
 
