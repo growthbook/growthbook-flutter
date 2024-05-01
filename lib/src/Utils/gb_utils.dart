@@ -1,5 +1,9 @@
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
+import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit
@@ -68,8 +72,7 @@ class GBUtils {
 
   /// This checks if a userId is within an experiment namespace or not.
   static bool inNamespace(String userId, GBNameSpace namespace) {
-    final hashValue =
-        hash(value: "${userId}__", seed: namespace.item1, version: 1);
+    final hashValue = hash(value: "${userId}__", seed: namespace.item1, version: 1);
     if (hashValue == null) return false;
     return hashValue >= namespace.item2 && hashValue < namespace.item3;
   }
@@ -88,8 +91,7 @@ class GBUtils {
 
   ///This converts and experiment's coverage and variation weights into an array
   /// of bucket ranges.
-  static List<GBBucketRange> getBucketRanges(
-      int numVariations, double coverage, List<double>? weights) {
+  static List<GBBucketRange> getBucketRanges(int numVariations, double coverage, List<double>? weights) {
     List<List<double>> bucketRanges = [];
     var targetCoverage = coverage;
 
@@ -109,8 +111,7 @@ class GBUtils {
     }
 
     // Calculate the sum of target weights
-    double weightsSum =
-        targetWeights.fold<double>(0, (prev, element) => prev + element);
+    double weightsSum = targetWeights.fold<double>(0, (prev, element) => prev + element);
     // targetWeights.reduce(0.0, (sum, weight) => sum + weight);
 
     // If the sum of weights is not close to 1, default to equal weights
@@ -157,8 +158,7 @@ class GBUtils {
       final end = namespace[2];
 
       if (start != null && end != null) {
-        return GBNameSpace(title, double.parse(start.toString()),
-            double.parse(end.toString()));
+        return GBNameSpace(title, double.parse(start.toString()), double.parse(end.toString()));
       }
     }
 
@@ -200,24 +200,14 @@ class GBUtils {
     });
   }
 
-  static bool isIncludedInRollout(
-      Map<dynamic, dynamic> attributeOverrides,
-      String? seed,
-      String? hashAttribute,
-      String? fallbackAttribute,
-      GBBucketRange? range,
-      double? coverage,
-      int? hashVersion,
-      GBContext context) {
+  static bool isIncludedInRollout(Map<dynamic, dynamic> attributeOverrides, String? seed, String? hashAttribute,
+      String? fallbackAttribute, GBBucketRange? range, double? coverage, int? hashVersion, GBContext context) {
     // If both range and coverage are null, return true
     if (range == null && coverage == null) return true;
 
     // Get the hash attribute and its value
     var hashAttrResult = getHashAttribute(
-        attr: hashAttribute,
-        fallback: fallbackAttribute,
-        attributeOverrides: attributeOverrides,
-        context: context);
+        attr: hashAttribute, fallback: fallbackAttribute, attributeOverrides: attributeOverrides, context: context);
     String? hashValue = hashAttrResult[1];
 
     // Calculate the hash
@@ -242,8 +232,7 @@ class GBUtils {
 
   static String paddedVersionString(String input) {
     // "v1.2.3-rc.1+build123" -> ["1","2","3","rc","1"]
-    List<String> parts =
-        input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
+    List<String> parts = input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
 
     // ["1","0","0"] -> ["1","0","0","~"]
     // "~" is the largest ASCII character, so this will make "1.0.0" greater than "1.0.0-beta" for example
@@ -274,8 +263,7 @@ class GBUtils {
     String hashAttribute = attr ?? 'id';
     String hashValue = '';
 
-    if (attributeOverrides.containsKey(hashAttribute) &&
-        attributeOverrides[hashAttribute] != null) {
+    if (attributeOverrides.containsKey(hashAttribute) && attributeOverrides[hashAttribute] != null) {
       hashValue = attributeOverrides[hashAttribute].toString();
     } else if (context.attributes != null &&
         context.attributes!.containsKey(hashAttribute) &&
@@ -285,8 +273,7 @@ class GBUtils {
 
     // If no match, try fallback
     if (hashValue.isEmpty && fallback != null) {
-      if (attributeOverrides.containsKey(fallback) &&
-          attributeOverrides[fallback] != null) {
+      if (attributeOverrides.containsKey(fallback) && attributeOverrides[fallback] != null) {
         hashValue = attributeOverrides[fallback].toString();
       } else if (context.attributes != null &&
           context.attributes!.containsKey(fallback) &&
@@ -353,12 +340,217 @@ class GBUtils {
     double remainderAsFloat = remainder.toDouble();
     return remainderAsFloat / 10000.0;
   }
+
+  static Map<String, String> getStickyBucketAssignments({
+    required GBContext context,
+    required String? expHashAttribute,
+    required String? expFallBackAttribute,
+    required Map<dynamic, dynamic> attributeOverrides,
+  }) {
+    final assignments = <String, String>{};
+
+    Map<StickyAttributeKey, StickyAssignmentsDocument>?
+        stickyBucketAssignmentDocs =
+        <StickyAttributeKey, StickyAssignmentsDocument>{};
+
+    // Check if stickyBucketAssignmentDocs is null
+    if (context.stickyBucketAssignmentDocs == null) {
+      return assignments;
+    } else {
+      stickyBucketAssignmentDocs = context.stickyBucketAssignmentDocs;
+    }
+
+    // Retrieve hashAttributeAndValue and hashKey
+    final hashAttributeAndValue = getHashAttribute(
+      context: context,
+      attr: expHashAttribute,
+      fallback: null,
+      attributeOverrides: attributeOverrides,
+    );
+
+    final hashKey = '${hashAttributeAndValue[0]}||${hashAttributeAndValue[1]}';
+
+    // Retrieve fallbackAttributeAndValue and fallbackKey
+    final fallbackAttributeAndValue = getHashAttribute(
+      context: context,
+      attr: null,
+      fallback: expFallBackAttribute,
+      attributeOverrides: attributeOverrides,
+    );
+
+    String? fallbackKey;
+
+    if (fallbackAttributeAndValue[1].isEmpty) {
+      fallbackKey = null;
+    } else {
+      "${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}";
+    }
+
+    String? leftOperand = context
+        .stickyBucketAssignmentDocs?[
+            "$expFallBackAttribute||${attributeOverrides[expFallBackAttribute]}"]
+        ?.attributeValue;
+
+    if (leftOperand != attributeOverrides[expFallBackAttribute]) {
+      context.stickyBucketAssignmentDocs = {};
+    }
+
+    // Add assignments from stickyBucketAssignmentDocs
+    context.stickyBucketAssignmentDocs?.forEach((key, doc) {
+      assignments.addAll(doc.assignments);
+    });
+
+    // Add assignments from fallbackKey if not null
+    if (fallbackKey != null &&
+        stickyBucketAssignmentDocs?[fallbackKey] != null) {
+      assignments
+          .addAll(stickyBucketAssignmentDocs?[fallbackKey]?.assignments ?? {});
+    }
+
+    // Add assignments from hashKey if not null
+    if (stickyBucketAssignmentDocs?[hashKey] != null) {
+      assignments
+          .addAll(stickyBucketAssignmentDocs![hashKey]?.assignments ?? {});
+    }
+
+    return assignments;
+  }
+
+  static Future<void> refreshStickyBuckets(
+    GBContext context,
+    FeaturedDataModel? data,
+    Map<dynamic, dynamic> attributeOverrides,
+  ) async {
+    if (context.stickyBucketService == null) {
+      return;
+    }
+    var attributes = getStickyBucketAttributes(context, data, attributeOverrides);
+    context.stickyBucketAssignmentDocs = await context.stickyBucketService?.getAllAssignments(attributes);
+  }
+
+  static Map<String, String> getStickyBucketAttributes(
+    GBContext context,
+    FeaturedDataModel? data,
+    Map<dynamic, dynamic> attributeOverrides,
+  ) {
+    var attributes = <String, String>{};
+    context.stickyBucketIdentifierAttributes = context.stickyBucketIdentifierAttributes != null
+        ? GBUtils.deriveStickyBucketIdentifierAttributes(context: context, data: data)
+        : context.stickyBucketIdentifierAttributes;
+    context.stickyBucketIdentifierAttributes?.forEach((attr) {
+      var hashValue = GBUtils.getHashAttribute(context: context, attributeOverrides: attributeOverrides, attr: attr);
+      attributes[attr] = hashValue[1];
+    });
+    return attributes;
+  }
+
+  static List<String> deriveStickyBucketIdentifierAttributes({
+    required GBContext context,
+    required FeaturedDataModel? data,
+  }) {
+    var attributes = <String>{};
+    var features = data?.features ?? context.features;
+    for (var id in features.keys) {
+      var feature = features[id];
+      var rules = feature?.rules;
+      rules?.forEach((rule) {
+        var variations = rule.variations;
+        variations?.forEach((variation) {
+          attributes.add(rule.hashAttribute ?? "id");
+          if (rule.fallbackAttribute != null) {
+            attributes.add(rule.fallbackAttribute!);
+          }
+        });
+      });
+    }
+    return attributes.toList();
+  }
+
+  static StickyBucketResult getStickyBucketVariation({
+    required GBContext context,
+    required String experimentKey,
+    required int experimentBucketVersion,
+    required int minExperimentBucketVersion,
+    required List<GBVariationMeta> meta,
+    required String expHashAttribute,
+    required String expFallBackAttribute,
+    required Map<dynamic, dynamic> attributeOverrides,
+  }) {
+    // Get the assignment key for the given experiment key and version.
+    final assignmentKey = getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
+    // Fetch all sticky bucket assignments from the context.
+    final assignments = getStickyBucketAssignments(
+      context: context,
+      expHashAttribute: expHashAttribute,
+      expFallBackAttribute: expFallBackAttribute,
+      attributeOverrides: attributeOverrides,
+    );
+
+    // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
+    if (minExperimentBucketVersion > 0) {
+      for (int version = 0; version <= minExperimentBucketVersion; version++) {
+        final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
+        if (assignments.containsKey(blockedKey)) {
+          // A blocked version was found.
+          return StickyBucketResult(variation:-1, versionIsBlocked: true);
+        }
+      }
+    }
+
+    final variationKey = assignments[assignmentKey];
+
+    if (variationKey == null) {
+      // no assignment found
+      return StickyBucketResult(variation: -1);
+    }
+
+    final variation = meta.indexWhere((m) => m.key == variationKey);
+
+    if (variation < 0) {
+      // invalid assignment, treat as "no assignment found"
+      return StickyBucketResult(variation: -1);
+    }
+
+    return StickyBucketResult(variation: variation);
+  }
+
+  static String getStickyBucketExperimentKey(String experimentKey, int experimentBucketVersion) {
+    return '${experimentKey}__$experimentBucketVersion';
+  }
+
+  static StickyBucketDocumentChange generateStickyBucketAssignmentDoc({
+    required GBContext context,
+    required String attributeName,
+    required String attributeValue,
+    required Map<String, String> newAssignments,
+  }) {
+    // Generate the key using attribute name and value.
+    final key = '$attributeName||$attributeValue';
+
+    // Get the existing assignments from the context.
+    final existingAssignments = context.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
+
+    // Merge existing assignments with the new assignments.
+    final mergedAssignments = {...existingAssignments, ...newAssignments};
+
+    // Check if the merged assignments are different from the existing assignments.
+    final hasChanged = mergedAssignments.toString() != existingAssignments.toString();
+
+    // Create a new document with the merged assignments.
+    final doc = StickyAssignmentsDocument(
+      attributeName: attributeName,
+      attributeValue: attributeValue,
+      assignments: mergedAssignments,
+    );
+
+    // Return the key, document, and whether the document has changed.
+    return StickyBucketDocumentChange(key, doc, hasChanged);
+  }
 }
 
 extension RoundToExtension on num {
   num roundTo({int numFractionDigits = 0}) {
-    final fractionDigits =
-        numFractionDigits.clamp(0, 20); // Ensure fractionDigits is within range
+    final fractionDigits = numFractionDigits.clamp(0, 20); // Ensure fractionDigits is within range
     final stringValue = toStringAsFixed(fractionDigits);
     return num.parse(stringValue); // Convert back to num
   }

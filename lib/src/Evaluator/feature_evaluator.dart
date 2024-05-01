@@ -118,7 +118,7 @@ class FeatureEvaluator {
             attributeOverrides,
             rule.seed ?? featureKey,
             rule.hashAttribute,
-            (context.stickyBucketService != null && !(rule.disableStickyBucketing ?? true))
+            (context.stickyBucketService != null && (rule.disableStickyBucketing != true))
                 ? rule.fallbackAttribute
                 : null,
             rule.range,
@@ -168,40 +168,42 @@ class FeatureEvaluator {
           if (rule.variations == null) {
             // If not, skip this rule
             continue;
-          }
-          // Convert the rule to an Experiment object
-          GBExperiment exp = GBExperiment(
-            key: rule.key ?? featureKey,
-            variations: rule.variations!,
-            namespace: rule.namespace,
-            hashAttribute: rule.hashAttribute,
-            fallbackAttribute: rule.fallbackAttribute,
-            hashVersion: rule.hashVersion?.toDouble(),
-            disableStickyBucketing: rule.disableStickyBucketing,
-            bucketVersion: rule.bucketVersion,
-            minBucketVersion: rule.minBucketVersion,
-            weights: rule.weights,
-            coverage: rule.coverage,
-            condition: rule.condition,
-            ranges: rule.ranges,
-            meta: rule.meta,
-            filters: rule.filters,
-            seed: rule.seed,
-            name: rule.name,
-            phase: rule.phase,
-          );
-          GBExperimentResult result =
-              ExperimentEvaluator(attributeOverrides: attributeOverrides).evaluateExperiment(context, exp);
-
-          // Check if the result is in the experiment and not a passthrough
-          if (result.inExperiment && !(result.passthrough ?? false)) {
-            // Return the result value and source if the result is successful
-            return prepareResult(
-              value: result.value,
-              source: GBFeatureSource.experiment,
-              experiment: exp,
-              result: result,
+          } else {
+            // Convert the rule to an Experiment object
+            GBExperiment exp = GBExperiment(
+              key: rule.key ?? featureKey,
+              variations: rule.variations!,
+              namespace: rule.namespace,
+              hashAttribute: rule.hashAttribute,
+              fallbackAttribute: rule.fallbackAttribute,
+              hashVersion: rule.hashVersion?.toDouble(),
+              disableStickyBucketing: rule.disableStickyBucketing,
+              bucketVersion: rule.bucketVersion,
+              minBucketVersion: rule.minBucketVersion,
+              weights: rule.weights,
+              coverage: rule.coverage,
+              condition: rule.condition,
+              ranges: rule.ranges,
+              meta: rule.meta,
+              filters: rule.filters,
+              seed: rule.seed,
+              name: rule.name,
+              phase: rule.phase,
             );
+            GBExperimentResult result =
+                ExperimentEvaluator(attributeOverrides: attributeOverrides)
+                    .evaluateExperiment(context, exp, featureId: featureKey);
+
+            // Check if the result is in the experiment and not a passthrough
+            if (result.inExperiment && !(result.passthrough ?? false)) {
+              // Return the result value and source if the result is successful
+              return prepareResult(
+                value: result.value,
+                source: GBFeatureSource.experiment,
+                experiment: exp,
+                result: result,
+              );
+            }
           }
         }
       }
@@ -249,45 +251,6 @@ class FeatureEvaluator {
       // If any exception occurs during the merge, return an empty map (equivalent to an empty JSON object)
       return {};
     }
-  }
-
-  Future<void> refreshStickyBuckets(GBContext context, FeaturedDataModel? data) async {
-    if (context.stickyBucketService == null) {
-      return;
-    }
-    var attributes = getStickyBucketAttributes(context, data);
-    context.stickyBucketAssignmentDocs = await context.stickyBucketService?.getAllAssignments(attributes);
-  }
-
-  Map<String, String> getStickyBucketAttributes(GBContext context, FeaturedDataModel? data) {
-    var attributes = <String, String>{};
-    context.stickyBucketIdentifierAttributes = context.stickyBucketIdentifierAttributes != null
-        ? deriveStickyBucketIdentifierAttributes(context, data)
-        : context.stickyBucketIdentifierAttributes;
-    context.stickyBucketIdentifierAttributes?.forEach((attr) {
-      var hashValue = GBUtils.getHashAttribute(context: context, attributeOverrides: attributeOverrides, attr: attr);
-      attributes[attr] = hashValue[1];
-    });
-    return attributes;
-  }
-
-  List<String> deriveStickyBucketIdentifierAttributes(GBContext context, FeaturedDataModel? data) {
-    var attributes = <String>{};
-    var features = data?.features ?? context.features;
-    for (var id in features.keys) {
-      var feature = features[id];
-      var rules = feature?.rules;
-      rules?.forEach((rule) {
-        var variations = rule.variations;
-        variations?.forEach((variation) {
-          attributes.add(rule.hashAttribute ?? "id");
-          if (rule.fallbackAttribute != null) {
-            attributes.add(rule.fallbackAttribute!);
-          }
-        });
-      });
-    }
-    return attributes.toList();
   }
 }
 

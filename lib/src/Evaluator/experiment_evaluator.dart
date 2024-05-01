@@ -12,11 +12,12 @@ class ExperimentEvaluator {
   ExperimentEvaluator({required this.attributeOverrides});
 
   // Takes Context and Experiment and returns ExperimentResult
-  GBExperimentResult evaluateExperiment(GBContext context, GBExperiment experiment) {
+  GBExperimentResult evaluateExperiment(GBContext context, GBExperiment experiment, {String? featureId}) {
     // Check if experiment.variations has fewer than 2 variations
     if (experiment.variations.length < 2 || context.enabled != true) {
       // Return an ExperimentResult indicating not in experiment and variationId 0
       return _getExperimentResult(
+        featureId: featureId,
         experiment: experiment,
         context: context,
         variationIndex: -1,
@@ -31,6 +32,7 @@ class ExperimentEvaluator {
 
         // Return the experiment result using the forced variation index and indicating that no hash was used
         return _getExperimentResult(
+          featureId: featureId,
           context: context,
           experiment: experiment,
           variationIndex: forcedVariationIndex,
@@ -41,6 +43,7 @@ class ExperimentEvaluator {
 
     if (!experiment.active) {
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -51,7 +54,7 @@ class ExperimentEvaluator {
     final hashAttributeAndValue = GBUtils.getHashAttribute(
       context: context,
       attr: experiment.hashAttribute,
-      fallback: (context.stickyBucketService != null && !(experiment.disableStickyBucketing ?? true))
+      fallback: (context.stickyBucketService != null && (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
       attributeOverrides: attributeOverrides,
@@ -63,6 +66,7 @@ class ExperimentEvaluator {
     if (hashValue.isEmpty || hashValue == "null") {
       log('Skip because missing hashAttribute');
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -74,15 +78,16 @@ class ExperimentEvaluator {
     bool foundStickyBucket = false;
     bool stickyBucketVersionIsBlocked = false;
 
-    if (context.stickyBucketService != null && !(experiment.disableStickyBucketing ?? true)) {
-      final stickyBucketResult = getStickyBucketVariation(
-        context,
-        experiment.key,
-        experiment.bucketVersion ?? 0,
-        experiment.minBucketVersion ?? 0,
-        experiment.meta ?? [],
-        experiment.hashAttribute ?? "id",
-        experiment.fallbackAttribute!,
+    if (context.stickyBucketService != null && (experiment.disableStickyBucketing != true)) {
+      final stickyBucketResult = GBUtils.getStickyBucketVariation(
+        context: context,
+        experimentKey: experiment.key,
+        experimentBucketVersion: experiment.bucketVersion ?? 0,
+        minExperimentBucketVersion: experiment.minBucketVersion ?? 0,
+        meta: experiment.meta ?? [],
+        expHashAttribute: experiment.hashAttribute ?? "id",
+        expFallBackAttribute: experiment.fallbackAttribute!,
+        attributeOverrides: attributeOverrides,
       );
       foundStickyBucket = stickyBucketResult.variation >= 0;
       assigned = stickyBucketResult.variation;
@@ -94,6 +99,7 @@ class ExperimentEvaluator {
         if (GBUtils.isFilteredOut(experiment.filters!, context, attributeOverrides)) {
           log('Skip because of filters');
           return _getExperimentResult(
+            featureId: featureId,
             context: context,
             experiment: experiment,
             variationIndex: -1,
@@ -106,6 +112,7 @@ class ExperimentEvaluator {
           if (!GBUtils.inNamespace(hashValue, namespace)) {
             log('Skip because of namespace');
             return _getExperimentResult(
+              featureId: featureId,
               context: context,
               experiment: experiment,
               variationIndex: -1,
@@ -118,6 +125,7 @@ class ExperimentEvaluator {
       if (experiment.condition != null &&
           !GBConditionEvaluator().evaluateCondition(context.attributes!, experiment.condition!)) {
         return _getExperimentResult(
+          featureId: featureId,
           context: context,
           experiment: experiment,
           variationIndex: -1,
@@ -135,6 +143,7 @@ class ExperimentEvaluator {
 
           if (parentResult.source?.name == GBFeatureSource.cyclicPrerequisite.name) {
             return _getExperimentResult(
+              featureId: featureId,
               context: context,
               experiment: experiment,
               variationIndex: -1,
@@ -151,6 +160,7 @@ class ExperimentEvaluator {
           if (!evalCondition) {
             log("Feature blocked by prerequisite");
             return _getExperimentResult(
+              featureId: featureId,
               context: context,
               experiment: experiment,
               variationIndex: -1,
@@ -170,6 +180,7 @@ class ExperimentEvaluator {
     if (hash == null) {
       log('Skip because of invalid hash version');
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -190,6 +201,7 @@ class ExperimentEvaluator {
     if (stickyBucketVersionIsBlocked) {
       log('Skip because sticky bucket version is blocked');
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -202,6 +214,7 @@ class ExperimentEvaluator {
     if (assigned < 0) {
       log('Skip because of coverage');
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -211,6 +224,7 @@ class ExperimentEvaluator {
 
     if (experiment.force != null) {
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: experiment.force!,
@@ -220,6 +234,7 @@ class ExperimentEvaluator {
 
     if (context.qaMode) {
       return _getExperimentResult(
+        featureId: featureId,
         context: context,
         experiment: experiment,
         variationIndex: -1,
@@ -228,6 +243,7 @@ class ExperimentEvaluator {
     }
 
     final result = _getExperimentResult(
+      featureId: featureId,
       context: context,
       experiment: experiment,
       variationIndex: assigned,
@@ -236,12 +252,14 @@ class ExperimentEvaluator {
       stickyBucketUsed: foundStickyBucket,
     );
 
-    if (context.stickyBucketService != null && (experiment.disableStickyBucketing ?? true)) {
-      final stickyBucketDoc = generateStickyBucketAssignmentDoc(
-        context,
-        hashAttribute,
-        hashValue,
-        {getStickyBucketExperimentKey(experiment.key, experiment.bucketVersion ?? 0): result.key},
+    if (context.stickyBucketService != null && (experiment.disableStickyBucketing != true)) {
+      final stickyBucketDoc = GBUtils.generateStickyBucketAssignmentDoc(
+        context: context,
+        attributeName: hashAttribute,
+        attributeValue: hashValue,
+        newAssignments: {
+          GBUtils.getStickyBucketExperimentKey(experiment.key, experiment.bucketVersion ?? 0): result.key
+        },
       );
 
       if (stickyBucketDoc.hasChanged) {
@@ -280,7 +298,7 @@ class ExperimentEvaluator {
     final hashResult = GBUtils.getHashAttribute(
       context: context,
       attr: experiment.hashAttribute,
-      fallback: (context.stickyBucketService != null && !(experiment.disableStickyBucketing ?? true))
+      fallback: (context.stickyBucketService != null && (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
       attributeOverrides: attributeOverrides,
@@ -309,123 +327,6 @@ class ExperimentEvaluator {
       passthrough: meta?.passthrough,
     );
   }
-
-  StickyBucketResult getStickyBucketVariation(
-    GBContext context,
-    String experimentKey,
-    int experimentBucketVersion,
-    int minExperimentBucketVersion,
-    List<GBVariationMeta> meta,
-    String expHashAttribute,
-    String expFallBackAttribute,
-  ) {
-    // Get the assignment key for the given experiment key and version.
-    final assignmentKey = getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
-    // Fetch all sticky bucket assignments from the context.
-    final assignments = getStickyBucketAssignments(context, expHashAttribute, expFallBackAttribute);
-
-    // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
-    if (minExperimentBucketVersion > 0) {
-      for (int version = 0; version <= minExperimentBucketVersion; version++) {
-        final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
-        if (assignments.containsKey(blockedKey)) {
-          // A blocked version was found.
-          return StickyBucketResult(-1, true);
-        }
-      }
-    }
-
-    // Retrieve the variation key using the assignmentKey.
-    final variationKey = assignments[assignmentKey];
-
-    // Return (-1, null) if no assignment was found.
-    if (variationKey == null) {
-      return StickyBucketResult(-1, null);
-    }
-
-    // Find the index of the variation that matches the variation key.
-    final variationIndex = meta.indexWhere((variationMeta) => variationMeta.key == variationKey);
-
-    // Return (-1, null) if no matching variation was found.
-    if (variationIndex == -1) {
-      return StickyBucketResult(-1, null);
-    }
-
-    // Return the found variation and no blocked version.
-    return StickyBucketResult(variationIndex, null);
-  }
-
-  Map<String, String> getStickyBucketAssignments(GBContext context,
-      String? expHashAttribute, String? expFallBackAttribute) {
-    if (context.stickyBucketAssignmentDocs == null) {
-      return {};
-    }
-
-    final hashAttributeAndValue = GBUtils.getHashAttribute(
-        context: context,
-        fallback: null,
-        attributeOverrides: attributeOverrides);
-
-    final hashKey = "${hashAttributeAndValue[0]}||${hashAttributeAndValue[1]}";
-
-    final fallbackAttributeAndValue = GBUtils.getHashAttribute(
-        context: context,
-        attr: null,
-        fallback: expFallBackAttribute,
-        attributeOverrides: attributeOverrides);
-
-    final fallbackKey = (fallbackAttributeAndValue[1].isNotEmpty)
-        ? "${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}"
-        : null;
-
-    final mergedAssignments = <String, String>{};
-
-    if (fallbackKey != null &&
-        context.stickyBucketAssignmentDocs![fallbackKey] != null) {
-      mergedAssignments.addAll(
-          context.stickyBucketAssignmentDocs![fallbackKey]!.assignments);
-    }
-
-    if (context.stickyBucketAssignmentDocs![hashKey] != null) {
-      mergedAssignments
-          .addAll(context.stickyBucketAssignmentDocs![hashKey]!.assignments);
-    }
-
-    return mergedAssignments;
-  }
-
-  String getStickyBucketExperimentKey(String experimentKey, int experimentBucketVersion) {
-    return '${experimentKey}__$experimentBucketVersion';
-  }
-
-  StickyBucketDocumentChange generateStickyBucketAssignmentDoc(
-    GBContext context,
-    String attributeName,
-    String attributeValue,
-    Map<String, String> newAssignments,
-  ) {
-    // Generate the key using attribute name and value.
-    final key = '$attributeName||$attributeValue';
-
-    // Get the existing assignments from the context.
-    final existingAssignments = context.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
-
-    // Merge existing assignments with the new assignments.
-    final mergedAssignments = {...existingAssignments, ...newAssignments};
-
-    // Check if the merged assignments are different from the existing assignments.
-    final hasChanged = mergedAssignments.toString() != existingAssignments.toString();
-
-    // Create a new document with the merged assignments.
-    final doc = StickyAssignmentsDocument(
-      attributeName: attributeName,
-      attributeValue: attributeValue,
-      assignments: mergedAssignments,
-    );
-
-    // Return the key, document, and whether the document has changed.
-    return StickyBucketDocumentChange(key, doc, hasChanged);
-  }
 }
 
 class StickyBucketDocumentChange {
@@ -440,5 +341,5 @@ class StickyBucketResult {
   final int variation;
   final bool? versionIsBlocked;
 
-  StickyBucketResult(this.variation, this.versionIsBlocked);
+  StickyBucketResult({required this.variation, this.versionIsBlocked});
 }
