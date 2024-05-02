@@ -5,23 +5,29 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 
 abstract class StickyBucketService {
-  Future<StickyAssignmentsDocument?> getAssignments(String attributeName, String attributeValue);
+  Future<StickyAssignmentsDocument?> getAssignments(
+      String attributeName, String attributeValue);
 
   Future<void> saveAssignments(StickyAssignmentsDocument doc);
 
-  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(Map<String, String> attributes);
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes);
 }
 
 class LocalStorageStickyBucketService extends StickyBucketService {
   final String prefix;
   CachingLayer? localStorage;
 
-  LocalStorageStickyBucketService({this.prefix = 'gbStickyBuckets__', this.localStorage}) {
+  final utf8Encoder = const Utf8Encoder();
+
+  LocalStorageStickyBucketService(
+      {this.prefix = 'gbStickyBuckets__', this.localStorage}) {
     localStorage ??= CachingManager();
   }
 
   @override
-  Future<StickyAssignmentsDocument?> getAssignments(String attributeName, String attributeValue) async {
+  Future<StickyAssignmentsDocument?> getAssignments(
+      String attributeName, String attributeValue) async {
     final key = '$attributeName||$attributeValue';
     StickyAssignmentsDocument? doc;
     try {
@@ -45,7 +51,8 @@ class LocalStorageStickyBucketService extends StickyBucketService {
     final key = '${doc.attributeName}||${doc.attributeValue}';
     try {
       if (localStorage != null) {
-        localStorage!.saveContent(fileName: '$prefix$key', content: utf8.encode(json.encode(doc.toJson())));
+        final content = utf8Encoder.convert(json.encode(doc.toJson()));
+        localStorage!.saveContent(fileName: '$prefix$key', content: content);
       }
     } catch (e) {
       // Ignore localStorage errors
@@ -53,7 +60,8 @@ class LocalStorageStickyBucketService extends StickyBucketService {
   }
 
   @override
-  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(Map<String, String> attributes) async {
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) async {
     Map<String, StickyAssignmentsDocument> docs = {};
     attributes.forEach((key, value) async {
       var doc = await getAssignments(key, value);

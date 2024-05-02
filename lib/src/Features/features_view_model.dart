@@ -21,11 +21,14 @@ class FeatureViewModel {
   final bool? backgroundSync;
 
   final CachingManager manager = CachingManager();
+  final utf8Encoder = const Utf8Encoder();
+  final utf8Decoder = const Utf8Decoder();
 
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-      (data) => delegate.featuresFetchedSuccessfully(gbFeatures: data.features, isRemote: false),
+      (data) => delegate.featuresFetchedSuccessfully(
+          gbFeatures: data.features, isRemote: false),
       (e, s) => delegate.featuresFetchFailed(
         error: GBError(
           error: e,
@@ -36,8 +39,10 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl, {bool remoteEval = false, RemoteEvalModel? payload}) async {
-    final receivedData = await manager.getContent(fileName: Constant.featureCache);
+  Future<void> fetchFeatures(String? apiUrl,
+      {bool remoteEval = false, RemoteEvalModel? payload}) async {
+    final receivedData =
+        await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData == null) {
       await source.fetchFeatures(
@@ -57,10 +62,11 @@ class FeatureViewModel {
         ),
       );
     } else {
-      String receivedDataJson = utf8.decode(receivedData);
+      String receivedDataJson = utf8Decoder.convert(receivedData);
       final receivedDataJsonMap = json.decode(receivedDataJson);
       final data = FeaturedDataModel.fromJson(receivedDataJsonMap);
-      delegate.featuresFetchedSuccessfully(gbFeatures: data.features, isRemote: false);
+      delegate.featuresFetchedSuccessfully(
+          gbFeatures: data.features, isRemote: false);
     }
 
     if (apiUrl != null) {
@@ -114,7 +120,8 @@ class FeatureViewModel {
       delegate.featuresAPIModelSuccessfully(data);
       // todo manager content save
       //    manager.putData(fileName: Constant.featureCache, content: utf8.encode(data.features.toString()));
-      delegate.featuresFetchedSuccessfully(gbFeatures: data.features, isRemote: true);
+      delegate.featuresFetchedSuccessfully(
+          gbFeatures: data.features, isRemote: true);
     } else {
       handleInvalidFeatures(data.features);
     }
@@ -123,7 +130,9 @@ class FeatureViewModel {
   void handleInvalidFeatures(Map<String, dynamic>? jsonPetitions) {
     final encryptedString = jsonPetitions?["encryptedFeatures"];
 
-    if (encryptedString == null || encryptedString is! String || encryptedString.isEmpty) {
+    if (encryptedString == null ||
+        encryptedString is! String ||
+        encryptedString.isEmpty) {
       logError("Failed to parse encrypted data.");
       return;
     }
@@ -141,9 +150,14 @@ class FeatureViewModel {
       );
 
       if (extractedFeatures != null) {
-        delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: false);
-        final featureData = utf8.encode(jsonEncode(extractedFeatures));
-        manager.putData(fileName: Constant.featureCache, content: featureData);
+        delegate.featuresFetchedSuccessfully(
+            gbFeatures: extractedFeatures, isRemote: false);
+        final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
+        final featureDataOnUint8List = Uint8List.fromList(featureData);
+        manager.putData(
+          fileName: Constant.featureCache,
+          content: featureDataOnUint8List,
+        );
       } else {
         logError("Failed to extract features from encrypted string.");
       }
@@ -175,7 +189,7 @@ class FeatureViewModel {
   void cacheFeatures(FeaturedDataModel data) {
     // final GBFeatures features = data.toJson(); //.features;
     String jsonString = json.encode(data.toJson());
-    Uint8List bytes = utf8.encode(jsonString);
+    final bytes = utf8Encoder.convert(jsonString);
 
     manager.putData(fileName: Constant.featureCache, content: bytes);
   }
