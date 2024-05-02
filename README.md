@@ -457,12 +457,13 @@ To enable streaming updates set backgroundSync variable to "true" and add stream
 ```dart
 
 final GrowthBookSDK sdkInstance = GBSDKBuilderApp(
+  backgroundSync: true,
   apiKey: "<API_KEY>",
   attributes: {
     /// Specify attributes.
   },
   growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
-  backgroundSync: true,).initializer();
+  ).initializer();
 
 ```
 ## ParentCondition
@@ -493,19 +494,22 @@ You must enable Remote Evaluation in your SDK Connection settings. Cloud custome
 
 To use Remote Evaluation, add the `remoteEval: true` property to your SDK instance. A new evaluation API call will be made any time a user attribute or other dependency changes. You may optionally limit these API calls to specific attribute changes by setting the `cacheKeyAttributes` property (an array of attribute names that, when changed, trigger a new evaluation call).
 
+```dart
+
 var sdkInstance: GrowthBookSDK = GrowthBookBuilder(apiHost: <GrowthBook/API_KEY>, clientKey: <GrowthBook/ClientKey>, attributes: <[String: Any]>, trackingCallback: { experiment, experimentResult in 
     }, refreshHandler: { isRefreshed in
     }, remoteEval: true)
     .initializer()
+    
+```
 
-:::note
 
 If you would like to implement Sticky Bucketing while using Remote Evaluation, you must configure your remote evaluation backend to support Sticky Bucketing. You will not need to provide a StickyBucketService instance to the client side SDK.
 
 
 ## Sticky Bucketing
 
-Sticky bucketing ensures that users see the same experiment variant, even when user session, user login status, or experiment parameters change. See the [Sticky Bucketing docs](/app/sticky-bucketing) for more information. If your organization and experiment supports sticky bucketing, you must implement an instance of the `GBStickyBucketingService` to use Sticky Bucketing.
+Sticky bucketing ensures that users see the same experiment variant, even when user session, user login status, or experiment parameters change. See the [Sticky Bucketing docs](https://docs.growthbook.io/app/sticky-bucketing) for more information. If your organization and experiment supports sticky bucketing, you must implement an instance of the `GBStickyBucketingService` to use Sticky Bucketing.
 
 ## License
 

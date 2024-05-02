@@ -36,69 +36,6 @@ class DioClient extends BaseClient {
 
   final Dio _dio;
 
-  Dio get client => _dio;
-
-  Future<void> listenAndRetry({
-    required Dio dio,
-    required String path,
-    required OnSuccess onSuccess,
-    required OnError onError,
-  }) async {
-    try {
-      final resp = await dio.get(
-        path,
-        options: Options(responseType: ResponseType.stream),
-      );
-
-      final data = resp.data;
-
-      if (data is ResponseBody) {
-        // Listen to SSE stream
-        data.stream
-            .cast<List<int>>()
-            .transform(const Utf8Decoder())
-            .transform(const SseEventTransformer())
-            .listen(
-          (sseModel) {
-            if (sseModel.name == "features") {
-              String jsonData = sseModel.data ?? "";
-              Map<String, dynamic> jsonMap = jsonDecode(jsonData);
-              onSuccess(jsonMap);
-            }
-          },
-          onError: (dynamic e, dynamic s) async {
-            onError;
-            await Future.delayed(const Duration(seconds: 5));
-            await listenAndRetry(
-              dio: dio,
-              path: path,
-              onError: onError,
-              onSuccess: onSuccess,
-            );
-          },
-          onDone: () async {
-            await Future.delayed(const Duration(seconds: 5));
-            await listenAndRetry(
-              dio: dio,
-              path: path,
-              onError: onError,
-              onSuccess: onSuccess,
-            );
-          },
-        );
-      }
-    } catch (error) {
-      onError;
-      await Future.delayed(const Duration(seconds: 5));
-      await listenAndRetry(
-        dio: dio,
-        path: path,
-        onError: onError,
-        onSuccess: onSuccess,
-      );
-    }
-  }
-
   @override
   Future<void> consumeGetRequest(
     String baseUrl,
@@ -125,12 +62,45 @@ class DioClient extends BaseClient {
   ) async {
     final dio = _dio..options.baseUrl = baseUrl;
 
-    await listenAndRetry(
-      dio: dio,
-      path: path,
-      onError: onError,
-      onSuccess: onSuccess,
-    );
+    bool errorOccurred = false;
+
+    Future<void> listenAndRetry() async {
+      final Response<ResponseBody> resp = await dio.get(
+        path,
+        options: Options(responseType: ResponseType.stream),
+      );
+
+      resp.data?.stream
+          .cast<List<int>>()
+          .transform(const Utf8Decoder())
+          .transform(const SseEventTransformer())
+          .listen(
+        (sseModel) {
+          if (sseModel.name == "features") {
+            String jsonData = sseModel.data ?? "";
+            Map<String, dynamic> jsonMap = jsonDecode(jsonData);
+            onSuccess(jsonMap);
+          }
+        },
+        onError: (dynamic e, dynamic s) async {
+          onError;
+
+          if (!errorOccurred) {
+            errorOccurred = true;
+            await Future.delayed(const Duration(seconds: 5));
+            await listenAndRetry();
+          }
+        },
+        onDone: () async {
+          if (!errorOccurred) {
+            await Future.delayed(const Duration(seconds: 5));
+            await listenAndRetry();
+          }
+        },
+      );
+    }
+
+    await listenAndRetry();
   }
 
   @override

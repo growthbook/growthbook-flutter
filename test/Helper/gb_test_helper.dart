@@ -1,12 +1,17 @@
 import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 
 import '../test_cases/test_case.dart';
 
 /// Test helper class.
 class GBTestHelper {
   static final testData = jsonDecode(gbTestCases);
+
+  static List getStickyBucketingData() {
+    return testData['stickyBucket'];
+  }
 
   static List getEvalConditionData() {
     return testData['evalCondition'];
@@ -46,23 +51,30 @@ class GBTestHelper {
 }
 
 class GBFeaturesTest {
-  GBFeaturesTest({this.features, this.attributes, this.forcedVariations});
+  GBFeaturesTest({
+    this.features,
+    this.attributes,
+    this.forcedVariations,
+    this.stickyBucketAssignmentDocs,
+  });
   final Map<String, GBFeature>? features;
   final Map<String, dynamic>? attributes;
   final dynamic forcedVariations;
+  final Map<String, StickyAssignmentsDocument>? stickyBucketAssignmentDocs;
 
   factory GBFeaturesTest.fromMap(Map<String, dynamic> map) {
     return GBFeaturesTest(
-        attributes: map['attributes'],
-        forcedVariations: map['forcedVariations'],
-        features: map['features'] != null
-            ? (map['features'] as Map).map((key, value) {
-                return MapEntry(
-                  key,
-                  GBFeature.fromJson(value),
-                );
-              })
-            : null);
+      attributes: map['attributes'] as Map<String, dynamic>?,
+      forcedVariations: map['forcedVariations'],
+      features: (map['features'] as Map<String, dynamic>?)?.map(
+        (key, value) => MapEntry(key, GBFeature.fromJson(value)),
+      ),
+      stickyBucketAssignmentDocs:
+          (map['stickyBucketAssignmentDocs'] as Map<String, dynamic>?)?.map(
+        (key, value) =>
+            MapEntry(key, StickyAssignmentsDocument.fromJson(value)),
+      ),
+    );
   }
 }
 
@@ -115,8 +127,10 @@ class GBContextTest {
 
   factory GBContextTest.fromMap(Map<String, dynamic> map) => GBContextTest(
         attributes: map['attributes'],
-        features: (map['features'] as Map<String, dynamic>?)?.map((key, value) =>
-      MapEntry(key, GBFeature.fromJson(value as Map<String, dynamic>))) ?? <String, GBFeature>{},
+        features: (map['features'] as Map<String, dynamic>?)?.map(
+                (key, value) => MapEntry(
+                    key, GBFeature.fromJson(value as Map<String, dynamic>))) ??
+            <String, GBFeature>{},
         qaMode: map['qaMode'] ?? false,
         enabled: map['enabled'] ?? true,
         forcedVariations: map['forcedVariations'],
@@ -131,6 +145,12 @@ class GBExperimentResultTest {
     this.hashAttribute,
     this.hashUsed,
     this.hashValue,
+    this.key,
+    this.name,
+    this.bucket,
+    this.passthrough,
+    this.featureId,
+    this.stickyBucketUsed,
   });
 
   /// Whether or not the user is part of the experiment
@@ -145,10 +165,29 @@ class GBExperimentResultTest {
   /// The user attribute used to assign a variation
   String? hashAttribute;
 
+  /// If a hash was used to assign a variation
   bool? hashUsed;
 
   ///  The value of that attribute
   String? hashValue;
+
+  /// The unique key for the assigned variation
+  String? key;
+
+  /// The human-readable name of the assigned variation
+  String? name;
+
+  /// The hash value used to assign a variation (float from `0` to `1`)
+  double? bucket;
+
+  /// Used for holdout groups
+  bool? passthrough;
+
+  /// The id of the feature (if any) that the experiment came from
+  String? featureId;
+
+  /// If sticky bucketing was used to assign a variation
+  bool? stickyBucketUsed;
 
   factory GBExperimentResultTest.fromMap(Map<String, dynamic> map) =>
       GBExperimentResultTest(
@@ -158,5 +197,11 @@ class GBExperimentResultTest {
         hashAttribute: map['hashAttribute'],
         hashUsed: map['hashUsed'],
         hashValue: map['hashValue']?.toString(),
+        key: map['key']?.toString(),
+        name: map['name']?.toString(),
+        bucket: map['bucket'],
+        passthrough: map['passthrough'],
+        featureId: map['featureId']?.toString(),
+        stickyBucketUsed: map['stickyBucketUsed'],
       );
 }

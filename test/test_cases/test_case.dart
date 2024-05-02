@@ -6766,6 +6766,7 @@ const String gbTestCases = r'''
           }
         }
       },
+      [],
       "feature",
       {
         "bucket": 0.863,
@@ -6841,6 +6842,7 @@ const String gbTestCases = r'''
         },
         "stickyBucketAssignmentDocs": {}
       },
+      [],
       "exp1",
       {
         "bucket": 0.6468,
@@ -6913,17 +6915,17 @@ const String gbTestCases = r'''
               }
             ]
           }
-        },
-        "stickyBucketAssignmentDocs": {
-          "deviceId||d123": {
-            "attributeName": "deviceId",
-            "attributeValue": "d123",
-            "assignments": {
-              "feature-exp__0": "2"
-            }
-          }
         }
       },
+      [
+        {
+          "attributeName": "deviceId",
+          "attributeValue": "d123",
+          "assignments": {
+            "feature-exp__0": "2"
+          }
+        }
+      ],
       "exp1",
       {
         "bucket": 0.6468,
@@ -6948,10 +6950,10 @@ const String gbTestCases = r'''
       }
     ],
     [
-      "upgrades a sticky bucket doc from a fallbackAttribute to a hashAttribute",
+      "does not consume a sticky bucket not belonging to the user",
       {
         "attributes": {
-          "id": "i123",
+          "deviceId": "d123",
           "anonymousId": "ses123",
           "foo": "bar",
           "country": "USA"
@@ -6996,17 +6998,100 @@ const String gbTestCases = r'''
               }
             ]
           }
+        }
+      },
+      [
+        {
+          "attributeName": "deviceId",
+          "attributeValue": "d456",
+          "assignments": {
+            "feature-exp__0": "2"
+          }
+        }
+      ],
+      "exp1",
+      {
+        "bucket": 0.6468,
+        "featureId": "exp1",
+        "hashAttribute": "deviceId",
+        "hashUsed": true,
+        "hashValue": "d123",
+        "inExperiment": true,
+        "key": "1",
+        "stickyBucketUsed": false,
+        "value": "red",
+        "variationId": 1
+      },
+      {
+        "deviceId||d123": {
+          "assignments": {
+            "feature-exp__0": "1"
+          },
+          "attributeName": "deviceId",
+          "attributeValue": "d123"
+        }
+      }
+    ],
+    [
+      "upgrades a sticky bucket doc from a fallbackAttribute to a hashAttribute",
+      {
+        "attributes": {
+          "id": "i123",
+          "anonymousId": "ses123",
+          "foo": "bar",
+          "country": "USA"
         },
-        "stickyBucketAssignmentDocs": {
-          "anonymousId||123": {
-            "attributeName": "anonymousId",
-            "attributeValue": "123",
-            "assignments": {
-              "feature-exp__0": "2"
-            }
+        "features": {
+          "exp1": {
+            "defaultValue": "control",
+            "rules": [
+              {
+                "key": "feature-exp",
+                "seed": "feature-exp",
+                "hashAttribute": "id",
+                "fallbackAttribute": "anonymousId",
+                "hashVersion": 2,
+                "bucketVersion": 0,
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
+                "coverage": 1,
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
+                "phase": "0"
+              }
+            ]
           }
         }
       },
+      [
+        {
+          "attributeName": "anonymousId",
+          "attributeValue": "ses123",
+          "assignments": {
+            "feature-exp__0": "1"
+          }
+        }
+      ],
       "exp1",
       {
         "bucket": 0.9943,
@@ -7015,22 +7100,22 @@ const String gbTestCases = r'''
         "hashUsed": true,
         "hashValue": "i123",
         "inExperiment": true,
-        "key": "2",
+        "key": "1",
         "stickyBucketUsed": true,
-        "value": "blue",
-        "variationId": 2
+        "value": "red",
+        "variationId": 1
       },
       {
-        "anonymousId||123": {
+        "anonymousId||ses123": {
           "assignments": {
-            "feature-exp__0": "2"
+            "feature-exp__0": "1"
           },
           "attributeName": "anonymousId",
-          "attributeValue": "123"
+          "attributeValue": "ses123"
         },
         "id||i123": {
           "assignments": {
-            "feature-exp__0": "2"
+            "feature-exp__0": "1"
           },
           "attributeName": "id",
           "attributeValue": "i123"
@@ -7054,7 +7139,7 @@ const String gbTestCases = r'''
                 "key": "feature-exp",
                 "seed": "feature-exp",
                 "hashAttribute": "id",
-                "fallbackAttribute": "deviceId",
+                "fallbackAttribute": "anonymousId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
                 "condition": {
@@ -7086,24 +7171,24 @@ const String gbTestCases = r'''
               }
             ]
           }
-        },
-        "stickyBucketAssignmentDocs": {
-          "anonymousId||123": {
-            "attributeName": "anonymousId",
-            "attributeValue": "123",
-            "assignments": {
-              "feature-exp__0": "2"
-            }
-          },
-          "id||i123": {
-            "attributeName": "id",
-            "attributeValue": "i123",
-            "assignments": {
-              "feature-exp__0": "1"
-            }
-          }
         }
       },
+      [
+        {
+          "attributeName": "anonymousId",
+          "attributeValue": "ses123",
+          "assignments": {
+            "feature-exp__0": "2"
+          }
+        },
+        {
+          "attributeName": "id",
+          "attributeValue": "i123",
+          "assignments": {
+            "feature-exp__0": "1"
+          }
+        }
+      ],
       "exp1",
       {
         "bucket": 0.9943,
@@ -7118,12 +7203,12 @@ const String gbTestCases = r'''
         "variationId": 1
       },
       {
-        "anonymousId||123": {
+        "anonymousId||ses123": {
           "assignments": {
             "feature-exp__0": "2"
           },
           "attributeName": "anonymousId",
-          "attributeValue": "123"
+          "attributeValue": "ses123"
         },
         "id||i123": {
           "assignments": {
@@ -7182,17 +7267,17 @@ const String gbTestCases = r'''
               }
             ]
           }
-        },
-        "stickyBucketAssignmentDocs": {
-          "id||i123": {
-            "assignments": {
-              "feature-exp__0": "1"
-            },
-            "attributeName": "id",
-            "attributeValue": "i123"
-          }
         }
       },
+      [
+        {
+          "assignments": {
+            "feature-exp__0": "1"
+          },
+          "attributeName": "id",
+          "attributeValue": "i123"
+        }
+      ],
       "exp1",
       {
         "bucket": 0.9943,
@@ -7266,17 +7351,17 @@ const String gbTestCases = r'''
               }
             ]
           }
-        },
-        "stickyBucketAssignmentDocs": {
-          "id||i123": {
-            "assignments": {
-              "feature-exp__0": "1"
-            },
-            "attributeName": "id",
-            "attributeValue": "i123"
-          }
         }
       },
+      [
+        {
+          "assignments": {
+            "feature-exp__0": "1"
+          },
+          "attributeName": "id",
+          "attributeValue": "i123"
+        }
+      ],
       "exp1",
       null,
       {
@@ -7338,17 +7423,17 @@ const String gbTestCases = r'''
               }
             ]
           }
-        },
-        "stickyBucketAssignmentDocs": {
-          "id||i123": {
-            "attributeName": "id",
-            "attributeValue": "i123",
-            "assignments": {
-              "feature-exp__0": "1"
-            }
-          }
         }
       },
+      [
+        {
+          "attributeName": "id",
+          "attributeValue": "i123",
+          "assignments": {
+            "feature-exp__0": "1"
+          }
+        }
+      ],
       "exp1",
       {
         "bucket": 0.9943,

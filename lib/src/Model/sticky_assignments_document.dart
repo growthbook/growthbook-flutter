@@ -5,14 +5,14 @@ part 'sticky_assignments_document.g.dart';
 @JsonSerializable()
 class StickyAssignmentsDocument {
   const StickyAssignmentsDocument({
+    required this.assignments,
     required this.attributeName,
     required this.attributeValue,
-    required this.assignments,
   });
 
+  final Map<String, String> assignments;
   final String attributeName;
   final String attributeValue;
-  final StickyAssignments assignments;
 
   factory StickyAssignmentsDocument.fromJson(Map<String, dynamic> value) =>
       _$StickyAssignmentsDocumentFromJson(value);
