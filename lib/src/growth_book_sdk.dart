@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
@@ -80,7 +79,8 @@ class GBSDKBuilderApp {
     return this;
   }
 
-  GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
+  GBSDKBuilderApp setStickyBucketService(
+      StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
     return this;
   }
@@ -125,7 +125,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   dynamic get features => _context.features;
 
   @override
-  void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote}) {
+  void featuresFetchedSuccessfully({
+    required GBFeatures gbFeatures,
+    required bool isRemote,
+  }) {
     _context.features = gbFeatures;
     _refreshHandler!(true);
   }
@@ -162,15 +165,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    return FeatureEvaluator(attributeOverrides: _attributeOverrides, context: context, featureKey: id)
-        .evaluateFeature();
+    return FeatureEvaluator(
+      attributeOverrides: _attributeOverrides,
+      context: context,
+      featureKey: id,
+    ).evaluateFeature();
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    return ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
+    return ExperimentEvaluator(attributeOverrides: _attributeOverrides)
+        .evaluateExperiment(context, experiment);
   }
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
+  Map<StickyAttributeKey, StickyAssignmentsDocument>
+      getStickyBucketAssignmentDocs() {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
@@ -193,7 +201,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _forcedFeatures = forcedFeatures;
   }
 
-  void setEncryptedFeatures(String encryptedString, String encryptionKey, [CryptoProtocol? subtle]) {
+  void setEncryptedFeatures(String encryptedString, String encryptionKey,
+      [CryptoProtocol? subtle]) {
     CryptoProtocol crypto = subtle ?? Crypto();
     var features = crypto.getFeaturesFromEncryptedFeatures(
       encryptedString,

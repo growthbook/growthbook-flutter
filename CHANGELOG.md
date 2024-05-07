@@ -1,3 +1,6 @@
+# 3.8.1+0
+- Export dio client to enable overrideable client
+
 # 3.8.0+0
 - add StickyBucketing test cases
 
