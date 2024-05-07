@@ -1,5 +1,8 @@
 # 3.8.1+0
-- Export dio client to enable overrideable client
+- Expose dio client to enable overrideable
+- Export as independent method listenAndRetry
+- To runnable on Web, use Utf8Encoder or Utf8Decoder instead of utf8.encode or utf8.decode
+- Export experiment result
 
 # 3.8.0+0
 - add StickyBucketing test cases
