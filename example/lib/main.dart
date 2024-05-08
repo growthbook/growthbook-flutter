@@ -44,7 +44,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 
   /// Initialization of controllers.
   late TabController _tabController;
-  final userAttr = {"id": Platform.isIOS ? "foo" : "foo_bar"};
+  final userAttr = {"id": (!kIsWeb && Platform.isIOS) ? "foo" : "foo_bar"};
   GrowthBookSDK? gb;
   @override
   void initState() {

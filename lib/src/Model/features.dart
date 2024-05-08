@@ -1,5 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';

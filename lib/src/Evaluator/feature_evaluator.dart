@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
-import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 
 /// Feature Evaluator Class
 /// Takes Context and Feature Key
@@ -19,7 +18,8 @@ class FeatureEvaluator {
     required this.featureKey,
     required this.attributeOverrides,
     FeatureEvalContext? evalContext,
-  }) : evalContext = evalContext ?? FeatureEvalContext(evaluatedFeatures: <String>{});
+  }) : evalContext =
+            evalContext ?? FeatureEvalContext(evaluatedFeatures: <String>{});
 
   /// Takes context and feature key and returns the calculated feature result against that key.
   GBFeatureResult evaluateFeature() {
@@ -96,7 +96,8 @@ class FeatureEvaluator {
           }
         }
         if (rule.filters != null) {
-          if (GBUtils.isFilteredOut(rule.filters!, context, attributeOverrides)) {
+          if (GBUtils.isFilteredOut(
+              rule.filters!, context, attributeOverrides)) {
             log('Skip rule because of filters');
             continue; // Skip to the next rule
           }
@@ -118,7 +119,8 @@ class FeatureEvaluator {
             attributeOverrides,
             rule.seed ?? featureKey,
             rule.hashAttribute,
-            (context.stickyBucketService != null && (rule.disableStickyBucketing != true))
+            (context.stickyBucketService != null &&
+                    (rule.disableStickyBucketing != true))
                 ? rule.fallbackAttribute
                 : null,
             rule.range,
@@ -135,8 +137,10 @@ class FeatureEvaluator {
           // Handle tracks if present
           if (rule.tracks != null) {
             for (var track in rule.tracks!) {
-              if (!ExperimentHelper.shared.isTracked(track.experiment, track.experimentResult)) {
-                context.trackingCallBack!(track.experiment, track.experimentResult);
+              if (!ExperimentHelper.shared
+                  .isTracked(track.experiment, track.experimentResult)) {
+                context.trackingCallBack!(
+                    track.experiment, track.experimentResult);
               }
             }
           }
@@ -154,7 +158,9 @@ class FeatureEvaluator {
               }
 
               // Compute the hash using the Fowler-Noll-Vo algorithm (fnv32-1a)
-              double hashFNV = GBUtils.hash(seed: featureKey, value: attributeValue, version: 1) ?? 0.0;
+              double hashFNV = GBUtils.hash(
+                      seed: featureKey, value: attributeValue, version: 1) ??
+                  0.0;
 
               // If the computed hash value is greater than rule.coverage, skip the rule
               if (hashFNV > rule.coverage!) {
@@ -163,7 +169,8 @@ class FeatureEvaluator {
             }
           }
 
-          return prepareResult(value: rule.force!, source: GBFeatureSource.force);
+          return prepareResult(
+              value: rule.force!, source: GBFeatureSource.force);
         } else {
           if (rule.variations == null) {
             // If not, skip this rule
@@ -208,7 +215,9 @@ class FeatureEvaluator {
         }
       }
     }
-    return prepareResult(value: targetFeature.defaultValue, source: GBFeatureSource.defaultValue);
+    return prepareResult(
+        value: targetFeature.defaultValue,
+        source: GBFeatureSource.defaultValue);
   }
 
   GBFeatureResult prepareResult({
