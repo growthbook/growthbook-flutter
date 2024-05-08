@@ -25,7 +25,7 @@ class GBSDKBuilderApp {
     this.onInitializationFailure,
     this.refreshHandler,
     this.stickyBucketService,
-    this.backgroundSync,
+    this.backgroundSync = false,
     this.remoteEval = false,
   }) : assert(
           hostURL.endsWith('/'),
@@ -42,7 +42,7 @@ class GBSDKBuilderApp {
   final BaseClient? client;
   final GBFeatures gbFeatures;
   final OnInitializationFailure? onInitializationFailure;
-  final bool? backgroundSync;
+  final bool backgroundSync;
   final bool remoteEval;
 
   CacheRefreshHandler? refreshHandler;
@@ -130,7 +130,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required bool isRemote,
   }) {
     _context.features = gbFeatures;
-    _refreshHandler!(true);
+    if (_refreshHandler != null) {
+      _refreshHandler!(true);
+    }
   }
 
   @override
@@ -143,7 +145,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refresh() async {
     final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync ?? false,
+      backgroundSync: _context.backgroundSync,
       encryptionKey: _context.encryptionKey ?? "",
       delegate: this,
       source: FeatureDataSource(
@@ -154,7 +156,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_gbFeatures != null) {
       _context.features = _gbFeatures!;
     }
-    if (_context.backgroundSync != false) {
+    if (_context.backgroundSync) {
       await featureViewModel.connectBackgroundSync();
     }
     if (_context.remoteEval) {
@@ -233,7 +235,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
     final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync ?? false,
+      backgroundSync: _context.backgroundSync,
       encryptionKey: _context.encryptionKey ?? "",
       delegate: this,
       source: FeatureDataSource(
