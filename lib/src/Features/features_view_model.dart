@@ -27,8 +27,10 @@ class FeatureViewModel {
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-      (data) => delegate.featuresFetchedSuccessfully(
-          gbFeatures: data.features, isRemote: false),
+      (data) {
+        delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: false);
+        prepareFeaturesData(data);
+      },
       (e, s) => delegate.featuresFetchFailed(
         error: GBError(
           error: e,
@@ -39,16 +41,14 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl,
-      {bool remoteEval = false, RemoteEvalModel? payload}) async {
-    final receivedData =
-        await manager.getContent(fileName: Constant.featureCache);
+  Future<void> fetchFeatures(String? apiUrl, {bool remoteEval = false, RemoteEvalModel? payload}) async {
+    final receivedData = await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData == null) {
       await source.fetchFeatures(
         (data) {
           delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features,
+            gbFeatures: data.features!,
             isRemote: false,
           );
           cacheFeatures(data);
@@ -63,10 +63,20 @@ class FeatureViewModel {
       );
     } else {
       String receivedDataJson = utf8Decoder.convert(receivedData);
-      final receivedDataJsonMap = json.decode(receivedDataJson);
-      final data = FeaturedDataModel.fromJson(receivedDataJsonMap);
-      delegate.featuresFetchedSuccessfully(
-          gbFeatures: data.features, isRemote: false);
+      final receiveFeatureJsonMap = json.decode(receivedDataJson);
+      Map<String, GBFeature> featureMap = {};
+
+      if (encryptionKey.isNotEmpty) {
+        receiveFeatureJsonMap.forEach((key, value) {
+          if (value is Map<String, dynamic>) {
+            featureMap[key] = GBFeature.fromJson(value);
+          }
+        });
+      } else {
+        featureMap = FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+      }
+
+      delegate.featuresFetchedSuccessfully(gbFeatures: featureMap, isRemote: false);
     }
 
     if (apiUrl != null) {
@@ -105,7 +115,7 @@ class FeatureViewModel {
 
   void prepareFeaturesData(FeaturedDataModel data) {
     try {
-      if (data.features.isEmpty) {
+      if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
       } else {
         handleValidFeatures(data);
@@ -116,23 +126,21 @@ class FeatureViewModel {
   }
 
   void handleValidFeatures(FeaturedDataModel data) {
-    if (data.features.isNotEmpty) {
+    if (data.features != null && data.features!.isNotEmpty) {
       delegate.featuresAPIModelSuccessfully(data);
-      // todo manager content save
-      //    manager.putData(fileName: Constant.featureCache, content: utf8.encode(data.features.toString()));
-      delegate.featuresFetchedSuccessfully(
-          gbFeatures: data.features, isRemote: true);
+      String jsonString = json.encode(data.toJson());
+      final bytes = utf8Encoder.convert(jsonString);
+      manager.putData(fileName: Constant.featureCache, content: bytes);
+      delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
     } else {
-      handleInvalidFeatures(data.features);
+      if (data.encryptedFeatures != null) {
+        handleEncryptedFeatures(data.encryptedFeatures!);
+      }
     }
   }
 
-  void handleInvalidFeatures(Map<String, dynamic>? jsonPetitions) {
-    final encryptedString = jsonPetitions?["encryptedFeatures"];
-
-    if (encryptedString == null ||
-        encryptedString is! String ||
-        encryptedString.isEmpty) {
+  void handleEncryptedFeatures(String encryptedFeatures) {
+    if (encryptedFeatures.isEmpty) {
       logError("Failed to parse encrypted data.");
       return;
     }
@@ -145,13 +153,12 @@ class FeatureViewModel {
     try {
       final crypto = Crypto();
       final extractedFeatures = crypto.getFeaturesFromEncryptedFeatures(
-        encryptedString,
+        encryptedFeatures,
         encryptionKey,
       );
 
       if (extractedFeatures != null) {
-        delegate.featuresFetchedSuccessfully(
-            gbFeatures: extractedFeatures, isRemote: false);
+        delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: false);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
         final featureDataOnUint8List = Uint8List.fromList(featureData);
         manager.putData(
@@ -187,7 +194,6 @@ class FeatureViewModel {
   }
 
   void cacheFeatures(FeaturedDataModel data) {
-    // final GBFeatures features = data.toJson(); //.features;
     String jsonString = json.encode(data.toJson());
     final bytes = utf8Encoder.convert(jsonString);
 

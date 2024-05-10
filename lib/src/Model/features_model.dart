@@ -6,14 +6,17 @@ part 'features_model.g.dart';
 
 @JsonSerializable()
 class FeaturedDataModel {
-  FeaturedDataModel({required this.features});
+  FeaturedDataModel({
+    required this.features,
+    required this.encryptedFeatures,
+  });
 
   @GBFeaturesConverter()
-  final GBFeatures features;
+  final GBFeatures? features;
 
-  factory FeaturedDataModel.fromJson(Map<String, dynamic> json) =>
-      _$FeaturedDataModelFromJson(json);
+  final String? encryptedFeatures;
 
-  Map<String, dynamic> toJson() =>
-   _$FeaturedDataModelToJson(this);     
+  factory FeaturedDataModel.fromJson(Map<String, dynamic> json) => _$FeaturedDataModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$FeaturedDataModelToJson(this);
 }
