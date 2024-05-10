@@ -15,6 +15,7 @@ class GBSDKBuilderApp {
   GBSDKBuilderApp({
     required this.hostURL,
     required this.apiKey,
+    this.encryptionKey,
     required this.growthBookTrackingCallBack,
     this.attributes = const <String, dynamic>{},
     this.qaMode = false,
@@ -33,6 +34,7 @@ class GBSDKBuilderApp {
         );
 
   final String apiKey;
+  final String? encryptionKey;
   final String hostURL;
   final bool enable;
   final bool qaMode;
@@ -51,6 +53,7 @@ class GBSDKBuilderApp {
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
       apiKey: apiKey,
+      encryptionKey: encryptionKey,
       hostURL: hostURL,
       enabled: enable,
       qaMode: qaMode,
@@ -79,8 +82,7 @@ class GBSDKBuilderApp {
     return this;
   }
 
-  GBSDKBuilderApp setStickyBucketService(
-      StickyBucketService? stickyBucketService) {
+  GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
     return this;
   }
@@ -175,12 +177,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    return ExperimentEvaluator(attributeOverrides: _attributeOverrides)
-        .evaluateExperiment(context, experiment);
+    return ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
   }
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument>
-      getStickyBucketAssignmentDocs() {
+  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
@@ -203,8 +203,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _forcedFeatures = forcedFeatures;
   }
 
-  void setEncryptedFeatures(String encryptedString, String encryptionKey,
-      [CryptoProtocol? subtle]) {
+  void setEncryptedFeatures(String encryptedString, String encryptionKey, [CryptoProtocol? subtle]) {
     CryptoProtocol crypto = subtle ?? Crypto();
     var features = crypto.getFeaturesFromEncryptedFeatures(
       encryptedString,

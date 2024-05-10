@@ -38,8 +38,6 @@ class DioClient extends BaseClient {
 
   Dio get client => _dio;
 
-  bool errorOccurred = false;
-
   Future<void> listenAndRetry({
     required Dio dio,
     required String path,
@@ -53,13 +51,10 @@ class DioClient extends BaseClient {
       );
 
       final data = resp.data;
+      final statusCode = resp.statusCode;
 
       if (data is ResponseBody) {
-        data.stream
-            .cast<List<int>>()
-            .transform(const Utf8Decoder())
-            .transform(const SseEventTransformer())
-            .listen(
+        data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
           (sseModel) {
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";
@@ -69,21 +64,9 @@ class DioClient extends BaseClient {
           },
           onError: (dynamic e, dynamic s) async {
             onError;
-
-            if (!errorOccurred) {
-              errorOccurred = true;
-              await Future.delayed(const Duration(seconds: 5));
-              await listenAndRetry(
-                dio: dio,
-                onError: onError,
-                onSuccess: onSuccess,
-                path: path,
-              );
-            }
           },
           onDone: () async {
-            if (!errorOccurred) {
-              await Future.delayed(const Duration(seconds: 5));
+            if (statusCode != null && shouldReconnect(statusCode)) {
               await listenAndRetry(
                 dio: dio,
                 onError: onError,
@@ -96,17 +79,11 @@ class DioClient extends BaseClient {
       }
     } catch (error) {
       onError;
-      if (!errorOccurred) {
-        errorOccurred = true;
-        await Future.delayed(const Duration(seconds: 5));
-        await listenAndRetry(
-          dio: dio,
-          onError: onError,
-          onSuccess: onSuccess,
-          path: path,
-        );
-      }
     }
+  }
+
+  bool shouldReconnect(int statusCode) {
+    return statusCode >= 200 && statusCode < 300;
   }
 
   @override
