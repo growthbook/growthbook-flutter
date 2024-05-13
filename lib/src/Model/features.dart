@@ -21,8 +21,7 @@ class GBFeature {
   ///  The default value (should use null if not specified)
   dynamic defaultValue;
 
-  factory GBFeature.fromJson(Map<String, dynamic> value) =>
-      _$GBFeatureFromJson(value);
+  factory GBFeature.fromJson(Map<String, dynamic> value) => _$GBFeatureFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureToJson(this);
 }
@@ -56,6 +55,7 @@ class GBFeatureRule {
     this.parentConditions,
   });
 
+  /// Unique feature rule id
   String? id;
 
   /// Optional targeting condition
@@ -128,8 +128,7 @@ class GBFeatureRule {
   // GBTrackData? tracks;
   List<GBTrackData>? tracks;
 
-  factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
-      _$GBFeatureRuleFromJson(value);
+  factory GBFeatureRule.fromJson(Map<String, dynamic> value) => _$GBFeatureRuleFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);
 }

@@ -205,6 +205,8 @@ class GBUtils {
     // If both range and coverage are null, return true
     if (range == null && coverage == null) return true;
 
+    if (range == null && coverage == 0) return false;
+
     // Get the hash attribute and its value
     var hashAttrResult = getHashAttribute(
         attr: hashAttribute, fallback: fallbackAttribute, attributeOverrides: attributeOverrides, context: context);
@@ -349,8 +351,7 @@ class GBUtils {
   }) {
     final assignments = <String, String>{};
 
-    Map<StickyAttributeKey, StickyAssignmentsDocument>?
-        stickyBucketAssignmentDocs =
+    Map<StickyAttributeKey, StickyAssignmentsDocument>? stickyBucketAssignmentDocs =
         <StickyAttributeKey, StickyAssignmentsDocument>{};
 
     // Check if stickyBucketAssignmentDocs is null
@@ -387,8 +388,7 @@ class GBUtils {
     }
 
     String? leftOperand = context
-        .stickyBucketAssignmentDocs?[
-            "$expFallBackAttribute||${attributeOverrides[expFallBackAttribute]}"]
+        .stickyBucketAssignmentDocs?["$expFallBackAttribute||${attributeOverrides[expFallBackAttribute]}"]
         ?.attributeValue;
 
     if (leftOperand != attributeOverrides[expFallBackAttribute]) {
@@ -401,16 +401,13 @@ class GBUtils {
     });
 
     // Add assignments from fallbackKey if not null
-    if (fallbackKey != null &&
-        stickyBucketAssignmentDocs?[fallbackKey] != null) {
-      assignments
-          .addAll(stickyBucketAssignmentDocs?[fallbackKey]?.assignments ?? {});
+    if (fallbackKey != null && stickyBucketAssignmentDocs?[fallbackKey] != null) {
+      assignments.addAll(stickyBucketAssignmentDocs?[fallbackKey]?.assignments ?? {});
     }
 
     // Add assignments from hashKey if not null
     if (stickyBucketAssignmentDocs?[hashKey] != null) {
-      assignments
-          .addAll(stickyBucketAssignmentDocs![hashKey]?.assignments ?? {});
+      assignments.addAll(stickyBucketAssignmentDocs![hashKey]?.assignments ?? {});
     }
 
     return assignments;
@@ -492,7 +489,7 @@ class GBUtils {
         final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
         if (assignments.containsKey(blockedKey)) {
           // A blocked version was found.
-          return StickyBucketResult(variation:-1, versionIsBlocked: true);
+          return StickyBucketResult(variation: -1, versionIsBlocked: true);
         }
       }
     }
