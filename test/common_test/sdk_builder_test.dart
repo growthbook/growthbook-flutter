@@ -26,9 +26,7 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (experiment, experimentResult) {},
         backgroundSync: false,
-      )
-          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
-          .initialize();
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
@@ -89,9 +87,7 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (exp, result) {},
         backgroundSync: false,
-      )
-          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
-          .initialize();
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
       final featureValue = sdk.feature('fwrfewrfe');
       expect(featureValue.source, GBFeatureSource.unknownFeature);
       final result = sdk.run(GBExperiment(key: "fwrfewrfe"));
@@ -139,8 +135,7 @@ void main() {
       );
 
       final dataExpectedResult = utf8.encode(expectedResult);
-      final features =
-          json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
+      final features = json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
 
       expect(
         sdkInstance.features["testfeature1"]?.rules?[0].condition,
@@ -166,9 +161,7 @@ void main() {
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        )
-            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
-            .initialize();
+        ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
