@@ -1,4 +1,10 @@
-# 3.8.1+0
+# 3.9.1
+- v0.6.0: Tweak to isIncludedInRollout to handle an edge case when coverage is zero. Also added test case for this
+- v0.6.0: Remove versionCompare test cases (these are now just included as part of evalCondition)
+- v0.6.0: Add id property to feature rules (reserved for future use)
+- Add common tests and make fixes
+
+# 3.9.0
 - Expose dio client to enable overrideable
 - Export as independent method listenAndRetry
 - To runnable on Web, use Utf8Encoder or Utf8Decoder instead of utf8.encode or utf8.decode
