@@ -19,7 +19,7 @@ void main() {
       final passedScenarios = <String>[];
       for (final item in evaluateCondition) {
         final evaluator = GBConditionEvaluator();
-        final result = evaluator.evaluateCondition(item[2], item[1]);
+        final result = evaluator.isEvalCondition(item[2], item[1]);
         final status = "${item[0]}\nExpected Result - ${item[3]}\nActual result - $result\n\n";
         if (item[3].toString() == result.toString()) {
           passedScenarios.add(status);
@@ -29,6 +29,8 @@ void main() {
         }
         index++;
       }
+      print(failedScenarios);
+      // print(passedScenarios.length);
       expect(failedScenarios.length, 0);
       customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
     });
@@ -36,13 +38,13 @@ void main() {
     test('Test valid condition obj', () {
       final evaluator = GBConditionEvaluator();
 
-      expect(evaluator.evaluateCondition({}, []), false);
+      expect(evaluator.isEvalCondition({}, []), false);
 
       expect(evaluator.isOperatorObject({}), false);
 
       expect(evaluator.getPath('test', 'key'), null);
 
-      expect(evaluator.evalConditionValue(<String, dynamic>{}, null), false);
+      expect(evaluator.isEvalConditionValue(<String, dynamic>{}, null), false);
 
       expect(evaluator.evalOperatorCondition("\$lte", "abc", "abc"), true);
 
@@ -66,7 +68,7 @@ void main() {
     ''';
 
     expect(
-      GBConditionEvaluator().evaluateCondition(
+      GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
       ),
@@ -88,7 +90,7 @@ void main() {
     ''';
 
     expect(
-      GBConditionEvaluator().evaluateCondition(
+      GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
       ),
@@ -110,7 +112,7 @@ void main() {
     ''';
 
     expect(
-      GBConditionEvaluator().evaluateCondition(
+      GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
       ),
@@ -132,7 +134,7 @@ void main() {
     ''';
 
     expect(
-      GBConditionEvaluator().evaluateCondition(
+      GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
       ),

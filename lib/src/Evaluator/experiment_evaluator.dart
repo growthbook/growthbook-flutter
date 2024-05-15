@@ -132,7 +132,7 @@ class ExperimentEvaluator {
 
       if (experiment.condition != null &&
           !GBConditionEvaluator()
-              .evaluateCondition(context.attributes!, experiment.condition!)) {
+              .isEvalCondition(context.attributes!, experiment.condition!)) {
         return _getExperimentResult(
           featureId: featureId,
           context: context,
@@ -162,7 +162,7 @@ class ExperimentEvaluator {
           }
 
           final evalObj = {'value': parentResult.value};
-          final evalCondition = GBConditionEvaluator().evaluateCondition(
+          final evalCondition = GBConditionEvaluator().isEvalCondition(
             evalObj,
             parentCondition.condition,
           );

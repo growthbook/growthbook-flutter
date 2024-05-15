@@ -37,53 +37,51 @@ enum GBAttributeType {
 
 /// Evaluator class fro condition.
 class GBConditionEvaluator {
-  /// This is the main function used to evaluate a condition.
+  /// This is the main function used to evaluate a condition. It loops through the condition key/value pairs and checks each entry:
   /// - attributes : User Attributes
   /// - condition : to be evaluated
-
-  bool evaluateCondition(Map<String, dynamic> attributes, dynamic conditionOBJ) {
-    if (conditionOBJ is List) {
+  bool isEvalCondition(Map<String, dynamic> attributes, dynamic conditionObj) {
+    if (conditionObj is List) {
       return false;
     }
-
-    /// If conditionObj has a key $or, return evalOr(attributes, condition["$or"])
-    var targetItems = conditionOBJ["\$or"];
-    if (targetItems != null) {
-      return evalOr(attributes, targetItems);
-    }
-
-    /// If conditionObj has a key $nor, return !evalOr(attributes, condition["$nor"])
-    targetItems = conditionOBJ["\$nor"];
-    if (targetItems != null) {
-      return !evalOr(attributes, targetItems);
-    }
-
-    /// If conditionObj has a key $and, return !evalAnd(attributes, condition["$and"])
-    targetItems = conditionOBJ["\$and"];
-    if (targetItems != null) {
-      return evalAnd(attributes, targetItems);
-    }
-
-    // If conditionObj has a key $not, return !evalCondition(attributes, condition["$not"])
-    var targetItem = conditionOBJ["\$not"];
-    if (targetItem != null) {
-      return !evaluateCondition(attributes, targetItem);
-    }
-    // Loop through the conditionObj key/value pairs
-    for (final key in conditionOBJ.keys) {
-      final element = getPath(attributes, key);
-      final value = conditionOBJ[key];
-
-      if (!evalConditionValue(value, element)) {
-        return false;
+    if (conditionObj is Map<String, dynamic>) {
+      for (var key in conditionObj.keys) {
+        var value = conditionObj[key];
+        switch (key) {
+          case "\$or":
+            if (!isEvalOr(attributes, value)) {
+              return false;
+            }
+            break;
+          case "\$nor":
+            if (isEvalOr(attributes, value)) {
+              return false;
+            }
+            break;
+          case "\$and":
+            if (!isEvalAnd(attributes, value)) {
+              return false;
+            }
+            break;
+          case "\$not":
+            if (isEvalCondition(attributes, value)) {
+              return false;
+            }
+            break;
+          default:
+            var element = getPath(attributes, key);
+            if (!isEvalConditionValue(value, element)) {
+              return false;
+            }
+        }
       }
     }
-
+    // If none of the entries failed their checks, `evalCondition` returns true
     return true;
   }
 
   /// Evaluate OR conditions against given attributes
-  bool evalOr(Map<String, dynamic> attributes, List conditionObj) {
+  bool isEvalOr(Map<String, dynamic> attributes, List conditionObj) {
     // If conditionObj is empty, return true
     if (conditionObj.isEmpty) {
       return true;
@@ -92,7 +90,7 @@ class GBConditionEvaluator {
       for (var item in conditionObj) {
         // If evalCondition(attributes, conditionObj[i]) is true, break out of
         // the loop and return true
-        if (evaluateCondition(attributes, item)) {
+        if (isEvalCondition(attributes, item)) {
           return true;
         }
       }
@@ -102,14 +100,14 @@ class GBConditionEvaluator {
   }
 
   /// Evaluate AND conditions against given attributes
-  bool evalAnd(dynamic attributes, List conditionObj) {
+  bool isEvalAnd(dynamic attributes, List conditionObj) {
     // Loop through the conditionObjects
 
     // Loop through the conditionObjects
     for (var item in conditionObj) {
       // If evalCondition(attributes, conditionObj[i]) is true, break out of
       // the loop and return false
-      if (!evaluateCondition(attributes, item)) {
+      if (!isEvalCondition(attributes, item)) {
         return false;
       }
     }
@@ -182,7 +180,7 @@ class GBConditionEvaluator {
   }
 
   ///Evaluates Condition Value against given condition & attributes
-  bool evalConditionValue(dynamic conditionValue, dynamic attributeValue) {
+  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue) {
     // If conditionValue is a string, number, boolean, return true if it's
     // "equal" to attributeValue and false if not.
     if ((conditionValue as Object?).isPrimitive && (attributeValue as Object?).isPrimitive) {
@@ -242,13 +240,13 @@ class GBConditionEvaluator {
         if (isOperatorObject(condition)) {
           // If evalConditionValue(condition, item), break out of loop and
           //return true
-          if (evalConditionValue(condition, item)) {
+          if (isEvalConditionValue(condition, item)) {
             return true;
           }
         }
         // Else if evalCondition(item, condition), break out of loop and
         //return true
-        else if (evaluateCondition(item, condition)) {
+        else if (isEvalCondition(item, condition)) {
           return true;
         }
       }
@@ -268,7 +266,7 @@ class GBConditionEvaluator {
 
     /// Evaluate NOT operator - whether condition doesn't contain attribute
     if (operator == "\$not") {
-      return !evalConditionValue(conditionValue, attributeValue);
+      return !isEvalConditionValue(conditionValue, attributeValue);
     }
 
     /// Evaluate EXISTS operator - whether condition contains attribute
@@ -301,7 +299,7 @@ class GBConditionEvaluator {
             for (var con in conditionValue) {
               var result = false;
               for (var attr in attributeValue) {
-                if (evalConditionValue(con, attr)) {
+                if (isEvalConditionValue(con, attr)) {
                   result = true;
                 }
               }
@@ -326,7 +324,7 @@ class GBConditionEvaluator {
         /// Evaluate SIE operator - whether condition size is same as that
         /// of attribute
         case "\$size":
-          return evalConditionValue(conditionValue, attributeValue.length);
+          return isEvalConditionValue(conditionValue, attributeValue.length);
 
         default:
       }
