@@ -49,6 +49,7 @@ class GBSDKBuilderApp {
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
+  GBFeatureUsageCallback? featureUsageCallback;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -60,6 +61,7 @@ class GBSDKBuilderApp {
       attributes: attributes,
       forcedVariation: forcedVariations,
       trackingCallBack: growthBookTrackingCallBack,
+      featureUsageCallback: featureUsageCallback,
       features: gbFeatures,
       stickyBucketService: stickyBucketService,
       backgroundSync: backgroundSync,
@@ -84,6 +86,12 @@ class GBSDKBuilderApp {
 
   GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
+    return this;
+  }
+
+  /// Setter for featureUsageCallback. A callback that will be invoked every time a feature is viewed.
+  GBSDKBuilderApp setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback) {
+    this.featureUsageCallback = featureUsageCallback;
     return this;
   }
 }

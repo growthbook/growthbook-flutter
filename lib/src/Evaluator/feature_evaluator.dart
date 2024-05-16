@@ -18,17 +18,23 @@ class FeatureEvaluator {
     required this.featureKey,
     required this.attributeOverrides,
     FeatureEvalContext? evalContext,
-  }) : evalContext =
-            evalContext ?? FeatureEvalContext(evaluatedFeatures: <String>{});
+  }) : evalContext = evalContext ?? FeatureEvalContext(evaluatedFeatures: <String>{});
 
   /// Takes context and feature key and returns the calculated feature result against that key.
   GBFeatureResult evaluateFeature() {
+    /// This callback serves for listening for feature usage events
+    final onFeatureUsageCallback = context.featureUsageCallback;
+
     // Check if the feature has been evaluated already and return early if it has
     if (evalContext?.evaluatedFeatures.contains(featureKey) ?? false) {
-      return prepareResult(
+      final featureResultWhenCircularDependencyDetected = prepareResult(
         value: null,
         source: GBFeatureSource.cyclicPrerequisite,
       );
+
+      onFeatureUsageCallback?.call(featureKey, featureResultWhenCircularDependencyDetected);
+
+      return featureResultWhenCircularDependencyDetected;
     }
 
     evalContext?.evaluatedFeatures.add(featureKey);
@@ -39,10 +45,13 @@ class FeatureEvaluator {
 
     // If the targetFeature is not found, return a result with null value and unknown feature source
     if (targetFeature == null) {
-      return prepareResult(
+      final emptyFeatureResult = prepareResult(
         value: null,
         source: GBFeatureSource.unknownFeature,
       );
+
+      onFeatureUsageCallback?.call(featureKey, emptyFeatureResult);
+      return emptyFeatureResult;
     }
 
     if (targetFeature.rules != null && targetFeature.rules!.isNotEmpty) {
@@ -64,10 +73,14 @@ class FeatureEvaluator {
 
             // Check if the source of the parent result is cyclic prerequisite
             if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
-              return prepareResult(
+              final featureResultWhenCircularDependencyDetected = prepareResult(
                 value: null, // Corresponds to .null in Swift
                 source: GBFeatureSource.cyclicPrerequisite,
               );
+
+              onFeatureUsageCallback?.call(featureKey, featureResultWhenCircularDependencyDetected);
+
+              return featureResultWhenCircularDependencyDetected;
             }
 
             // Create a map with the parent result value for evaluation
@@ -84,10 +97,14 @@ class FeatureEvaluator {
               // Check if there is a gate in the parent condition
               if (parentCondition.gate != null) {
                 log('Feature blocked by prerequisite');
-                return prepareResult(
+                final featureResultWhenBlockedByPrerequisite = prepareResult(
                   value: null, // Corresponds to .null in Swift
                   source: GBFeatureSource.prerequisite,
                 );
+
+                onFeatureUsageCallback?.call(featureKey, featureResultWhenBlockedByPrerequisite);
+
+                return featureResultWhenBlockedByPrerequisite;
               }
 
               // Non-blocking prerequisite evaluation failed; continue to the next rule
@@ -96,8 +113,7 @@ class FeatureEvaluator {
           }
         }
         if (rule.filters != null) {
-          if (GBUtils.isFilteredOut(
-              rule.filters!, context, attributeOverrides)) {
+          if (GBUtils.isFilteredOut(rule.filters!, context, attributeOverrides)) {
             log('Skip rule because of filters');
             continue; // Skip to the next rule
           }
@@ -119,8 +135,7 @@ class FeatureEvaluator {
             attributeOverrides,
             rule.seed ?? featureKey,
             rule.hashAttribute,
-            (context.stickyBucketService != null &&
-                    (rule.disableStickyBucketing != true))
+            (context.stickyBucketService != null && (rule.disableStickyBucketing != true))
                 ? rule.fallbackAttribute
                 : null,
             rule.range,
@@ -137,10 +152,8 @@ class FeatureEvaluator {
           // Handle tracks if present
           if (rule.tracks != null) {
             for (var track in rule.tracks!) {
-              if (!ExperimentHelper.shared
-                  .isTracked(track.experiment, track.experimentResult)) {
-                context.trackingCallBack!(
-                    track.experiment, track.experimentResult);
+              if (!ExperimentHelper.shared.isTracked(track.experiment, track.experimentResult)) {
+                context.trackingCallBack!(track.experiment, track.experimentResult);
               }
             }
           }
@@ -158,9 +171,7 @@ class FeatureEvaluator {
               }
 
               // Compute the hash using the Fowler-Noll-Vo algorithm (fnv32-1a)
-              double hashFNV = GBUtils.hash(
-                      seed: featureKey, value: attributeValue, version: 1) ??
-                  0.0;
+              double hashFNV = GBUtils.hash(seed: featureKey, value: attributeValue, version: 1) ?? 0.0;
 
               // If the computed hash value is greater than rule.coverage, skip the rule
               if (hashFNV > rule.coverage!) {
@@ -168,9 +179,9 @@ class FeatureEvaluator {
               }
             }
           }
-
-          return prepareResult(
-              value: rule.force!, source: GBFeatureSource.force);
+          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force);
+          onFeatureUsageCallback?.call(featureKey, forcedFeatureResult);
+          return forcedFeatureResult;
         } else {
           if (rule.variations == null) {
             // If not, skip this rule
@@ -197,27 +208,28 @@ class FeatureEvaluator {
               name: rule.name,
               phase: rule.phase,
             );
-            GBExperimentResult result =
-                ExperimentEvaluator(attributeOverrides: attributeOverrides)
-                    .evaluateExperiment(context, exp, featureId: featureKey);
+            GBExperimentResult result = ExperimentEvaluator(attributeOverrides: attributeOverrides)
+                .evaluateExperiment(context, exp, featureId: featureKey);
 
             // Check if the result is in the experiment and not a passthrough
             if (result.inExperiment && !(result.passthrough ?? false)) {
               // Return the result value and source if the result is successful
-              return prepareResult(
+              final experimentFeatureResult = prepareResult(
                 value: result.value,
                 source: GBFeatureSource.experiment,
                 experiment: exp,
                 result: result,
               );
+              onFeatureUsageCallback?.call(featureKey, experimentFeatureResult);
+              return experimentFeatureResult;
             }
           }
         }
       }
     }
-    return prepareResult(
-        value: targetFeature.defaultValue,
-        source: GBFeatureSource.defaultValue);
+    final defaultFeatureResult = prepareResult(value: targetFeature.defaultValue, source: GBFeatureSource.defaultValue);
+    onFeatureUsageCallback?.call(featureKey, defaultFeatureResult);
+    return defaultFeatureResult;
   }
 
   GBFeatureResult prepareResult({

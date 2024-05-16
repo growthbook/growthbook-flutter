@@ -17,6 +17,7 @@ class GBContext {
     this.remoteEval = false,
     this.qaMode = false,
     this.trackingCallBack,
+    this.featureUsageCallback,
     this.features = const <String, GBFeature>{},
     this.backgroundSync = false,
   });
@@ -52,6 +53,9 @@ class GBContext {
 
   /// A function that takes experiment and result as arguments.
   TrackingCallBack? trackingCallBack;
+
+  /// A callback that will be invoked every time a feature is viewed. Listen for feature usage events
+  GBFeatureUsageCallback? featureUsageCallback;
 
   /// Keys are unique identifiers for the features and the values are Feature objects.
   /// Feature definitions - To be pulled from API / Cache

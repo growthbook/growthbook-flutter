@@ -42,6 +42,8 @@ typedef GBStickyBucketingService = LocalStorageStickyBucketService;
 /// A function that takes experiment and result as arguments.
 typedef TrackingCallBack = void Function(GBExperiment, GBExperimentResult);
 
+typedef GBFeatureUsageCallback = void Function(String, GBFeatureResult);
+
 /// GrowthBook Error Class to handle any error / exception scenario
 
 class GBError {
