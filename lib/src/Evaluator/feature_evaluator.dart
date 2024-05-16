@@ -74,7 +74,7 @@ class FeatureEvaluator {
             var evalObj = {'value': parentResult.value};
 
             // Evaluate the condition with the attributes and condition object
-            bool evalCondition = GBConditionEvaluator().evaluateCondition(
+            bool evalCondition = GBConditionEvaluator().isEvalCondition(
               evalObj,
               parentCondition.condition,
             );
@@ -106,7 +106,7 @@ class FeatureEvaluator {
         // Check if rule.force is set
         if (rule.force != null) {
           if (rule.condition != null &&
-              !GBConditionEvaluator().evaluateCondition(
+              !GBConditionEvaluator().isEvalCondition(
                 getAttributes(),
                 rule.condition!,
               )) {
