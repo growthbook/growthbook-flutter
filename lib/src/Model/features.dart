@@ -162,8 +162,8 @@ enum GBFeatureSource {
 class GBFeatureResult {
   GBFeatureResult({
     this.value,
-    this.on,
-    this.off,
+    this.on = false,
+    this.off = true,
     this.source,
     this.experiment,
     this.experimentResult,
@@ -173,10 +173,10 @@ class GBFeatureResult {
   dynamic value;
 
   /// The assigned value cast to a boolean
-  bool? on = false;
+  bool on;
 
   /// The assigned value cast to a boolean and then negated
-  bool? off = true;
+  bool off;
 
   /// One of "unknownFeature", "defaultValue", "force", or "experiment"
 

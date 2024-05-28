@@ -232,21 +232,19 @@ class FeatureEvaluator {
     return defaultFeatureResult;
   }
 
+  /// This is a helper method to create a FeatureResult object.
+  /// Besides the passed-in arguments, there are two derived values -
+  /// on and off, which are just the value cast to booleans.
   GBFeatureResult prepareResult({
     dynamic value,
     required GBFeatureSource source,
     GBExperiment? experiment,
     GBExperimentResult? result,
   }) {
-    var isFalse = false;
-
-    if (value == null) {
-      isFalse = true;
-    } else if (value.toString() == 'false' ||
+    var isFalse = value == null ||
+        value.toString() == 'false' ||
         value.toString() == '0' ||
-        (value.toString().isEmpty && value is! Map && value is! List)) {
-      isFalse = true;
-    }
+        (value.toString().isEmpty && value is! Map && value is! List);
     return GBFeatureResult(
       value: value,
       on: !isFalse,

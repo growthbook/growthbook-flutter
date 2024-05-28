@@ -263,4 +263,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       payload: payload,
     );
   }
+
+   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
+  GBFeatureResult evalFeature(String id) {
+    return FeatureEvaluator(context: context, featureKey: id, attributeOverrides: _attributeOverrides).evaluateFeature();
+  }
+
+  /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
+  bool isOn(String id) {
+    return evalFeature(id).on;
+  }
 }
