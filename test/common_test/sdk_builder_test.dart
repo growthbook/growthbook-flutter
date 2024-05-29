@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 import '../mocks/network_mock.dart';
 
@@ -169,5 +170,45 @@ void main() {
         manager.clearCache();
       },
     );
+    test('- testTrackingCallback', () async {
+      int countTrackingCallback = 0;
+
+      final sdkInstance = await GBSDKBuilderApp(
+        apiKey: testApiKey,
+        hostURL: testHostURL,
+        attributes: attr,
+        growthBookTrackingCallBack: (experiment, experimentResult) {
+          countTrackingCallback += 1;
+        },
+        refreshHandler: null,
+        backgroundSync: false,
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+
+      sdkInstance.context.features = {
+        'feature 1': GBFeature(defaultValue: true),
+        'feature 2': GBFeature(defaultValue: false),
+        'feature 3': GBFeature(
+          defaultValue: true,
+          rules: [
+            GBFeatureRule(
+              id: 'rule 1',
+              force: 'force',
+              tracks: [
+                GBTrackData(
+                  experiment: GBExperiment(key: 'testExperimentKey'),
+                  experimentResult: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true),
+                ),
+              ],
+            ),
+          ],
+        ),
+      };
+
+      sdkInstance.evalFeature('feature 1');
+      sdkInstance.evalFeature('feature 2');
+      sdkInstance.evalFeature('feature 3');
+
+      expect(countTrackingCallback, equals(1));
+    });
   });
 }
