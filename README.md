@@ -511,6 +511,9 @@ If you would like to implement Sticky Bucketing while using Remote Evaluation, y
 
 Sticky bucketing ensures that users see the same experiment variant, even when user session, user login status, or experiment parameters change. See the [Sticky Bucketing docs](https://docs.growthbook.io/app/sticky-bucketing) for more information. If your organization and experiment supports sticky bucketing, you must implement an instance of the `GBStickyBucketingService` to use Sticky Bucketing.
 
+## Acknowledgments
+This SDK was originally contributed by the team at [Alippo](http://alippo.com/) and others. You can find the original repo here: [github.com/alippo-com/GrowthBook-SDK-Flutter](https://github.com/alippo-com/GrowthBook-SDK-Flutter)
+
 ## License
 
 This project uses the MIT license. The core GrowthBook app will always remain open and free, although we may add some commercial enterprise add-ons in the future.
