@@ -1,3 +1,9 @@
+# 3.9.2
+- Allowing multiple keys on a single level, even with operators like $or
+- feature usage callback
+- isOn and evalFeature methods to GrowthBookSDK
+- tracking callback and feature usage callback tests
+  
 # 3.9.1
 - v0.6.0: Tweak to isIncludedInRollout to handle an edge case when coverage is zero. Also added test case for this
 - v0.6.0: Remove versionCompare test cases (these are now just included as part of evalCondition)
