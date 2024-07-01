@@ -67,25 +67,24 @@ void main() {
           Map<String, StickyAssignmentsDocument> expectedStickyAssignmentDocs = <String, StickyAssignmentsDocument>{};
 
           (item[5] as Map<String, dynamic>).forEach((key, value) {
-            expectedStickyAssignmentDocs[key] =
-                StickyAssignmentsDocument.fromJson(value);
+            expectedStickyAssignmentDocs[key] = StickyAssignmentsDocument.fromJson(value);
           });
 
           final evaluator = FeatureEvaluator(attributeOverrides: attributes, context: gbContext, featureKey: item[3]);
 
           final actualExperimentResult = evaluator.evaluateFeature().experimentResult;
 
-          String status = "\n${item[0]}\nExpected Result - ${item[4]} & $expectedStickyAssignmentDocs\n\nActual result - ${actualExperimentResult?.toJson()} & ${gbContext.stickyBucketAssignmentDocs}\n\n";
+          String status =
+              "\n${item[0]}\nExpected Result - ${item[4]} & $expectedStickyAssignmentDocs\n\nActual result - ${actualExperimentResult?.toJson()} & ${gbContext.stickyBucketAssignmentDocs}\n\n";
 
           if (expectedExperimentResult?.value.toString() == actualExperimentResult?.value.toString() &&
-              expectedStickyAssignmentDocs.length == gbContext.stickyBucketAssignmentDocs?.length) {
+              expectedStickyAssignmentDocs.toString() == gbContext.stickyBucketAssignmentDocs.toString()) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);
           }
         }
       }
-
       expect(failedScenarios.length, 0);
     });
   });
