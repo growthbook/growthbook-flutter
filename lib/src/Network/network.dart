@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
@@ -98,6 +99,16 @@ class DioClient extends BaseClient {
     try {
       final response = await dio.get(path);
       onSuccess(response.data);
+    } on DioException catch (e, s) {
+      onError(e, s);
+    } on SocketException catch (e, s) {
+      onError(e, s);
+    } on HandshakeException catch (e, s) {
+      onError(e, s);
+    } on TlsException catch (e, s) {
+      onError(e, s);
+    } on IOException catch (e, s) {
+      onError(e, s);
     } catch (e, s) {
       onError(e, s);
     }
