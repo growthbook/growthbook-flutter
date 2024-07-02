@@ -68,7 +68,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   }
 
   Widget _getRightWidget() {
-    if (gb?.feature('some-feature').on ?? false) {
+    if (gb?.feature('some-feature').on! ?? false) {
       return TabBar(
         isScrollable: true,
         tabs: tabs,
