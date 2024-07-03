@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class CachingLayer {
   Future<Uint8List?> getContent({required String fileName});
@@ -14,6 +15,7 @@ abstract class CachingLayer {
 class CachingManager extends CachingLayer {
   static final CachingManager _instance = CachingManager._internal();
   CachingManager._internal();
+  final _key = 'GrowthBook-Cache';
 
   factory CachingManager() {
     return _instance;
@@ -35,6 +37,13 @@ class CachingManager extends CachingLayer {
     required String fileName,
     required Uint8List content,
   }) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final mapedContent = content.map((value) => value.toString());
+      prefs.setStringList('$_key/$fileName', mapedContent.toList());
+      return;
+    }
+
     final fileManager = File(await getTargetFile(fileName));
     if (fileManager.existsSync()) {
       try {
@@ -53,8 +62,8 @@ class CachingManager extends CachingLayer {
 
   Future<String> getTargetFile(String fileName) async {
     final cacheDirectoryPath = localPath;
-    String targetFolderPath = '$cacheDirectoryPath/GrowthBook-Cache';
-    var fileManager = Directory(targetFolderPath);
+    String targetFolderPath = '$cacheDirectoryPath/$_key';
+    final fileManager = Directory(targetFolderPath);
     if (!fileManager.existsSync()) {
       try {
         fileManager.createSync(recursive: true);
@@ -71,6 +80,15 @@ class CachingManager extends CachingLayer {
 
   @override
   Future<Uint8List?> getContent({required String fileName}) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final result = prefs.getStringList('$_key/$fileName');
+      final mapedResult = result?.map((value) => int.parse(value)).toList();
+      if (mapedResult != null) return Uint8List.fromList(mapedResult);
+
+      return null;
+    }
+
     try {
       final filePath = await getTargetFile(fileName);
       File file = File(filePath);
@@ -84,8 +102,16 @@ class CachingManager extends CachingLayer {
   }
 
   Future<void> clearCache() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where((value) => value.contains(_key));
+      for (String key in keys) {
+        prefs.remove(key);
+      }
+    }
+
     String cacheDirectoryPath = localPath;
-    String targetFolderPath = '$cacheDirectoryPath/GrowthBook-Cache';
+    String targetFolderPath = '$cacheDirectoryPath/$_key';
     final fileManager = Directory(targetFolderPath);
 
     if (fileManager.existsSync()) {
