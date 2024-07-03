@@ -1,6 +1,6 @@
 # 3.9.3
 - Support Caching Manager on Flutter Web
-- Removed a broken test case
+- Remove a broken test case
 - Add equatable for StickyAssignmentsDocument
 - Add different type of exception handling for get features request
 
