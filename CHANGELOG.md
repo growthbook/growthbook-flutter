@@ -1,5 +1,8 @@
 # 3.9.3
 - Support Caching Manager on Flutter Web
+- Remove a broken test case
+- Add equatable for StickyAssignmentsDocument
+- Add different type of exception handling for get features request
 
 # 3.9.2
 - Allowing multiple keys on a single level, even with operators like $or
