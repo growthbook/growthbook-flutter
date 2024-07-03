@@ -1,3 +1,6 @@
+# 3.9.3
+- Support Caching Manager on Flutter Web
+
 # 3.9.2
 - Allowing multiple keys on a single level, even with operators like $or
 - Add feature usage callback

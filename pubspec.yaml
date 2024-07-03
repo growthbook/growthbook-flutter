@@ -1,6 +1,6 @@
 name: growthbook_sdk_flutter
 description: An open-source feature flagging and experimentation platform that makes it simple to alter features and execute A/B testing.
-version: 3.9.2
+version: 3.9.3
 homepage: https://github.com/alippo-com/GrowthBook-SDK-Flutter
 repository: https://github.com/growthbook/growthbook-flutter
 
@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
   json_annotation: ^4.5.0
   pointycastle: ^3.1.3
+  shared_preferences: ^2.2.3
   tuple: ^2.0.0
 
 dev_dependencies:
