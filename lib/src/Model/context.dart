@@ -20,6 +20,7 @@ class GBContext {
     this.featureUsageCallback,
     this.features = const <String, GBFeature>{},
     this.backgroundSync = false,
+    this.savedGroups,
   });
 
   /// Registered API key for GrowthBook SDK.
@@ -63,6 +64,8 @@ class GBContext {
 
   ///Disable background streaming connection
   bool backgroundSync;
+
+  SavedGroupsValues? savedGroups;
 
   String? getFeaturesURL() {
     if (hostURL != null && apiKey != null) {

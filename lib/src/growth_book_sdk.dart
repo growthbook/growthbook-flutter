@@ -106,10 +106,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
     GBFeatures? gbFeatures,
+    SavedGroupsValues? savedGroups,
   })  : _context = context,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _gbFeatures = gbFeatures,
+        _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {};
@@ -123,6 +125,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final CacheRefreshHandler? _refreshHandler;
 
   final GBFeatures? _gbFeatures;
+
+  final SavedGroupsValues? _savedGroups;
 
   List<dynamic> _forcedFeatures;
 
@@ -165,6 +169,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     );
     if (_gbFeatures != null) {
       _context.features = _gbFeatures!;
+    }
+    if (_savedGroups != null) {
+      _context.savedGroups = _savedGroups!;
     }
     if (_context.backgroundSync) {
       await featureViewModel.connectBackgroundSync();
@@ -264,13 +271,30 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     );
   }
 
-   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
+  /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    return FeatureEvaluator(context: context, featureKey: id, attributeOverrides: _attributeOverrides).evaluateFeature();
+    return FeatureEvaluator(context: context, featureKey: id, attributeOverrides: _attributeOverrides)
+        .evaluateFeature();
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
   bool isOn(String id) {
     return evalFeature(id).on;
+  }
+
+  @override
+  void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
+    _onInitializationFailure?.call(error);
+    if (_refreshHandler != null) {
+      _refreshHandler!(false);
+    }
+  }
+
+  @override
+  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
+    _context.savedGroups = savedGroups;
+    if (_refreshHandler != null) {
+      _refreshHandler!(true);
+    }
   }
 }

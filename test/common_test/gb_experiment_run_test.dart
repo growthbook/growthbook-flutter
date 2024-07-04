@@ -34,15 +34,14 @@ void main() {
             trackingCallBack: (_, __) {},
             backgroundSync: false,
             features: testContext.features,
+            savedGroups: testContext.savedGroups,
           );
 
-          final result = ExperimentEvaluator(attributeOverrides: {})
-              .evaluateExperiment(gbContext, experiment);
+          final result = ExperimentEvaluator(attributeOverrides: {}).evaluateExperiment(gbContext, experiment);
           final status =
               "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
 
-          if (item[3].toString() == result.value.toString() &&
-              item[4] == result.inExperiment) {
+          if (item[3].toString() == result.value.toString() && item[4] == result.inExperiment) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);
@@ -51,8 +50,7 @@ void main() {
           failingIndex++;
         }
       }
-      customLogger(
-          'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
       expect(failedScenarios.length, 0);
     });
   });

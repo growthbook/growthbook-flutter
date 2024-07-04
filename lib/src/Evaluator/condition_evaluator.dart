@@ -40,7 +40,13 @@ class GBConditionEvaluator {
   /// This is the main function used to evaluate a condition. It loops through the condition key/value pairs and checks each entry:
   /// - attributes : User Attributes
   /// - condition : to be evaluated
-  bool isEvalCondition(Map<String, dynamic> attributes, dynamic conditionObj) {
+  bool isEvalCondition(
+    Map<String, dynamic> attributes,
+    dynamic conditionObj,
+    // Must be included for `condition` to correctly evaluate group Operators
+    SavedGroupsValues? savedGroups,
+  ) {
+    savedGroups ??= {};
     if (conditionObj is List) {
       return false;
     }
@@ -49,28 +55,28 @@ class GBConditionEvaluator {
         var value = conditionObj[key];
         switch (key) {
           case "\$or":
-            if (!isEvalOr(attributes, value)) {
+            if (!isEvalOr(attributes, value, savedGroups)) {
               return false;
             }
             break;
           case "\$nor":
-            if (isEvalOr(attributes, value)) {
+            if (isEvalOr(attributes, value, savedGroups)) {
               return false;
             }
             break;
           case "\$and":
-            if (!isEvalAnd(attributes, value)) {
+            if (!isEvalAnd(attributes, value, savedGroups)) {
               return false;
             }
             break;
           case "\$not":
-            if (isEvalCondition(attributes, value)) {
+            if (isEvalCondition(attributes, value, savedGroups)) {
               return false;
             }
             break;
           default:
             var element = getPath(attributes, key);
-            if (!isEvalConditionValue(value, element)) {
+            if (!isEvalConditionValue(value, element, savedGroups)) {
               return false;
             }
         }
@@ -81,7 +87,7 @@ class GBConditionEvaluator {
   }
 
   /// Evaluate OR conditions against given attributes
-  bool isEvalOr(Map<String, dynamic> attributes, List conditionObj) {
+  bool isEvalOr(Map<String, dynamic> attributes, List conditionObj, SavedGroupsValues savedGroups) {
     // If conditionObj is empty, return true
     if (conditionObj.isEmpty) {
       return true;
@@ -90,7 +96,7 @@ class GBConditionEvaluator {
       for (var item in conditionObj) {
         // If evalCondition(attributes, conditionObj[i]) is true, break out of
         // the loop and return true
-        if (isEvalCondition(attributes, item)) {
+        if (isEvalCondition(attributes, item, savedGroups)) {
           return true;
         }
       }
@@ -100,14 +106,14 @@ class GBConditionEvaluator {
   }
 
   /// Evaluate AND conditions against given attributes
-  bool isEvalAnd(dynamic attributes, List conditionObj) {
+  bool isEvalAnd(dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
     // Loop through the conditionObjects
 
     // Loop through the conditionObjects
     for (var item in conditionObj) {
       // If evalCondition(attributes, conditionObj[i]) is true, break out of
       // the loop and return false
-      if (!isEvalCondition(attributes, item)) {
+      if (!isEvalCondition(attributes, item, savedGroups)) {
         return false;
       }
     }
@@ -180,7 +186,7 @@ class GBConditionEvaluator {
   }
 
   ///Evaluates Condition Value against given condition & attributes
-  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue) {
+  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue, SavedGroupsValues savedGroups) {
     // If conditionValue is a string, number, boolean, return true if it's
     // "equal" to attributeValue and false if not.
     if ((conditionValue as Object?).isPrimitive && (attributeValue as Object?).isPrimitive) {
@@ -212,7 +218,7 @@ class GBConditionEvaluator {
         for (var key in conditionValue.keys) {
           // If evalOperatorCondition(key, attributeValue, value)
           // is false, return false
-          if (!evalOperatorCondition(key, attributeValue, conditionValue[key])) {
+          if (!evalOperatorCondition(key, attributeValue, conditionValue[key], savedGroups)) {
             return false;
           }
         }
@@ -232,7 +238,7 @@ class GBConditionEvaluator {
 
   /// This checks if attributeValue is an array, and if so at least one of the
   /// array items must match the condition
-  bool elemMatch(dynamic attributeValue, dynamic condition) {
+  bool elemMatch(dynamic attributeValue, dynamic condition, SavedGroupsValues savedGroups) {
     // Loop through items in attributeValue
     if (attributeValue is List) {
       for (final item in attributeValue) {
@@ -240,13 +246,13 @@ class GBConditionEvaluator {
         if (isOperatorObject(condition)) {
           // If evalConditionValue(condition, item), break out of loop and
           //return true
-          if (isEvalConditionValue(condition, item)) {
+          if (isEvalConditionValue(condition, item, savedGroups)) {
             return true;
           }
         }
         // Else if evalCondition(item, condition), break out of loop and
         //return true
-        else if (isEvalCondition(item, condition)) {
+        else if (isEvalCondition(item, condition, savedGroups)) {
           return true;
         }
       }
@@ -258,7 +264,12 @@ class GBConditionEvaluator {
   /// This function is just a case statement that handles all the possible operators
   /// There are basic comparison operators in the form attributeValue {op}
   ///  conditionValue.
-  bool evalOperatorCondition(String operator, dynamic attributeValue, dynamic conditionValue) {
+  bool evalOperatorCondition(
+    String operator,
+    dynamic attributeValue,
+    dynamic conditionValue,
+    SavedGroupsValues savedGroups,
+  ) {
     /// Evaluate TYPE operator - whether both are of the same type
     if (operator == "\$type") {
       return getType(attributeValue).name == conditionValue;
@@ -266,7 +277,7 @@ class GBConditionEvaluator {
 
     /// Evaluate NOT operator - whether condition doesn't contain attribute
     if (operator == "\$not") {
-      return !isEvalConditionValue(conditionValue, attributeValue);
+      return !isEvalConditionValue(conditionValue, attributeValue, savedGroups);
     }
 
     /// Evaluate EXISTS operator - whether condition contains attribute
@@ -276,6 +287,13 @@ class GBConditionEvaluator {
       } else if (conditionValue.toString() == 'true' && attributeValue != null) {
         return true;
       }
+    }
+
+    switch (operator) {
+      case "\$inGroup":
+        return isIn(attributeValue, savedGroups[conditionValue] ?? []);
+      case "\$notInGroup":
+        return !isIn(attributeValue, savedGroups[conditionValue] ?? []);
     }
 
     /// There are three operators where conditionValue is an array
@@ -299,7 +317,7 @@ class GBConditionEvaluator {
             for (var con in conditionValue) {
               var result = false;
               for (var attr in attributeValue) {
-                if (isEvalConditionValue(con, attr)) {
+                if (isEvalConditionValue(con, attr, savedGroups)) {
                   result = true;
                 }
               }
@@ -319,12 +337,12 @@ class GBConditionEvaluator {
       switch (operator) {
         /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
         case "\$elemMatch":
-          return elemMatch(attributeValue, conditionValue);
+          return elemMatch(attributeValue, conditionValue, savedGroups);
 
         /// Evaluate SIE operator - whether condition size is same as that
         /// of attribute
         case "\$size":
-          return isEvalConditionValue(conditionValue, attributeValue.length);
+          return isEvalConditionValue(conditionValue, attributeValue.length, savedGroups);
 
         default:
       }

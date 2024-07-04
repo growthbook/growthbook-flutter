@@ -136,6 +136,9 @@ class FeatureViewModel {
       if (data.encryptedFeatures != null) {
         handleEncryptedFeatures(data.encryptedFeatures!);
       }
+      if (data.encryptedSavedGroups != null) {
+        handleEncryptedSavedGroups(data.encryptedSavedGroups!);
+      }
     }
   }
 
@@ -175,6 +178,46 @@ class FeatureViewModel {
           stackTrace: s.toString(),
         ),
         isRemote: true,
+      );
+    }
+  }
+
+  void handleEncryptedSavedGroups(String encryptedSavedGroups) {
+    if (encryptedSavedGroups.isEmpty) {
+      logError("Failed to parse encrypted data.");
+      return;
+    }
+
+    if (encryptionKey.isEmpty) {
+      logError("Encryption key is missing.");
+      return;
+    }
+
+    try {
+      final crypto = Crypto();
+      final extractedSavedGroups = crypto.getSavedGroupsFromEncryptedFeatures(
+        encryptedSavedGroups,
+        encryptionKey,
+      );
+
+      if (extractedSavedGroups != null) {
+        delegate.savedGroupsFetchedSuccessfully(savedGroups: extractedSavedGroups, isRemote: false);
+        final savedGroupsData = utf8Encoder.convert(jsonEncode(extractedSavedGroups));
+        final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
+        manager.putData(
+          fileName: Constant.savedGroupsCache,
+          content: savedGroupsDataOnUint8List,
+        );
+      } else {
+        logError("Failed to extract savedGroups from encrypted string.");
+      }
+    } catch (e, s) {
+      delegate.savedGroupsFetchFailed(
+        error: GBError(
+          error: e,
+          stackTrace: s.toString(),
+        ),
+        isRemote: false,
       );
     }
   }

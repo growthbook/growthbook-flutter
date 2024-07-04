@@ -9,12 +9,18 @@ class FeaturedDataModel {
   FeaturedDataModel({
     required this.features,
     required this.encryptedFeatures,
+    this.savedGroups,
+    this.encryptedSavedGroups,
   });
 
   @GBFeaturesConverter()
   final GBFeatures? features;
 
   final String? encryptedFeatures;
+
+  final SavedGroupsValues? savedGroups;
+  
+  final String? encryptedSavedGroups;
 
   factory FeaturedDataModel.fromJson(Map<String, dynamic> json) => _$FeaturedDataModelFromJson(json);
 

@@ -19,7 +19,7 @@ void main() {
       final passedScenarios = <String>[];
       for (final item in evaluateCondition) {
         final evaluator = GBConditionEvaluator();
-        final result = evaluator.isEvalCondition(item[2], item[1]);
+        final result = evaluator.isEvalCondition(item[2], item[1], item.length == 5 ? item[4] : {});
         final status = "${item[0]}\nExpected Result - ${item[3]}\nActual result - $result\n\n";
         if (item[3].toString() == result.toString()) {
           passedScenarios.add(status);
@@ -29,8 +29,6 @@ void main() {
         }
         index++;
       }
-      print(failedScenarios);
-      // print(passedScenarios.length);
       expect(failedScenarios.length, 0);
       customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
     });
@@ -38,23 +36,23 @@ void main() {
     test('Test valid condition obj', () {
       final evaluator = GBConditionEvaluator();
 
-      expect(evaluator.isEvalCondition({}, []), false);
+      expect(evaluator.isEvalCondition({}, [], {}), false);
 
       expect(evaluator.isOperatorObject({}), false);
 
       expect(evaluator.getPath('test', 'key'), null);
 
-      expect(evaluator.isEvalConditionValue(<String, dynamic>{}, null), false);
+      expect(evaluator.isEvalConditionValue(<String, dynamic>{}, null, {}), false);
 
-      expect(evaluator.evalOperatorCondition("\$lte", "abc", "abc"), true);
+      expect(evaluator.evalOperatorCondition("\$lte", "abc", "abc", {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$gte", "abc", "abc"), true);
+      expect(evaluator.evalOperatorCondition("\$gte", "abc", "abc", {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$vlt", "0.9.0", "0.10.0"), true);
+      expect(evaluator.evalOperatorCondition("\$vlt", "0.9.0", "0.10.0", {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$in", "abc", ["abc"]), true);
+      expect(evaluator.evalOperatorCondition("\$in", "abc", ["abc"], {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$nin", "abc", ["abc"]), false);
+      expect(evaluator.evalOperatorCondition("\$nin", "abc", ["abc"], {}), false);
     });
   });
 
@@ -71,6 +69,7 @@ void main() {
       GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
+        {},
       ),
       false,
     );
@@ -93,6 +92,7 @@ void main() {
       GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
+        {},
       ),
       false,
     );
@@ -115,6 +115,7 @@ void main() {
       GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
+        {},
       ),
       true,
     );
@@ -137,6 +138,7 @@ void main() {
       GBConditionEvaluator().isEvalCondition(
         jsonDecode(attributes),
         jsonDecode(condition),
+        {},
       ),
       false,
     );

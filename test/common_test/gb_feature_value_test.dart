@@ -18,6 +18,7 @@ void main() {
       final passedScenarios = <String>[];
 
       for (final item in evaluateCondition) {
+        final testContext = GBContextTest.fromMap(item[1]);
         final testData = GBFeaturesTest.fromMap(item[1]);
 
         final gbContext = GBContext(
@@ -28,6 +29,7 @@ void main() {
           forcedVariation: testData.forcedVariations,
           trackingCallBack: (_, __) {},
           backgroundSync: false,
+          savedGroups: testContext.savedGroups,
         );
         if (testData.features != null) {
           gbContext.features = testData.features!;
