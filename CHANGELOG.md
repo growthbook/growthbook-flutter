@@ -1,3 +1,8 @@
+# 3.9.4
+- New Operators $inGroup and $notInGroup to check Saved Groups by reference
+- Add argument to evalCondition for definition of Saved Groups
+- Add test cases for evalCondition, feature, and run using the new operators
+
 # 3.9.3
 - Support Caching Manager on Flutter Web
 - Remove a broken test case

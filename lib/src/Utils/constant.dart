@@ -10,6 +10,8 @@ class Constant {
   /// Identifier for Caching Feature Data in Internal Storage File
   static String featureCache = 'featureCache';
 
+  static String savedGroupsCache = 'savedGroupCache';
+
   /// Context Path for Fetching Feature Details - Web Service
   static String featurePath = 'api/features';
 
@@ -43,6 +45,8 @@ typedef GBStickyBucketingService = LocalStorageStickyBucketService;
 typedef TrackingCallBack = void Function(GBExperiment, GBExperimentResult);
 
 typedef GBFeatureUsageCallback = void Function(String, GBFeatureResult);
+
+typedef SavedGroupsValues = Map<String, dynamic>;
 
 /// GrowthBook Error Class to handle any error / exception scenario
 

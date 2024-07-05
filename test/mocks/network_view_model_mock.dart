@@ -23,4 +23,16 @@ class DataSourceMock extends FeaturesFlowDelegate {
     _isError = true;
     _isSuccess = false;
   }
+
+  @override
+  void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
+    _isError = true;
+    _isSuccess = false;
+  }
+
+  @override
+  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
+    _isSuccess = true;
+    _isError = false;
+  }
 }

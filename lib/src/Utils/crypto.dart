@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
-import 'package:growthbook_sdk_flutter/src/Model/features.dart';
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:pointycastle/export.dart';
 
 // Dart equivalent of CryptoProtocol abstract class
@@ -9,6 +9,7 @@ abstract class CryptoProtocol {
   List<int> encrypt(Uint8List key, Uint8List iv, Uint8List plainText);
   List<int> decrypt(Uint8List key, Uint8List iv, Uint8List cypherText);
   Map<String, GBFeature>? getFeaturesFromEncryptedFeatures(String encryptedString, String encryptionKey);
+  SavedGroupsValues? getSavedGroupsFromEncryptedFeatures(String encryptedString, String encryptionKey);
 }
 
 // Dart equivalent of Crypto class
@@ -29,7 +30,7 @@ class Crypto implements CryptoProtocol {
     ParametersWithIV<KeyParameter> params = ParametersWithIV(KeyParameter(key), iv);
 
     PaddedBlockCipherParameters<CipherParameters, CipherParameters> paddingParams =
-    PaddedBlockCipherParameters<CipherParameters, CipherParameters>(params, null);
+        PaddedBlockCipherParameters<CipherParameters, CipherParameters>(params, null);
 
     PaddedBlockCipherImpl paddingCipher = PaddedBlockCipherImpl(PKCS7Padding(), cipher);
     paddingCipher.init(true, paddingParams);
@@ -58,7 +59,7 @@ class Crypto implements CryptoProtocol {
     ParametersWithIV<KeyParameter> params = ParametersWithIV(KeyParameter(key), iv);
 
     PaddedBlockCipherParameters<CipherParameters, CipherParameters> paddingParams =
-    PaddedBlockCipherParameters<CipherParameters, CipherParameters>(params, null);
+        PaddedBlockCipherParameters<CipherParameters, CipherParameters>(params, null);
 
     PaddedBlockCipherImpl paddingCipher = PaddedBlockCipherImpl(PKCS7Padding(), cipher);
     paddingCipher.init(false, paddingParams);
@@ -69,9 +70,7 @@ class Crypto implements CryptoProtocol {
     return decryptedBytes;
   }
 
-  @override
-  Map<String, GBFeature>? getFeaturesFromEncryptedFeatures(
-      String encryptedString, String encryptionKey) {
+  Map<String, dynamic>? _decryptString(String encryptedString, String encryptionKey) {
     final List<String> arrayEncryptedString = encryptedString.split('.');
     final String iv = arrayEncryptedString.first;
     final String cipherText = arrayEncryptedString.last;
@@ -80,18 +79,29 @@ class Crypto implements CryptoProtocol {
     final Uint8List ivBase64 = base64Decode(iv);
     final Uint8List cipherTextBase64 = base64Decode(cipherText);
     try {
-      final List<int> plainTextBuffer =
-      decrypt(keyBase64, ivBase64, cipherTextBase64);
-      final Map<String, dynamic> decodedMap =
-      jsonDecode(utf8.decode(plainTextBuffer));
+      final List<int> plainTextBuffer = decrypt(keyBase64, ivBase64, cipherTextBase64);
+      return jsonDecode(utf8.decode(plainTextBuffer));
+    } catch (e) {
+      log('Error decrypting: $e');
+    }
+    return null;
+  }
+
+  @override
+  Map<String, GBFeature>? getFeaturesFromEncryptedFeatures(String encryptedString, String encryptionKey) {
+    final Map<String, dynamic>? decodedMap = _decryptString(encryptedString, encryptionKey);
+    if (decodedMap != null) {
       final Map<String, GBFeature> features = decodedMap.map((key, value) {
         return MapEntry(key, GBFeature.fromJson(value));
       });
       return features;
-    } catch (e) {
-      log('Error decrypting: $e');
     }
-      return null;
+    return null;
+  }
+
+  @override
+  SavedGroupsValues? getSavedGroupsFromEncryptedFeatures(String encryptedString, String encryptionKey) {
+    return _decryptString(encryptedString, encryptionKey);
   }
 }
 

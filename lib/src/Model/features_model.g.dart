@@ -12,6 +12,10 @@ FeaturedDataModel _$FeaturedDataModelFromJson(Map<String, dynamic> json) =>
           _$JsonConverterFromJson<Map<String, dynamic>, Map<String, GBFeature>>(
               json['features'], const GBFeaturesConverter().fromJson),
       encryptedFeatures: json['encryptedFeatures'] as String?,
+      savedGroups: (json['savedGroups'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as List<dynamic>),
+      ),
+      encryptedSavedGroups: json['encryptedSavedGroups'] as String?,
     );
 
 Map<String, dynamic> _$FeaturedDataModelToJson(FeaturedDataModel instance) =>
@@ -20,6 +24,8 @@ Map<String, dynamic> _$FeaturedDataModelToJson(FeaturedDataModel instance) =>
           _$JsonConverterToJson<Map<String, dynamic>, Map<String, GBFeature>>(
               instance.features, const GBFeaturesConverter().toJson),
       'encryptedFeatures': instance.encryptedFeatures,
+      'savedGroups': instance.savedGroups,
+      'encryptedSavedGroups': instance.encryptedSavedGroups,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(

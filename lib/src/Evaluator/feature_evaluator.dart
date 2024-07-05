@@ -90,6 +90,7 @@ class FeatureEvaluator {
             bool evalCondition = GBConditionEvaluator().isEvalCondition(
               evalObj,
               parentCondition.condition,
+              context.savedGroups,
             );
 
             // If the evaluation condition is false
@@ -125,6 +126,7 @@ class FeatureEvaluator {
               !GBConditionEvaluator().isEvalCondition(
                 getAttributes(),
                 rule.condition!,
+                context.savedGroups,
               )) {
             log('Skip rule because of condition');
             continue; // Skip to the next rule
