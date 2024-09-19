@@ -42,3 +42,14 @@ class GBTrackData {
 
   Map<String, dynamic> toJson() => _$GBTrackDataToJson(this);
 }
+
+@JsonSerializable()
+class AssignedExperiment {
+  AssignedExperiment({
+    required this.experiment,
+    required this.experimentResult,
+  });
+
+  final GBExperiment experiment;
+  final GBExperimentResult experimentResult;
+}

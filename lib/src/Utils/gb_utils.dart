@@ -11,7 +11,7 @@ class FNV {
   // Constants for FNV-1a 32-bit hash
   final int init32 = 0x811c9dc5;
   final int prime32 = 0x01000193;
-  final int mod32 = 1 << 32; // Equivalent to 2^32
+  final int mod32 = 0x100000000; // Equivalent to 2^32
 
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
@@ -470,7 +470,7 @@ class GBUtils {
     required int minExperimentBucketVersion,
     required List<GBVariationMeta> meta,
     required String expHashAttribute,
-    required String expFallBackAttribute,
+    required String? expFallBackAttribute,
     required Map<dynamic, dynamic> attributeOverrides,
   }) {
     // Get the assignment key for the given experiment key and version.

@@ -1,3 +1,9 @@
+# 3.9.5
+- Add subscription logic
+- Fix issue with null handling
+- Fix hashing on web
+- Update cache saving logic
+
 # 3.9.4
 - New Operators $inGroup and $notInGroup to check Saved Groups by reference
 - Add argument to evalCondition for definition of Saved Groups
