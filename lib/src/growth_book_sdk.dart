@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 typedef VoidCallback = void Function();
 
@@ -28,10 +30,7 @@ class GBSDKBuilderApp {
     this.stickyBucketService,
     this.backgroundSync = false,
     this.remoteEval = false,
-  }) : assert(
-          hostURL.endsWith('/'),
-          'Invalid host url: $hostURL. The hostUrl should be end with `/`, example: `https://example.growthbook.io/`',
-        );
+  });
 
   final String apiKey;
   final String? encryptionKey;
@@ -132,6 +131,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Map<String, dynamic> _attributeOverrides;
 
+  List<ExperimentRunCallback> subscriptions = [];
+
+  Map<String, AssignedExperiment> assigned = {};
+
   /// The complete data regarding features & attributes etc.
   GBContext get context => _context;
 
@@ -144,16 +147,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required bool isRemote,
   }) {
     _context.features = gbFeatures;
-    if (_refreshHandler != null) {
-      _refreshHandler!(true);
+    if (isRemote) {
+      if (_refreshHandler != null) {
+        _refreshHandler!(true);
+      }
     }
   }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
-    if (_refreshHandler != null) {
-      _refreshHandler!(false);
+    if (isRemote) {
+      if (_refreshHandler != null) {
+        _refreshHandler!(false);
+      }
     }
   }
 
@@ -179,8 +186,38 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       refreshForRemoteEval();
     } else {
+      log(context.getFeaturesURL().toString());
       await featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
+  }
+
+  void fireSubscriptions(GBExperiment experiment, GBExperimentResult result) {
+    String key = experiment.key;
+
+    // If assigned variation has changed, fire subscriptions
+    if (assigned.containsKey(key)) {
+      var assignedExperiment = assigned[key];
+
+      if (assignedExperiment!.experimentResult.inExperiment != result.inExperiment ||
+          assignedExperiment.experimentResult.variationID != result.variationID) {
+        updateSubscriptions(key: key, experiment: experiment, result: result);
+      }
+    }
+  }
+
+  void updateSubscriptions({required String key, required GBExperiment experiment, required GBExperimentResult result}) {
+    assigned[key] = AssignedExperiment(experiment: experiment, experimentResult: result);
+    for (var subscription in subscriptions) {
+      subscription(experiment, result);
+    }
+  }
+
+  void subscribe(ExperimentRunCallback result) {
+    subscriptions.add(result);
+  }
+
+  void clearSubscriptions() {
+    subscriptions.clear();
   }
 
   GBFeatureResult feature(String id) {
@@ -192,7 +229,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    return ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
+    final result = ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
+    return result;
   }
 
   Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
@@ -285,16 +323,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   @override
   void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
-    if (_refreshHandler != null) {
-      _refreshHandler!(false);
+    if (isRemote) {
+      if (_refreshHandler != null) {
+        _refreshHandler!(false);
+      }
     }
   }
 
   @override
   void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
     _context.savedGroups = savedGroups;
-    if (_refreshHandler != null) {
-      _refreshHandler!(true);
+    if (isRemote) {
+      if (_refreshHandler != null) {
+        _refreshHandler!(true);
+      }
     }
   }
 }

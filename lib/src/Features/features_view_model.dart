@@ -64,8 +64,8 @@ class FeatureViewModel {
     } else {
       String receivedDataJson = utf8Decoder.convert(receivedData);
       final receiveFeatureJsonMap = json.decode(receivedDataJson);
-      Map<String, GBFeature> featureMap = {};
 
+      GBFeatures featureMap = {};
       if (encryptionKey.isNotEmpty) {
         receiveFeatureJsonMap.forEach((key, value) {
           if (value is Map<String, dynamic>) {
@@ -126,12 +126,25 @@ class FeatureViewModel {
   }
 
   void handleValidFeatures(FeaturedDataModel data) {
-    if (data.features != null && data.features!.isNotEmpty) {
+    if (data.features != null && data.encryptedFeatures == null) {
       delegate.featuresAPIModelSuccessfully(data);
-      String jsonString = json.encode(data.toJson());
-      final bytes = utf8Encoder.convert(jsonString);
-      manager.putData(fileName: Constant.featureCache, content: bytes);
       delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
+      final featureData = utf8Encoder.convert(jsonEncode(data.features));
+      final featureDataOnUint8List = Uint8List.fromList(featureData);
+      manager.putData(
+        fileName: Constant.featureCache,
+        content: featureDataOnUint8List,
+      );
+
+      if (data.savedGroups != null) {
+        delegate.savedGroupsFetchedSuccessfully(savedGroups: data.savedGroups!, isRemote: true);
+        final savedGroupsData = utf8Encoder.convert(jsonEncode(data.savedGroups));
+        final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
+        manager.putData(
+          fileName: Constant.savedGroupsCache,
+          content: savedGroupsDataOnUint8List,
+        );
+      }
     } else {
       if (data.encryptedFeatures != null) {
         handleEncryptedFeatures(data.encryptedFeatures!);
@@ -161,7 +174,7 @@ class FeatureViewModel {
       );
 
       if (extractedFeatures != null) {
-        delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: false);
+        delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
         final featureDataOnUint8List = Uint8List.fromList(featureData);
         manager.putData(
@@ -237,9 +250,11 @@ class FeatureViewModel {
   }
 
   void cacheFeatures(FeaturedDataModel data) {
-    String jsonString = json.encode(data.toJson());
-    final bytes = utf8Encoder.convert(jsonString);
-
-    manager.putData(fileName: Constant.featureCache, content: bytes);
+    final featureData = utf8Encoder.convert(jsonEncode(data.features));
+    final featureDataOnUint8List = Uint8List.fromList(featureData);
+    manager.putData(
+      fileName: Constant.featureCache,
+      content: featureDataOnUint8List,
+    );
   }
 }

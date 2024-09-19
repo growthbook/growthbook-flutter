@@ -12,7 +12,7 @@ void main() {
   group('Initialization', () {
     const testApiKey = '<API_KEY>';
     const attr = <String, String>{};
-    const testHostURL = 'https://example.growthbook.io/';
+    const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
 
     CachingManager manager = CachingManager();
@@ -66,18 +66,16 @@ void main() {
       manager.clearCache();
     });
 
-    test('- with initialization assertion cause of wrong host url', () async {
-      expect(
-        () => GBSDKBuilderApp(
-          apiKey: testApiKey,
-          hostURL: "https://example.growthbook.io",
-          client: client,
-          growthBookTrackingCallBack: (_, __) {},
-          backgroundSync: false,
-        ),
-        throwsAssertionError,
+    test('- with initialization without throwing assertion error for wrong host url', () async {
+      final sdkInstance = GBSDKBuilderApp(
+      apiKey: testApiKey,
+      hostURL: testHostURL,
+      client: client,
+      growthBookTrackingCallBack: (_, __) {},
+      backgroundSync: false,
       );
-      manager.clearCache();
+      expect(sdkInstance, isNotNull);  
+      manager.clearCache(); 
     });
 
     test('- with network client', () async {

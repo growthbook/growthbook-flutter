@@ -85,7 +85,7 @@ class ExperimentEvaluator {
         minExperimentBucketVersion: experiment.minBucketVersion ?? 0,
         meta: experiment.meta ?? [],
         expHashAttribute: experiment.hashAttribute ?? "id",
-        expFallBackAttribute: experiment.fallbackAttribute!,
+        expFallBackAttribute: experiment.fallbackAttribute,
         attributeOverrides: attributeOverrides,
       );
       foundStickyBucket = stickyBucketResult.variation >= 0;
