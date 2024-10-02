@@ -1,3 +1,6 @@
+# 3.9.6
+- Fixed issue with fallback attribute ignoring when needed.
+
 # 3.9.5
 - Add subscription logic
 - Fix issue with null handling
