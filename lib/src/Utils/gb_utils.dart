@@ -374,8 +374,8 @@ class GBUtils {
     // Retrieve fallbackAttributeAndValue and fallbackKey
     final fallbackAttributeAndValue = getHashAttribute(
       context: context,
-      attr: null,
-      fallback: expFallBackAttribute,
+      attr: expFallBackAttribute,
+      fallback: null,
       attributeOverrides: attributeOverrides,
     );
 
