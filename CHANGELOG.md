@@ -1,3 +1,6 @@
+# 3.9.7
+- Update hash function to get same result on web & mobile.
+
 # 3.9.6
 - Fixed issue with fallback attribute ignoring when needed.
 

@@ -11,17 +11,20 @@ class FNV {
   // Constants for FNV-1a 32-bit hash
   final int init32 = 0x811c9dc5;
   final int prime32 = 0x01000193;
-  final int mod32 = 0x100000000; // Equivalent to 2^32
 
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
-  int fnv1a32(String data) {
+  int fnv1a32(String str) {
     int hash = init32;
-    for (int i = 0; i < data.length; i++) {
-      int b = data.codeUnitAt(i) & 0xff; // Get the ASCII value of the character
-      hash ^= b; // XOR the hash with the character's value
-      hash = (hash * prime32) % mod32; // Multiply by prime and mod with mod32
+    final int length = str.length;
+
+    for (int i = 0; i < length; i++) {
+      hash ^= str.codeUnitAt(i); // XOR with character value
+
+      // Perform multiplication by prime using bitwise shifts and ensure 32-bit unsigned
+      hash = ((hash * prime32) & 0xffffffff).toUnsigned(32);
     }
+
     return hash;
   }
 }
