@@ -125,8 +125,8 @@ class GBFeatureRule {
   String? phase;
 
   /// Array of tracking calls to fire
-  // GBTrackData? tracks;
-  List<GBTrackData>? tracks;
+  // GBTrack? tracks;
+  List<GBTrack>? tracks;
 
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) => _$GBFeatureRuleFromJson(value);
 
@@ -159,6 +159,7 @@ enum GBFeatureSource {
 }
 
 /// Result for Feature
+@JsonSerializable()
 class GBFeatureResult {
   GBFeatureResult({
     this.value,
@@ -187,4 +188,8 @@ class GBFeatureResult {
 
   ///When source is "experiment", this will be an ExperimentResult object
   GBExperimentResult? experimentResult;
+
+  factory GBFeatureResult.fromJson(Map<String, dynamic> value) => _$GBFeatureResultFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBFeatureResultToJson(this);
 }

@@ -270,7 +270,7 @@ class ExperimentEvaluator {
     }
 
     if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-      context.trackingCallBack!(experiment, result);
+      context.trackingCallBack!(GBTrackData(experiment: experiment, experimentResult: result));
     }
 
     return result;

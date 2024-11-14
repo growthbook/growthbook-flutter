@@ -31,7 +31,7 @@ void main() {
             attributes: attr,
             forcedVariation: testContext.forcedVariations,
             qaMode: testContext.qaMode,
-            trackingCallBack: (_, __) {},
+            trackingCallBack: (_) {},
             backgroundSync: false,
             features: testContext.features,
             savedGroups: testContext.savedGroups,

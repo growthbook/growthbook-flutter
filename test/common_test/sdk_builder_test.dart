@@ -25,7 +25,7 @@ void main() {
         hostURL: testHostURL,
         attributes: attr,
         client: client,
-        growthBookTrackingCallBack: (experiment, experimentResult) {},
+        growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
@@ -57,7 +57,7 @@ void main() {
         forcedVariations: variations,
         hostURL: testHostURL,
         attributes: attr,
-        growthBookTrackingCallBack: (exp, result) {},
+        growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler) {}).initialize();
       expect(sdk.context.enabled, true);
@@ -68,14 +68,14 @@ void main() {
 
     test('- with initialization without throwing assertion error for wrong host url', () async {
       final sdkInstance = GBSDKBuilderApp(
-      apiKey: testApiKey,
-      hostURL: testHostURL,
-      client: client,
-      growthBookTrackingCallBack: (_, __) {},
-      backgroundSync: false,
+        apiKey: testApiKey,
+        hostURL: testHostURL,
+        client: client,
+        growthBookTrackingCallBack: (_) {},
+        backgroundSync: false,
       );
-      expect(sdkInstance, isNotNull);  
-      manager.clearCache(); 
+      expect(sdkInstance, isNotNull);
+      manager.clearCache();
     });
 
     test('- with network client', () async {
@@ -84,7 +84,7 @@ void main() {
         hostURL: testHostURL,
         attributes: attr,
         client: client,
-        growthBookTrackingCallBack: (exp, result) {},
+        growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
       final featureValue = sdk.feature('fwrfewrfe');
@@ -102,7 +102,7 @@ void main() {
           hostURL: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
-          growthBookTrackingCallBack: (exp, result) {},
+          growthBookTrackingCallBack: (trackData) {},
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           backgroundSync: false,
         ).setRefreshHandler((refreshHandler) {}).initialize();
@@ -118,7 +118,7 @@ void main() {
       final sdkInstance = await GBSDKBuilderApp(
         hostURL: testHostURL,
         apiKey: testApiKey,
-        growthBookTrackingCallBack: (exp, result) {},
+        growthBookTrackingCallBack: (trackData) {},
         attributes: attr,
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler) {}).initialize();
@@ -156,7 +156,7 @@ void main() {
           hostURL: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
-          growthBookTrackingCallBack: (exp, result) {},
+          growthBookTrackingCallBack: (trackData) {},
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
@@ -175,7 +175,7 @@ void main() {
         apiKey: testApiKey,
         hostURL: testHostURL,
         attributes: attr,
-        growthBookTrackingCallBack: (experiment, experimentResult) {
+        growthBookTrackingCallBack: (trackData) {
           countTrackingCallback += 1;
         },
         refreshHandler: null,
@@ -192,9 +192,10 @@ void main() {
               id: 'rule 1',
               force: 'force',
               tracks: [
-                GBTrackData(
-                  experiment: GBExperiment(key: 'testExperimentKey'),
-                  experimentResult: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true),
+                GBTrack(
+                  featureResult: GBFeatureResult(
+                      experiment: GBExperiment(key: 'testExperimentKey'),
+                      experimentResult: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true)),
                 ),
               ],
             ),

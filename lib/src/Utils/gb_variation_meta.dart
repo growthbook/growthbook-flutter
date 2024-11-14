@@ -1,3 +1,4 @@
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
 import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -19,10 +20,26 @@ class GBVariationMeta {
 
   final bool? passthrough;
 
-  factory GBVariationMeta.fromJson(Map<String, dynamic> value) =>
-      _$GBVariationMetaFromJson(value);
+  factory GBVariationMeta.fromJson(Map<String, dynamic> value) => _$GBVariationMetaFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBVariationMetaToJson(this);
+}
+
+/// Used for remote feature evaluation to trigger the `TrackingCallback`
+@JsonSerializable()
+class GBTrack {
+  GBTrack({
+    this.experiment,
+    this.featureResult,
+  });
+
+  final GBExperiment? experiment;
+
+  final GBFeatureResult? featureResult;
+
+  factory GBTrack.fromJson(Map<String, dynamic> value) => _$GBTrackFromJson(value);
+
+  Map<String, dynamic> toJson() => _$GBTrackToJson(this);
 }
 
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
@@ -37,8 +54,7 @@ class GBTrackData {
 
   final GBExperimentResult experimentResult;
 
-  factory GBTrackData.fromJson(Map<String, dynamic> value) =>
-      _$GBTrackDataFromJson(value);
+  factory GBTrackData.fromJson(Map<String, dynamic> value) => _$GBTrackDataFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBTrackDataToJson(this);
 }

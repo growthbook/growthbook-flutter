@@ -1,5 +1,6 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import 'package:tuple/tuple.dart';
 
 /// Constant class for GrowthBook
@@ -42,7 +43,7 @@ typedef GBCacheRefreshHandler = void Function(bool);
 typedef GBStickyBucketingService = LocalStorageStickyBucketService;
 
 /// A function that takes experiment and result as arguments.
-typedef TrackingCallBack = void Function(GBExperiment, GBExperimentResult);
+typedef TrackingCallBack = void Function(GBTrackData trackData);
 
 typedef ExperimentRunCallback = void Function(GBExperiment, GBExperimentResult);
 

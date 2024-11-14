@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 /// Feature Evaluator Class
 /// Takes Context and Feature Key
@@ -154,8 +155,14 @@ class FeatureEvaluator {
           // Handle tracks if present
           if (rule.tracks != null) {
             for (var track in rule.tracks!) {
-              if (!ExperimentHelper.shared.isTracked(track.experiment, track.experimentResult)) {
-                context.trackingCallBack!(track.experiment, track.experimentResult);
+              if (track.featureResult?.experiment != null && track.featureResult?.experimentResult != null) {
+                if (track.featureResult != null) {
+                  var experiment = track.featureResult!.experiment!;
+                  var result = track.featureResult!.experimentResult!;
+                  if (!ExperimentHelper.shared.isTracked(experiment, result)) {
+                    context.trackingCallBack!(GBTrackData(experiment: experiment, experimentResult: result));
+                  }
+                }
               }
             }
           }

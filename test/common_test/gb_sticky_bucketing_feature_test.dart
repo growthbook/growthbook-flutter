@@ -29,7 +29,7 @@ void main() {
             attributes: attributes,
             forcedVariation: testData.forcedVariations ?? {},
             qaMode: false,
-            trackingCallBack: (_, __) {},
+            trackingCallBack: (_) {},
             encryptionKey: "",
             stickyBucketService: service,
           );
