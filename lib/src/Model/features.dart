@@ -131,6 +131,33 @@ class GBFeatureRule {
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) => _$GBFeatureRuleFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);
+
+  @override
+  String toString() {
+    return "\nid: $id \n"
+        "condition: $condition \n"
+        "coverage: $coverage \n"
+        "force: $force \n"
+        "variations: $variations \n"
+        "key: $key \n"
+        "weights: $weights \n"
+        "namespace: $namespace \n"
+        "hashAttribute: $hashAttribute \n"
+        "fallbackAttribute: $fallbackAttribute \n"
+        "hashVersion: $hashVersion \n"
+        "disableStickyBucketin: $disableStickyBucketing \n"
+        "bucketVersion: $bucketVersion \n"
+        "minBucketVersion: $minBucketVersion \n"
+        "range: $range \n"
+        "ranges: $ranges \n"
+        "meta: $meta \n"
+        "filters: $filters \n"
+        "seed: $seed \n"
+        "name: $name \n"
+        "phase: $phase \n"
+        "tracks: $tracks \n"
+        "parentConditions: $parentConditions \n";
+  }
 }
 
 /// Enum For defining feature value source.

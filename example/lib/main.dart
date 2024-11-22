@@ -59,7 +59,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
       apiKey: kReleaseMode ? '<PROD_KEY>' : '<DEV_KEY>',
       hostURL: 'https://example.growthbook.io/',
       attributes: userAttr,
-      growthBookTrackingCallBack: (exp, rst) {},
+      growthBookTrackingCallBack: (trackData) {},
       gbFeatures: {
         'some-feature': GBFeature(defaultValue: true),
       },

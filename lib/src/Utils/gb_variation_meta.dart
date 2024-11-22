@@ -23,6 +23,13 @@ class GBVariationMeta {
   factory GBVariationMeta.fromJson(Map<String, dynamic> value) => _$GBVariationMetaFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBVariationMetaToJson(this);
+
+  @override
+  String toString() {
+    return "key: $key \n"
+        "name: $name \n"
+        "passthrough: $passthrough \n";
+  }
 }
 
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
@@ -40,6 +47,12 @@ class GBTrack {
   factory GBTrack.fromJson(Map<String, dynamic> value) => _$GBTrackFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBTrackToJson(this);
+
+  @override
+  String toString() {
+    return "experiment: $experiment \n"
+        "featureResult: $featureResult \n";
+  }
 }
 
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
