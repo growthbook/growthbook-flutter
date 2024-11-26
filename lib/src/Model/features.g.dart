@@ -53,7 +53,7 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String?,
       phase: json['phase'] as String?,
       tracks: (json['tracks'] as List<dynamic>?)
-          ?.map((e) => GBTrackData.fromJson(e as Map<String, dynamic>))
+          ?.map((e) => GBTrack.fromJson(e as Map<String, dynamic>))
           .toList(),
       parentConditions: (json['parentConditions'] as List<dynamic>?)
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
@@ -86,3 +86,37 @@ Map<String, dynamic> _$GBFeatureRuleToJson(GBFeatureRule instance) =>
       'phase': instance.phase,
       'tracks': instance.tracks,
     };
+
+GBFeatureResult _$GBFeatureResultFromJson(Map<String, dynamic> json) =>
+    GBFeatureResult(
+      value: json['value'],
+      on: json['on'] as bool? ?? false,
+      off: json['off'] as bool? ?? true,
+      source: $enumDecodeNullable(_$GBFeatureSourceEnumMap, json['source']),
+      experiment: json['experiment'] == null
+          ? null
+          : GBExperiment.fromJson(json['experiment'] as Map<String, dynamic>),
+      experimentResult: json['experimentResult'] == null
+          ? null
+          : GBExperimentResult.fromJson(
+              json['experimentResult'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$GBFeatureResultToJson(GBFeatureResult instance) =>
+    <String, dynamic>{
+      'value': instance.value,
+      'on': instance.on,
+      'off': instance.off,
+      'source': _$GBFeatureSourceEnumMap[instance.source],
+      'experiment': instance.experiment,
+      'experimentResult': instance.experimentResult,
+    };
+
+const _$GBFeatureSourceEnumMap = {
+  GBFeatureSource.unknownFeature: 'unknownFeature',
+  GBFeatureSource.defaultValue: 'defaultValue',
+  GBFeatureSource.force: 'force',
+  GBFeatureSource.experiment: 'experiment',
+  GBFeatureSource.cyclicPrerequisite: 'cyclicPrerequisite',
+  GBFeatureSource.prerequisite: 'prerequisite',
+};

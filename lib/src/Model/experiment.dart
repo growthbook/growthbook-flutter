@@ -103,8 +103,31 @@ class GBExperiment {
   /// Id of the current experiment phase
   String? phase;
 
-  factory GBExperiment.fromJson(Map<String, dynamic> value) =>
-      _$GBExperimentFromJson(value);
+  factory GBExperiment.fromJson(Map<String, dynamic> value) => _$GBExperimentFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBExperimentToJson(this);
+
+  @override
+  String toString() {
+    return "variations: $variations \n"
+        "namespace: $namespace \n"
+        "condition: $condition \n"
+        "parentConditions: $parentConditions \n"
+        "hashAttribute: $hashAttribute \n"
+        "fallbackAttribute: $fallbackAttribute \n"
+        "weights: $weights \n"
+        "active: $active \n"
+        "coverage: $coverage \n"
+        "force: $force \n"
+        "hashVersion: $hashVersion \n"
+        "disableStickyBucketing: $disableStickyBucketing \n \n"
+        "bucketVersion: $bucketVersion \n"
+        "minBucketVersion: $minBucketVersion \n"
+        "ranges: $ranges \n"
+        "meta: $meta \n"
+        "filters: $filters \n"
+        "seed: $seed \n"
+        "name: $name \n"
+        "phase: $phase \n";
+  }
 }

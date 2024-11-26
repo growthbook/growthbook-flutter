@@ -27,7 +27,7 @@ void main() {
           qaMode: false,
           attributes: testData.attributes,
           forcedVariation: testData.forcedVariations,
-          trackingCallBack: (_, __) {},
+          trackingCallBack: (_) {},
           backgroundSync: false,
           savedGroups: testContext.savedGroups,
         );
@@ -71,7 +71,7 @@ void main() {
         hostURL: testHostURL,
         attributes: attr,
         client: const MockNetworkClient(),
-        growthBookTrackingCallBack: (exp, res) {},
+        growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
       );
 
@@ -107,7 +107,7 @@ void main() {
             attributes: attributes,
             forcedVariation: {},
             qaMode: false,
-            trackingCallBack: (_, __) {},
+            trackingCallBack: (_) {},
             featureUsageCallback: (_, __) {
               actualNumberOfOnFeatureUsageCalls++;
             },

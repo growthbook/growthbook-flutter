@@ -25,7 +25,7 @@ void main() {
             enabled: true,
             forcedVariation: {},
             qaMode: false,
-            trackingCallBack: (_, __) {},
+            trackingCallBack: (_) {},
           );
           dataSourceMock = DataSourceMock();
         },
