@@ -2,6 +2,10 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/evaluation_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/global_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/options.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/user_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
@@ -176,14 +180,12 @@ class GBUtils {
   /// This is a helper method to evaluate filters for both feature flags and experiments.
   static bool isFilteredOut(
     List<GBFilter> filters,
-    GBContext context,
-    Map<String, dynamic> attributeOverrides,
+    Map<String, dynamic> attributes,
   ) {
     return filters.any((filter) {
       final hashAttributeAndValue = GBUtils.getHashAttribute(
-        context: context,
         attr: filter.attribute,
-        attributeOverrides: attributeOverrides,
+        attributes: attributes,
       );
       final hashValue = hashAttributeAndValue[1];
 
@@ -203,16 +205,15 @@ class GBUtils {
     });
   }
 
-  static bool isIncludedInRollout(Map<dynamic, dynamic> attributeOverrides, String? seed, String? hashAttribute,
-      String? fallbackAttribute, GBBucketRange? range, double? coverage, int? hashVersion, GBContext context) {
+  static bool isIncludedInRollout(Map<String, dynamic> attributes, String? seed, String? hashAttribute,
+      String? fallbackAttribute, GBBucketRange? range, double? coverage, int? hashVersion) {
     // If both range and coverage are null, return true
     if (range == null && coverage == null) return true;
 
     if (range == null && coverage == 0) return false;
 
     // Get the hash attribute and its value
-    var hashAttrResult = getHashAttribute(
-        attr: hashAttribute, fallback: fallbackAttribute, attributeOverrides: attributeOverrides, context: context);
+    var hashAttrResult = getHashAttribute(attr: hashAttribute, fallback: fallbackAttribute, attributes: attributes);
     String? hashValue = hashAttrResult[1];
 
     // Calculate the hash
@@ -260,30 +261,21 @@ class GBUtils {
 
   /// Returns a tuple of two elements: the attribute itself and its hash value.
   static List<String> getHashAttribute({
-    required GBContext context,
     String? attr,
     String? fallback,
-    required Map<dynamic, dynamic> attributeOverrides,
+    required Map<String, dynamic> attributes,
   }) {
     String hashAttribute = attr ?? 'id';
     String hashValue = '';
 
-    if (attributeOverrides.containsKey(hashAttribute) && attributeOverrides[hashAttribute] != null) {
-      hashValue = attributeOverrides[hashAttribute].toString();
-    } else if (context.attributes != null &&
-        context.attributes!.containsKey(hashAttribute) &&
-        context.attributes![hashAttribute] != null) {
-      hashValue = context.attributes![hashAttribute].toString();
+    if (attributes[hashAttribute] != null) {
+      hashValue = attributes[hashAttribute].toString();
     }
 
     // If no match, try fallback
     if (hashValue.isEmpty && fallback != null) {
-      if (attributeOverrides.containsKey(fallback) && attributeOverrides[fallback] != null) {
-        hashValue = attributeOverrides[fallback].toString();
-      } else if (context.attributes != null &&
-          context.attributes!.containsKey(fallback) &&
-          context.attributes![fallback] != null) {
-        hashValue = context.attributes![fallback].toString();
+      if (attributes[fallback] != null) {
+        hashValue = attributes[fallback].toString();
       }
 
       if (hashValue.isNotEmpty) {
@@ -347,10 +339,9 @@ class GBUtils {
   }
 
   static Map<String, String> getStickyBucketAssignments({
-    required GBContext context,
+    required EvaluationContext context,
     required String? expHashAttribute,
     required String? expFallBackAttribute,
-    required Map<dynamic, dynamic> attributeOverrides,
   }) {
     final assignments = <String, String>{};
 
@@ -358,28 +349,26 @@ class GBUtils {
         <StickyAttributeKey, StickyAssignmentsDocument>{};
 
     // Check if stickyBucketAssignmentDocs is null
-    if (context.stickyBucketAssignmentDocs == null) {
+    if (context.userContext.stickyBucketAssignmentDocs == null) {
       return assignments;
     } else {
-      stickyBucketAssignmentDocs = context.stickyBucketAssignmentDocs;
+      stickyBucketAssignmentDocs = context.userContext.stickyBucketAssignmentDocs;
     }
 
     // Retrieve hashAttributeAndValue and hashKey
     final hashAttributeAndValue = getHashAttribute(
-      context: context,
       attr: expHashAttribute,
       fallback: null,
-      attributeOverrides: attributeOverrides,
+      attributes: context.userContext.attributes!,
     );
 
     final hashKey = '${hashAttributeAndValue[0]}||${hashAttributeAndValue[1]}';
 
     // Retrieve fallbackAttributeAndValue and fallbackKey
     final fallbackAttributeAndValue = getHashAttribute(
-      context: context,
       attr: expFallBackAttribute,
       fallback: null,
-      attributeOverrides: attributeOverrides,
+      attributes: context.userContext.attributes!,
     );
 
     String? fallbackKey;
@@ -391,15 +380,16 @@ class GBUtils {
     }
 
     String? leftOperand = context
-        .stickyBucketAssignmentDocs?["$expFallBackAttribute||${attributeOverrides[expFallBackAttribute]}"]
+        .userContext
+        .stickyBucketAssignmentDocs?["$expFallBackAttribute||${context.userContext.attributes![expFallBackAttribute]}"]
         ?.attributeValue;
 
-    if (leftOperand != attributeOverrides[expFallBackAttribute]) {
-      context.stickyBucketAssignmentDocs = {};
+    if (leftOperand != context.userContext.attributes?[expFallBackAttribute]) {
+      context.userContext.stickyBucketAssignmentDocs = {};
     }
 
     // Add assignments from stickyBucketAssignmentDocs
-    context.stickyBucketAssignmentDocs?.forEach((key, doc) {
+    context.userContext.stickyBucketAssignmentDocs?.forEach((key, doc) {
       assignments.addAll(doc.assignments);
     });
 
@@ -417,40 +407,40 @@ class GBUtils {
   }
 
   static Future<void> refreshStickyBuckets(
-    GBContext context,
+    EvaluationContext context,
     FeaturedDataModel? data,
-    Map<dynamic, dynamic> attributeOverrides,
+    Map<String, dynamic> attributes,
   ) async {
-    if (context.stickyBucketService == null) {
+    if (context.options.stickyBucketService == null) {
       return;
     }
-    var attributes = getStickyBucketAttributes(context, data, attributeOverrides);
-    context.stickyBucketAssignmentDocs = await context.stickyBucketService?.getAllAssignments(attributes);
+    var allAttributes = getStickyBucketAttributes(context, data, attributes);
+    context.userContext.stickyBucketAssignmentDocs =
+        await context.options.stickyBucketService?.getAllAssignments(allAttributes);
   }
 
   static Map<String, String> getStickyBucketAttributes(
-    GBContext context,
+    EvaluationContext context,
     FeaturedDataModel? data,
-    Map<dynamic, dynamic> attributeOverrides,
+    Map<String, dynamic> attributes,
   ) {
     var attributes = <String, String>{};
-    context.stickyBucketIdentifierAttributes = context.stickyBucketIdentifierAttributes != null
-        ? GBUtils.deriveStickyBucketIdentifierAttributes(context: context, data: data)
-        : context.stickyBucketIdentifierAttributes;
-    context.stickyBucketIdentifierAttributes?.forEach((attr) {
-      var hashValue = GBUtils.getHashAttribute(context: context, attributeOverrides: attributeOverrides, attr: attr);
+    final stickyBucketIdentifierAttributes = deriveStickyBucketIdentifierAttributes(context: context, data: data);
+
+    for (var attr in stickyBucketIdentifierAttributes) {
+      var hashValue = GBUtils.getHashAttribute(attributes: attributes, attr: attr);
       attributes[attr] = hashValue[1];
-    });
+    }
     return attributes;
   }
 
   static List<String> deriveStickyBucketIdentifierAttributes({
-    required GBContext context,
+    required EvaluationContext context,
     required FeaturedDataModel? data,
   }) {
     var attributes = <String>{};
-    var features = data?.features ?? context.features;
-    for (var id in features.keys) {
+    var features = data?.features ?? context.globalContext.features;
+    for (var id in features!.keys) {
       var feature = features[id];
       var rules = feature?.rules;
       rules?.forEach((rule) {
@@ -467,14 +457,13 @@ class GBUtils {
   }
 
   static StickyBucketResult getStickyBucketVariation({
-    required GBContext context,
+    required EvaluationContext context,
     required String experimentKey,
     required int experimentBucketVersion,
     required int minExperimentBucketVersion,
     required List<GBVariationMeta> meta,
     required String expHashAttribute,
     required String? expFallBackAttribute,
-    required Map<dynamic, dynamic> attributeOverrides,
   }) {
     // Get the assignment key for the given experiment key and version.
     final assignmentKey = getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
@@ -483,7 +472,6 @@ class GBUtils {
       context: context,
       expHashAttribute: expHashAttribute,
       expFallBackAttribute: expFallBackAttribute,
-      attributeOverrides: attributeOverrides,
     );
 
     // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
@@ -519,7 +507,7 @@ class GBUtils {
   }
 
   static StickyBucketDocumentChange generateStickyBucketAssignmentDoc({
-    required GBContext context,
+    required EvaluationContext context,
     required String attributeName,
     required String attributeValue,
     required Map<String, String> newAssignments,
@@ -528,7 +516,7 @@ class GBUtils {
     final key = '$attributeName||$attributeValue';
 
     // Get the existing assignments from the context.
-    final existingAssignments = context.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
+    final existingAssignments = context.userContext.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
 
     // Merge existing assignments with the new assignments.
     final mergedAssignments = {...existingAssignments, ...newAssignments};
@@ -545,6 +533,42 @@ class GBUtils {
 
     // Return the key, document, and whether the document has changed.
     return StickyBucketDocumentChange(key, doc, hasChanged);
+  }
+
+  static EvaluationContext initializeEvalContext(GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+    var options = Options(
+      enabled: gbContext.enabled,
+      isQaMode: gbContext.qaMode,
+      isCacheDisabled: false,
+      url: gbContext.hostURL,
+      clientKey: gbContext.apiKey,
+      decryptionKey: gbContext.encryptionKey,
+      stickyBucketIdentifierAttributes: gbContext.stickyBucketIdentifierAttributes,
+      stickyBucketService: gbContext.stickyBucketService,
+      trackingCallBackWithUser: gbContext.trackingCallBack!,
+      featureUsageCallbackWithUser: gbContext.featureUsageCallback,
+      featureRefreshCallback: refreshHandler,
+    );
+
+    var globalContext = GlobalContext(
+      features: gbContext.features,
+      savedGroups: gbContext.savedGroups,
+    );
+
+    var userContext = UserContext(
+      attributes: gbContext.attributes,
+      stickyBucketAssignmentDocs: gbContext.stickyBucketAssignmentDocs,
+      forcedVariationsMap: gbContext.forcedVariation,
+    );
+
+    var evalContext = EvaluationContext(
+      globalContext: globalContext,
+      userContext: userContext,
+      stackContext: StackContext(),
+      options: options,
+    );
+
+    return evalContext;
   }
 }
 

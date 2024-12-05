@@ -1,6 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
-import 'package:growthbook_sdk_flutter/src/Model/experiment_result.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'gb_variation_meta.g.dart';

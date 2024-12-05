@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
@@ -102,11 +103,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   GrowthBookSDK._({
     OnInitializationFailure? onInitializationFailure,
     required GBContext context,
+    EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
     GBFeatures? gbFeatures,
     SavedGroupsValues? savedGroups,
   })  : _context = context,
+        _evaluationContext = evaluationContext,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _gbFeatures = gbFeatures,
@@ -116,6 +119,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _attributeOverrides = {};
 
   final GBContext _context;
+
+  final EvaluationContext? _evaluationContext;
 
   final BaseClient _baseClient;
 
@@ -205,15 +210,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  void updateSubscriptions({required String key, required GBExperiment experiment, required GBExperimentResult result}) {
+  void updateSubscriptions(
+      {required String key, required GBExperiment experiment, required GBExperimentResult result}) {
     assigned[key] = AssignedExperiment(experiment: experiment, experimentResult: result);
     for (var subscription in subscriptions) {
       subscription(experiment, result);
     }
   }
 
-  void subscribe(ExperimentRunCallback result) {
-    subscriptions.add(result);
+  void subscribe(ExperimentRunCallback callback) {
+    subscriptions.add(callback);
   }
 
   void clearSubscriptions() {
@@ -223,13 +229,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   GBFeatureResult feature(String id) {
     return FeatureEvaluator(
       attributeOverrides: _attributeOverrides,
-      context: context,
+      context: GBUtils.initializeEvalContext(context, _refreshHandler),
       featureKey: id,
     ).evaluateFeature();
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    final result = ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(context, experiment);
+    final result = ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(
+      GBUtils.initializeEvalContext(context, _refreshHandler),
+      experiment,
+    );
     return result;
   }
 
@@ -280,7 +289,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(context, data, _attributeOverrides);
+      await GBUtils.refreshStickyBuckets(_evaluationContext!, data, _evaluationContext!.userContext.attributes ?? {});
     }
   }
 
@@ -297,9 +306,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     );
 
     RemoteEvalModel payload = RemoteEvalModel(
-      attributes: context.attributes,
+      attributes: _evaluationContext?.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
-      forcedVariations: context.forcedVariation,
+      forcedVariations: _evaluationContext?.userContext.forcedVariationsMap ?? {},
     );
 
     await featureViewModel.fetchFeatures(
@@ -311,7 +320,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    return FeatureEvaluator(context: context, featureKey: id, attributeOverrides: _attributeOverrides)
+    return FeatureEvaluator(
+            context: GBUtils.initializeEvalContext(context, _refreshHandler),
+            featureKey: id,
+            attributeOverrides: _attributeOverrides)
         .evaluateFeature();
   }
 

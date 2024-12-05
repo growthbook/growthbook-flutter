@@ -70,7 +70,10 @@ void main() {
             expectedStickyAssignmentDocs[key] = StickyAssignmentsDocument.fromJson(value);
           });
 
-          final evaluator = FeatureEvaluator(attributeOverrides: attributes, context: gbContext, featureKey: item[3]);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+
+          final evaluator =
+              FeatureEvaluator(attributeOverrides: attributes, context: evaluationContext, featureKey: item[3]);
 
           final actualExperimentResult = evaluator.evaluateFeature().experimentResult;
 

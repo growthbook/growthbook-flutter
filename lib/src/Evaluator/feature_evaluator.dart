@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 /// Feature Evaluator Class
@@ -9,7 +10,7 @@ import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 /// Returns Calculated Feature Result against that key
 
 class FeatureEvaluator {
-  GBContext context;
+  EvaluationContext context;
   FeatureEvalContext? evalContext;
   String featureKey;
   Map<String, dynamic> attributeOverrides;
@@ -24,7 +25,7 @@ class FeatureEvaluator {
   /// Takes context and feature key and returns the calculated feature result against that key.
   GBFeatureResult evaluateFeature() {
     /// This callback serves for listening for feature usage events
-    final onFeatureUsageCallback = context.featureUsageCallback;
+    final onFeatureUsageCallbackWithUser = context.options.featureUsageCallbackWithUser;
 
     // Check if the feature has been evaluated already and return early if it has
     if (evalContext?.evaluatedFeatures.contains(featureKey) ?? false) {
@@ -33,7 +34,7 @@ class FeatureEvaluator {
         source: GBFeatureSource.cyclicPrerequisite,
       );
 
-      onFeatureUsageCallback?.call(featureKey, featureResultWhenCircularDependencyDetected);
+      onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenCircularDependencyDetected);
 
       return featureResultWhenCircularDependencyDetected;
     }
@@ -42,7 +43,7 @@ class FeatureEvaluator {
     evalContext?.id = featureKey;
 
     // Check if the targetFeature is available in context.features using the featureKey
-    GBFeature? targetFeature = context.features[featureKey];
+    GBFeature? targetFeature = context.userContext.forcedFeatureValues?[featureKey];
 
     // If the targetFeature is not found, return a result with null value and unknown feature source
     if (targetFeature == null) {
@@ -51,7 +52,7 @@ class FeatureEvaluator {
         source: GBFeatureSource.unknownFeature,
       );
 
-      onFeatureUsageCallback?.call(featureKey, emptyFeatureResult);
+      onFeatureUsageCallbackWithUser?.call(featureKey, emptyFeatureResult);
       return emptyFeatureResult;
     }
 
@@ -79,7 +80,7 @@ class FeatureEvaluator {
                 source: GBFeatureSource.cyclicPrerequisite,
               );
 
-              onFeatureUsageCallback?.call(featureKey, featureResultWhenCircularDependencyDetected);
+              onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenCircularDependencyDetected);
 
               return featureResultWhenCircularDependencyDetected;
             }
@@ -91,7 +92,7 @@ class FeatureEvaluator {
             bool evalCondition = GBConditionEvaluator().isEvalCondition(
               evalObj,
               parentCondition.condition,
-              context.savedGroups,
+              context.globalContext.savedGroups,
             );
 
             // If the evaluation condition is false
@@ -104,7 +105,7 @@ class FeatureEvaluator {
                   source: GBFeatureSource.prerequisite,
                 );
 
-                onFeatureUsageCallback?.call(featureKey, featureResultWhenBlockedByPrerequisite);
+                onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenBlockedByPrerequisite);
 
                 return featureResultWhenBlockedByPrerequisite;
               }
@@ -115,7 +116,7 @@ class FeatureEvaluator {
           }
         }
         if (rule.filters != null) {
-          if (GBUtils.isFilteredOut(rule.filters!, context, attributeOverrides)) {
+          if (GBUtils.isFilteredOut(rule.filters!, context.userContext.attributes ?? {})) {
             log('Skip rule because of filters');
             continue; // Skip to the next rule
           }
@@ -127,7 +128,7 @@ class FeatureEvaluator {
               !GBConditionEvaluator().isEvalCondition(
                 getAttributes(),
                 rule.condition!,
-                context.savedGroups,
+                context.globalContext.savedGroups,
               )) {
             log('Skip rule because of condition');
             continue; // Skip to the next rule
@@ -135,16 +136,15 @@ class FeatureEvaluator {
 
           // Check if the user is included in the rollout
           bool isUserIncluded = GBUtils.isIncludedInRollout(
-            attributeOverrides,
+            context.userContext.attributes ?? {},
             rule.seed ?? featureKey,
             rule.hashAttribute,
-            (context.stickyBucketService != null && (rule.disableStickyBucketing != true))
+            (context.options.stickyBucketService != null && (rule.disableStickyBucketing != true))
                 ? rule.fallbackAttribute
                 : null,
             rule.range,
             rule.coverage,
             rule.hashVersion,
-            context,
           );
 
           if (!isUserIncluded) {
@@ -160,7 +160,8 @@ class FeatureEvaluator {
                   var experiment = track.featureResult!.experiment!;
                   var result = track.featureResult!.experimentResult!;
                   if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-                    context.trackingCallBack!(GBTrackData(experiment: experiment, experimentResult: result));
+                    context.options
+                        .trackingCallBackWithUser!(GBTrackData(experiment: experiment, experimentResult: result));
                   }
                 }
               }
@@ -172,7 +173,7 @@ class FeatureEvaluator {
               String key = rule.hashAttribute ?? Constant.idAttribute;
 
               // Get the user hash value from context attributes based on the key
-              String? attributeValue = context.attributes?[key].toString();
+              String? attributeValue = context.userContext.attributes?[key].toString();
 
               // If attributeValue is empty or null, skip the rule
               if (attributeValue == null || attributeValue.isEmpty) {
@@ -189,7 +190,7 @@ class FeatureEvaluator {
             }
           }
           final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force);
-          onFeatureUsageCallback?.call(featureKey, forcedFeatureResult);
+          onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
           if (rule.variations == null) {
@@ -229,7 +230,7 @@ class FeatureEvaluator {
                 experiment: exp,
                 result: result,
               );
-              onFeatureUsageCallback?.call(featureKey, experimentFeatureResult);
+              onFeatureUsageCallbackWithUser?.call(featureKey, experimentFeatureResult);
               return experimentFeatureResult;
             }
           }
@@ -237,7 +238,7 @@ class FeatureEvaluator {
       }
     }
     final defaultFeatureResult = prepareResult(value: targetFeature.defaultValue, source: GBFeatureSource.defaultValue);
-    onFeatureUsageCallback?.call(featureKey, defaultFeatureResult);
+    onFeatureUsageCallbackWithUser?.call(featureKey, defaultFeatureResult);
     return defaultFeatureResult;
   }
 
@@ -267,7 +268,7 @@ class FeatureEvaluator {
   Map<String, dynamic> getAttributes() {
     try {
       // Merge context.attributes with attributeOverrides
-      Map<String, dynamic> mergedAttributes = {...?context.attributes};
+      Map<String, dynamic> mergedAttributes = {...?context.userContext.attributes};
 
       // Iterate over attributeOverrides and merge them into mergedAttributes
       attributeOverrides.forEach((key, value) {
