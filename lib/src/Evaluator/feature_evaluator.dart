@@ -10,25 +10,14 @@ import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 /// Returns Calculated Feature Result against that key
 
 class FeatureEvaluator {
-  EvaluationContext context;
-  FeatureEvalContext? evalContext;
-  String featureKey;
-  Map<String, dynamic> attributeOverrides;
-
-  FeatureEvaluator({
-    required this.context,
-    required this.featureKey,
-    required this.attributeOverrides,
-    FeatureEvalContext? evalContext,
-  }) : evalContext = evalContext ?? FeatureEvalContext(evaluatedFeatures: <String>{});
-
   /// Takes context and feature key and returns the calculated feature result against that key.
-  GBFeatureResult evaluateFeature() {
+  GBFeatureResult evaluateFeature(EvaluationContext context, String featureKey) {
     /// This callback serves for listening for feature usage events
     final onFeatureUsageCallbackWithUser = context.options.featureUsageCallbackWithUser;
 
     // Check if the feature has been evaluated already and return early if it has
-    if (evalContext?.evaluatedFeatures.contains(featureKey) ?? false) {
+
+    if (context.stackContext.evaluatedFeatures.contains(featureKey)) {
       final featureResultWhenCircularDependencyDetected = prepareResult(
         value: null,
         source: GBFeatureSource.cyclicPrerequisite,
@@ -39,11 +28,11 @@ class FeatureEvaluator {
       return featureResultWhenCircularDependencyDetected;
     }
 
-    evalContext?.evaluatedFeatures.add(featureKey);
-    evalContext?.id = featureKey;
+    context.stackContext.evaluatedFeatures.add(featureKey);
+    context.stackContext.id = featureKey;
 
     // Check if the targetFeature is available in context.features using the featureKey
-    GBFeature? targetFeature = context.userContext.forcedFeatureValues?[featureKey];
+    GBFeature? targetFeature = context.globalContext.features?[featureKey];
 
     // If the targetFeature is not found, return a result with null value and unknown feature source
     if (targetFeature == null) {
@@ -65,13 +54,7 @@ class FeatureEvaluator {
           // Iterate through each parent condition
           for (var parentCondition in rule.parentConditions!) {
             // Evaluate the parent condition using a new FeatureEvaluator
-            var parentEvaluator = FeatureEvaluator(
-              context: context,
-              featureKey: parentCondition.id,
-              attributeOverrides: attributeOverrides,
-              evalContext: evalContext,
-            );
-            GBFeatureResult parentResult = parentEvaluator.evaluateFeature();
+            GBFeatureResult parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
             // Check if the source of the parent result is cyclic prerequisite
             if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
@@ -126,7 +109,7 @@ class FeatureEvaluator {
         if (rule.force != null) {
           if (rule.condition != null &&
               !GBConditionEvaluator().isEvalCondition(
-                getAttributes(),
+                context.userContext.attributes ?? {},
                 rule.condition!,
                 context.globalContext.savedGroups,
               )) {
@@ -218,8 +201,7 @@ class FeatureEvaluator {
               name: rule.name,
               phase: rule.phase,
             );
-            GBExperimentResult result = ExperimentEvaluator(attributeOverrides: attributeOverrides)
-                .evaluateExperiment(context, exp, featureId: featureKey);
+            GBExperimentResult result = ExperimentEvaluator().evaluateExperiment(context, exp, featureId: featureKey);
 
             // Check if the result is in the experiment and not a passthrough
             if (result.inExperiment && !(result.passthrough ?? false)) {
@@ -265,13 +247,13 @@ class FeatureEvaluator {
     );
   }
 
-  Map<String, dynamic> getAttributes() {
+  Map<String, dynamic> getAttributes(GBContext context) {
     try {
       // Merge context.attributes with attributeOverrides
-      Map<String, dynamic> mergedAttributes = {...?context.userContext.attributes};
+      Map<String, dynamic> mergedAttributes = {...?context.attributes};
 
       // Iterate over attributeOverrides and merge them into mergedAttributes
-      attributeOverrides.forEach((key, value) {
+      context.attributes?.forEach((key, value) {
         mergedAttributes[key] = value;
       });
 
@@ -287,7 +269,6 @@ class FeatureEvalContext {
   String? id;
   Set<String> evaluatedFeatures;
 
-  // Constructor
   FeatureEvalContext({
     this.id,
     Set<String>? evaluatedFeatures,

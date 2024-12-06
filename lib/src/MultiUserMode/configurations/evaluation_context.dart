@@ -22,6 +22,6 @@ class StackContext {
 
   StackContext({
     this.id,
-    this.evaluatedFeatures = const <String>{},
-  });
+    Set<String>? evaluatedFeatures,
+  }) : evaluatedFeatures = evaluatedFeatures ?? <String>{};
 }

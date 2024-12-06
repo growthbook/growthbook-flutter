@@ -227,15 +227,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    return FeatureEvaluator(
-      attributeOverrides: _attributeOverrides,
-      context: GBUtils.initializeEvalContext(context, _refreshHandler),
-      featureKey: id,
-    ).evaluateFeature();
+    return FeatureEvaluator().evaluateFeature(GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    final result = ExperimentEvaluator(attributeOverrides: _attributeOverrides).evaluateExperiment(
+    final result = ExperimentEvaluator().evaluateExperiment(
       GBUtils.initializeEvalContext(context, _refreshHandler),
       experiment,
     );
@@ -320,11 +316,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    return FeatureEvaluator(
-            context: GBUtils.initializeEvalContext(context, _refreshHandler),
-            featureKey: id,
-            attributeOverrides: _attributeOverrides)
-        .evaluateFeature();
+    return FeatureEvaluator().evaluateFeature(GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off

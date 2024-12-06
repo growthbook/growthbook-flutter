@@ -37,8 +37,7 @@ void main() {
 
         final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
 
-        final result =
-            FeatureEvaluator(attributeOverrides: {}, context: evaluationContext, featureKey: item[2]).evaluateFeature();
+        final result = FeatureEvaluator().evaluateFeature(evaluationContext, item[2]);
         final expectedResult = GBFeatureResultTest.fromMap(item[3]);
 
         final status =
@@ -125,9 +124,8 @@ void main() {
 
           final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
 
-          final evaluator =
-              FeatureEvaluator(context: evaluationContext, featureKey: item[2], attributeOverrides: attributes);
-          evaluator.evaluateFeature();
+          final evaluator = FeatureEvaluator();
+          evaluator.evaluateFeature(evaluationContext, item[2]);
 
           expect(expectedNumberOfOnFeatureUsageCalls, actualNumberOfOnFeatureUsageCalls);
           break;

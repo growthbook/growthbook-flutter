@@ -7,10 +7,6 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/evaluati
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 class ExperimentEvaluator {
-  Map<String, dynamic> attributeOverrides;
-
-  ExperimentEvaluator({required this.attributeOverrides});
-
   // Takes Context and Experiment and returns ExperimentResult
   GBExperimentResult evaluateExperiment(EvaluationContext context, GBExperiment experiment, {String? featureId}) {
     // Check if experiment.variations has fewer than 2 variations
@@ -58,7 +54,7 @@ class ExperimentEvaluator {
       fallback: (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
-      attributes: attributeOverrides,
+      attributes: context.userContext.attributes ?? {},
     );
 
     final hashAttribute = hashAttributeAndValue[0];
@@ -136,11 +132,7 @@ class ExperimentEvaluator {
 
       if (experiment.parentConditions != null) {
         for (final parentCondition in experiment.parentConditions!) {
-          final parentResult = FeatureEvaluator(
-            context: context,
-            featureKey: parentCondition.id,
-            attributeOverrides: parentCondition.condition,
-          ).evaluateFeature();
+          final parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
           if (parentResult.source?.name == GBFeatureSource.cyclicPrerequisite.name) {
             return _getExperimentResult(
@@ -161,13 +153,14 @@ class ExperimentEvaluator {
 
           if (!evalCondition) {
             log("Feature blocked by prerequisite");
-            return _getExperimentResult(
+            final value = _getExperimentResult(
               featureId: featureId,
               context: context,
               experiment: experiment,
               variationIndex: -1,
               hashUsed: false,
             );
+            return value;
           }
         }
       }
@@ -302,7 +295,7 @@ class ExperimentEvaluator {
       fallback: (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
-      attributes: attributeOverrides,
+      attributes: context.userContext.attributes ?? {},
     );
 
     String hashAttribute = hashResult[0];
