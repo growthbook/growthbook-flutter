@@ -1,6 +1,6 @@
-import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/global_context.dart';
-import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/options.dart';
-import 'package:growthbook_sdk_flutter/src/MultiUserMode/configurations/user_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
 
 class EvaluationContext {
   EvaluationContext({
