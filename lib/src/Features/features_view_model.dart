@@ -129,7 +129,7 @@ class FeatureViewModel {
     if (data.features != null && data.encryptedFeatures == null) {
       delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
-      final featureData = utf8Encoder.convert(jsonEncode(data.features));
+      final featureData = utf8Encoder.convert(jsonEncode(data));
       final featureDataOnUint8List = Uint8List.fromList(featureData);
       manager.putData(
         fileName: Constant.featureCache,

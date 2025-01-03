@@ -3,8 +3,8 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
 typedef FeatureFetchSuccessCallBack = void Function(
-  FeaturedDataModel featuredDataModel,
-);
+    FeaturedDataModel featuredDataModel,
+    );
 
 abstract class FeaturesFlowDelegate {
   void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote});
@@ -23,30 +23,26 @@ class FeatureDataSource {
   final BaseClient client;
 
   Future<void> fetchFeatures(
-    FeatureFetchSuccessCallBack onSuccess,
-    OnError onError, {
-    FeatureRefreshStrategy featureRefreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
-  }) async {
-    final apiSse = FeatureURLBuilder.buildUrl(context.apiKey ?? "",
-        featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS);
+      FeatureFetchSuccessCallBack onSuccess,
+      OnError onError, {
+        FeatureRefreshStrategy featureRefreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
+      }) async {
 
     featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS
         ? await client.consumeSseConnections(
-            context.hostURL!,
-            apiSse,
-            (response) => onSuccess(
-              FeaturedDataModel.fromJson(response),
-            ),
-            onError,
-          )
+      _getEndpoint(context: context, featureRefreshStrategy: featureRefreshStrategy),
+          (response) => onSuccess(
+        FeaturedDataModel.fromJson(response),
+      ),
+      onError,
+    )
         : await client.consumeGetRequest(
-            context.hostURL ?? "",
-            FeatureURLBuilder.buildUrl(context.apiKey ?? ""),
-            (response) => onSuccess(
-              FeaturedDataModel.fromJson(response),
-            ),
-            onError,
-          );
+      _getEndpoint(context: context, featureRefreshStrategy: featureRefreshStrategy),
+          (response) => onSuccess(
+        FeaturedDataModel.fromJson(response),
+      ),
+      onError,
+    );
   }
 
   Future<void> fetchRemoteEval({
@@ -64,10 +60,17 @@ class FeatureDataSource {
     await client.consumePostRequest(
       apiUrl,
       remoteEvalJson,
-      (response) => onSuccess(
+          (response) => onSuccess(
         FeaturedDataModel.fromJson(response),
       ),
       onError,
     );
+  }
+
+  String _getEndpoint(
+      {required GBContext context,
+        FeatureRefreshStrategy featureRefreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE}
+      ) {
+    return FeatureURLBuilder.buildUrl(context.hostURL, context.apiKey, featureRefreshStrategy: featureRefreshStrategy);
   }
 }

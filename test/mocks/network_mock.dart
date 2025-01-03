@@ -8,7 +8,7 @@ class MockNetworkClient implements BaseClient {
   const MockNetworkClient({this.error = false});
 
   @override
-  Future<void> consumeGetRequest(String baseUrl, String path, OnSuccess onSuccess, OnError onError) async {
+  Future<void> consumeGetRequest(String url, OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
       onSuccess(pseudoResponse);
@@ -47,7 +47,7 @@ class MockNetworkClient implements BaseClient {
   }
 
   @override
-  Future<void> consumeSseConnections(String baseUrl, String path, OnSuccess onSuccess, OnError onError) async {
+  Future<void> consumeSseConnections(String url, OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
       onSuccess(pseudoResponse);
