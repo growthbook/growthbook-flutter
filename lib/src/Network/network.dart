@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -11,23 +12,23 @@ abstract class BaseClient {
   const BaseClient();
 
   Future<void> consumeGetRequest(
-      String url,
-      OnSuccess onSuccess,
-      OnError onError,
-      );
+    String url,
+    OnSuccess onSuccess,
+    OnError onError,
+  );
 
   Future<void> consumePostRequest(
-      String baseUrl,
-      Map<String, dynamic> params,
-      OnSuccess onSuccess,
-      OnError onError,
-      );
+    String baseUrl,
+    Map<String, dynamic> params,
+    OnSuccess onSuccess,
+    OnError onError,
+  );
 
   Future<void> consumeSseConnections(
-      String url,
-      OnSuccess onSuccess,
-      OnError onError,
-      );
+    String url,
+    OnSuccess onSuccess,
+    OnError onError,
+  );
 }
 
 class DioClient extends BaseClient {
@@ -53,7 +54,7 @@ class DioClient extends BaseClient {
 
       if (data is ResponseBody) {
         data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
-              (sseModel) {
+          (sseModel) {
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
@@ -85,10 +86,10 @@ class DioClient extends BaseClient {
 
   @override
   Future<void> consumeGetRequest(
-      String url,
-      OnSuccess onSuccess,
-      OnError onError,
-      ) async {
+    String url,
+    OnSuccess onSuccess,
+    OnError onError,
+  ) async {
     try {
       final response = await _dio.get(url);
 
@@ -104,22 +105,20 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      print('DioException: $e');
+      log('DioException: $e');
       onError(e, s);
     } catch (e, s) {
-      print('Unexpected error: $e');
+      log('Unexpected error: $e');
       onError(e, s);
     }
   }
 
-
   @override
   Future<void> consumeSseConnections(
-      String url,
-      OnSuccess onSuccess,
-      OnError onError,
-      ) async {
-
+    String url,
+    OnSuccess onSuccess,
+    OnError onError,
+  ) async {
     await listenAndRetry(
       url: url,
       onError: onError,
@@ -129,11 +128,11 @@ class DioClient extends BaseClient {
 
   @override
   Future<void> consumePostRequest(
-      String baseUrl,
-      Map<String, dynamic> params,
-      OnSuccess onSuccess,
-      OnError onError,
-      ) async {
+    String baseUrl,
+    Map<String, dynamic> params,
+    OnSuccess onSuccess,
+    OnError onError,
+  ) async {
     try {
       Response response = await _dio.post(
         baseUrl,

@@ -27,11 +27,11 @@ class FeatureViewModel {
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-          (data) {
+      (data) {
         delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: false);
         prepareFeaturesData(data);
       },
-          (e, s) => delegate.featuresFetchFailed(
+      (e, s) => delegate.featuresFetchFailed(
         error: GBError(
           error: e,
           stackTrace: s.toString(),
@@ -46,14 +46,14 @@ class FeatureViewModel {
 
     if (receivedData == null) {
       await source.fetchFeatures(
-            (data) {
+        (data) {
           delegate.featuresFetchedSuccessfully(
             gbFeatures: data.features!,
             isRemote: false,
           );
           cacheFeatures(data);
         },
-            (e, s) => delegate.featuresFetchFailed(
+        (e, s) => delegate.featuresFetchFailed(
           error: GBError(
             error: e,
             stackTrace: s.toString(),
@@ -98,10 +98,10 @@ class FeatureViewModel {
             });
       } else {
         await source.fetchFeatures(
-              (data) {
+          (data) {
             prepareFeaturesData(data);
           },
-              (e, s) => delegate.featuresFetchFailed(
+          (e, s) => delegate.featuresFetchFailed(
             error: GBError(
               error: e,
               stackTrace: s.toString(),
@@ -118,10 +118,6 @@ class FeatureViewModel {
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
       } else {
-        print(
-        'Data ${data}'
-        'FEATURES ${data.features}'
-        );
         handleValidFeatures(data);
       }
     } catch (e, s) {
