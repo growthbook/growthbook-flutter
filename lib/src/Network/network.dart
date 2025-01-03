@@ -11,25 +11,23 @@ abstract class BaseClient {
   const BaseClient();
 
   Future<void> consumeGetRequest(
-    String baseUrl,
-    String path,
-    OnSuccess onSuccess,
-    OnError onError,
-  );
+      String url,
+      OnSuccess onSuccess,
+      OnError onError,
+      );
 
   Future<void> consumePostRequest(
-    String baseUrl,
-    Map<String, dynamic> params,
-    OnSuccess onSuccess,
-    OnError onError,
-  );
+      String baseUrl,
+      Map<String, dynamic> params,
+      OnSuccess onSuccess,
+      OnError onError,
+      );
 
   Future<void> consumeSseConnections(
-    String baseUrl,
-    String path,
-    OnSuccess onSuccess,
-    OnError onError,
-  );
+      String url,
+      OnSuccess onSuccess,
+      OnError onError,
+      );
 }
 
 class DioClient extends BaseClient {
@@ -40,14 +38,13 @@ class DioClient extends BaseClient {
   Dio get client => _dio;
 
   Future<void> listenAndRetry({
-    required Dio dio,
-    required String path,
+    required String url,
     required OnSuccess onSuccess,
     required OnError onError,
   }) async {
     try {
-      final resp = await dio.get(
-        path,
+      final resp = await _dio.get(
+        url,
         options: Options(responseType: ResponseType.stream),
       );
 
@@ -56,7 +53,7 @@ class DioClient extends BaseClient {
 
       if (data is ResponseBody) {
         data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
-          (sseModel) {
+              (sseModel) {
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
@@ -69,10 +66,9 @@ class DioClient extends BaseClient {
           onDone: () async {
             if (statusCode != null && shouldReconnect(statusCode)) {
               await listenAndRetry(
-                dio: dio,
+                url: url,
                 onError: onError,
                 onSuccess: onSuccess,
-                path: path,
               );
             }
           },
@@ -89,55 +85,55 @@ class DioClient extends BaseClient {
 
   @override
   Future<void> consumeGetRequest(
-    String baseUrl,
-    String path,
-    OnSuccess onSuccess,
-    OnError onError,
-  ) async {
-    final dio = _dio..options.baseUrl = baseUrl;
-
+      String url,
+      OnSuccess onSuccess,
+      OnError onError,
+      ) async {
     try {
-      final response = await dio.get(path);
-      onSuccess(response.data);
+      final response = await _dio.get(url);
+
+      if (response.data is Map<String, dynamic>) {
+        onSuccess(response.data);
+      } else if (response.data is String) {
+        try {
+          onSuccess(jsonDecode(response.data));
+        } catch (e) {
+          onError(e, StackTrace.current);
+        }
+      } else {
+        onError(Exception('Unexpected response format'), StackTrace.current);
+      }
     } on DioException catch (e, s) {
-      onError(e, s);
-    } on SocketException catch (e, s) {
-      onError(e, s);
-    } on HandshakeException catch (e, s) {
-      onError(e, s);
-    } on TlsException catch (e, s) {
-      onError(e, s);
-    } on IOException catch (e, s) {
+      print('DioException: $e');
       onError(e, s);
     } catch (e, s) {
+      print('Unexpected error: $e');
       onError(e, s);
     }
   }
 
+
   @override
   Future<void> consumeSseConnections(
-    String baseUrl,
-    String path,
-    OnSuccess onSuccess,
-    OnError onError,
-  ) async {
-    final dio = _dio..options.baseUrl = baseUrl;
+      String url,
+      OnSuccess onSuccess,
+      OnError onError,
+      ) async {
 
     await listenAndRetry(
-      dio: dio,
+      url: url,
       onError: onError,
       onSuccess: onSuccess,
-      path: path,
     );
   }
 
   @override
   Future<void> consumePostRequest(
-    String baseUrl,
-    Map<String, dynamic> params,
-    OnSuccess onSuccess,
-    OnError onError,
-  ) async {
+      String baseUrl,
+      Map<String, dynamic> params,
+      OnSuccess onSuccess,
+      OnError onError,
+      ) async {
     try {
       Response response = await _dio.post(
         baseUrl,
