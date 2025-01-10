@@ -1,3 +1,8 @@
+# 3.9.8
+- Fix SSE connection
+- Fix building feature url
+- Create separate method autorefresh for SSE functionality
+
 # 3.9.7
 - Update hash function to get same result on web & mobile.
 

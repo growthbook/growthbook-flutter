@@ -169,6 +169,21 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  Future<void> autoRefresh() async {
+    final featureViewModel = FeatureViewModel(
+      backgroundSync: _context.backgroundSync,
+      encryptionKey: _context.encryptionKey ?? "",
+      delegate: this,
+      source: FeatureDataSource(
+        client: _baseClient,
+        context: _context,
+      ),
+    );
+    if (_context.backgroundSync) {
+      await featureViewModel.connectBackgroundSync();
+    }
+  }
+
   Future<void> refresh() async {
     final featureViewModel = FeatureViewModel(
       backgroundSync: _context.backgroundSync,
@@ -184,9 +199,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
     if (_savedGroups != null) {
       _context.savedGroups = _savedGroups!;
-    }
-    if (_context.backgroundSync) {
-      await featureViewModel.connectBackgroundSync();
     }
     if (_context.remoteEval) {
       refreshForRemoteEval();
