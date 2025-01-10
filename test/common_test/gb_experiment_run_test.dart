@@ -37,7 +37,9 @@ void main() {
             savedGroups: testContext.savedGroups,
           );
 
-          final result = ExperimentEvaluator(attributeOverrides: {}).evaluateExperiment(gbContext, experiment);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+
+          final result = ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
           final status =
               "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
 

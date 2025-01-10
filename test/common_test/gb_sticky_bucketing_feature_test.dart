@@ -70,15 +70,18 @@ void main() {
             expectedStickyAssignmentDocs[key] = StickyAssignmentsDocument.fromJson(value);
           });
 
-          final evaluator = FeatureEvaluator(attributeOverrides: attributes, context: gbContext, featureKey: item[3]);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
 
-          final actualExperimentResult = evaluator.evaluateFeature().experimentResult;
+          final evaluator = FeatureEvaluator();
+
+          final actualExperimentResult = evaluator.evaluateFeature(evaluationContext, item[3]).experimentResult;
 
           String status =
               "\n${item[0]}\nExpected Result - ${item[4]} & $expectedStickyAssignmentDocs\n\nActual result - ${actualExperimentResult?.toJson()} & ${gbContext.stickyBucketAssignmentDocs}\n\n";
 
           if (expectedExperimentResult?.value.toString() == actualExperimentResult?.value.toString() &&
-              expectedStickyAssignmentDocs.toString() == gbContext.stickyBucketAssignmentDocs.toString()) {
+              expectedStickyAssignmentDocs.toString() ==
+                  evaluationContext.userContext.stickyBucketAssignmentDocs.toString()) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);

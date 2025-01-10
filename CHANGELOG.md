@@ -1,3 +1,6 @@
+# 3.9.9
+- Enable Multi Context Support
+
 # 3.9.8
 - Fix SSE connection
 - Fix building feature url
