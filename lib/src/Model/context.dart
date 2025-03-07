@@ -69,7 +69,7 @@ class GBContext {
 
   String? getFeaturesURL() {
     if (hostURL != null && apiKey != null) {
-      return '${hostURL}/api/features/$apiKey';
+      return '$hostURL/api/features/$apiKey';
     } else {
       return null;
     }
@@ -77,7 +77,7 @@ class GBContext {
 
   String? getRemoteEvalUrl() {
     if (hostURL != null && apiKey != null) {
-      return '${hostURL}/api/eval/$apiKey';
+      return '$hostURL/api/eval/$apiKey';
     } else {
       return null;
     }

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 import '../test_cases/test_case.dart';
 
