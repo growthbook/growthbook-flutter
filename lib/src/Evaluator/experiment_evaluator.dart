@@ -131,7 +131,11 @@ class ExperimentEvaluator {
       }
 
       if (experiment.parentConditions != null) {
+        final evaluatedFeatures = context.stackContext.evaluatedFeatures.toSet();
+
         for (final parentCondition in experiment.parentConditions!) {
+          context.stackContext.evaluatedFeatures = evaluatedFeatures.toSet();
+
           final parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
           if (parentResult.source?.name == GBFeatureSource.cyclicPrerequisite.name) {

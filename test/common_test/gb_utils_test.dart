@@ -11,10 +11,10 @@ void main() {
       List<String> passedScenarios = [];
 
       for (var item in evalConditions) {
-        final testContext = item[0];
-        final experiment = item[1];
+        final seed = item[0];
+        final testContext = item[1];
         final hashVersion = item[2];
-        final seed = item[3];
+        final experiment = item[3];
 
         final result =
             GBUtils.hash(seed: seed, value: testContext, version: hashVersion);

@@ -45,6 +45,7 @@ class FeatureEvaluator {
     }
 
     if (targetFeature.rules != null && targetFeature.rules!.isNotEmpty) {
+      final evaluatedFeatures = context.stackContext.evaluatedFeatures.toSet();
       // Iterate through each rule in the target feature's rules
       ruleLoop:
       for (var rule in targetFeature.rules!) {
@@ -52,6 +53,7 @@ class FeatureEvaluator {
         if (rule.parentConditions != null) {
           // Iterate through each parent condition
           for (var parentCondition in rule.parentConditions!) {
+            context.stackContext.evaluatedFeatures = evaluatedFeatures.toSet();
             // Evaluate the parent condition using a new FeatureEvaluator
             GBFeatureResult parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
