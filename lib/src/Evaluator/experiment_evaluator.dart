@@ -21,6 +21,7 @@ class ExperimentEvaluator {
       );
     }
 
+    // Query string overrides
     int? override = GBUtils.getQueryStringOverride(experiment.key, context.options.url, experiment.variations.length);
     if (override != null) {
       return _getExperimentResult(

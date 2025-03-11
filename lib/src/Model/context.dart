@@ -66,7 +66,16 @@ class GBContext {
   ///Disable background streaming connection
   bool backgroundSync;
 
+  ///Once you define your Saved Groups, you can easily reference them from any Feature rule or Experiment.
+  ///Updates to saved groups apply immediately and will be instantly propagated to all matching Features and Experiments.
+  ///There are two types of Saved Groups:
+  ///ID Lists - Pick an attribute and define a list of values directly within the GrowthBook UI.
+  ///For example, you can make an Admin group and add the userId of all of your admins.
+  ///Condition Groups - Configure advanced targeting rules based on a user's attributes. For example,
+  ///"all users located in the US on a mobile device".
   SavedGroupsValues? savedGroups;
+
+  ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
 
   String? getFeaturesURL() {

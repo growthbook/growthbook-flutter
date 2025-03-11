@@ -538,6 +538,25 @@ class GBUtils {
     return StickyBucketDocumentChange(key, doc, hasChanged);
   }
 
+  /// Checks if an experiment variation is being forced via a URL query string.
+  /// This may not be applicable for all SDKs (e.g., mobile).
+  ///
+  /// For example, if the `id` is `"my-test"` and the URL is `http://localhost/?my-test=1`,
+  /// this function would return `1`.
+  ///
+  /// Returns `null` if any of the following conditions are met:
+  ///
+  /// - There is no query string.
+  /// - The `id` is not a key in the query string.
+  /// - The variation is not an integer.
+  /// - The variation is less than `0` or greater than or equal to `numberOfVariations`.
+  ///
+  ///
+  /// - [id] The experiment identifier.
+  /// - [urlString] The desired page URL as a string.
+  /// - [numberOfVariations] The number of variations.
+  ///
+  /// Returns an `int` or `null`.
   static int? getQueryStringOverride(String id, String? urlString, int variations)  {
     if (urlString == null || urlString.isEmpty) {
       return null;
@@ -552,6 +571,25 @@ class GBUtils {
     }
   }
 
+  /// Checks if an experiment variation is being forced via a URL query string.
+  /// This may not be applicable for all SDKs (e.g., mobile).
+  ///
+  /// For example, if the `id` is `"my-test"` and the URL is `http://localhost/?my-test=1`,
+  /// this function would return `1`.
+  ///
+  /// Returns `null` if any of the following conditions are met:
+  ///
+  /// - There is no query string.
+  /// - The `id` is not a key in the query string.
+  /// - The variation is not an integer.
+  /// - The variation is less than `0` or greater than or equal to `numberOfVariations`.
+  ///
+  ///
+  /// - [id] The experiment identifier.
+  /// - [url] The desired page URL.
+  /// - [numberOfVariations] The number of variations.
+  ///
+  /// Returns an `int` or `null`.
   static int? getQueryStringOverrideFromUrl(String id, Uri url, int numberOfVariations) {
      var queryString = url.query;
      var queryMap = parseQuery(queryString);
@@ -574,6 +612,12 @@ class GBUtils {
      }
   }
 
+  /// Parses a query string into a map of key/value pairs.
+  ///
+  /// - [queryString]: The string to parse (without the `?`).
+  ///
+  /// Returns a `Map<String, String>` containing the key/value pairs
+  /// from the query string.
   static Map<String, String> parseQuery(String? query) {
     Map<String, String> map = HashMap();
     if (query == null || query.isEmpty) {
