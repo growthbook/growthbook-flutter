@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:ffi';
+
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
@@ -535,12 +538,71 @@ class GBUtils {
     return StickyBucketDocumentChange(key, doc, hasChanged);
   }
 
+  static int? getQueryStringOverride(String id, String? urlString, int variations)  {
+    if (urlString == null || urlString.isEmpty) {
+      return null;
+    }
+
+    try {
+      Uri url = Uri.parse(urlString);
+      return getQueryStringOverrideFromUrl(id, url, variations);
+    } catch (e) {
+      print("Error parsing URL: $e");
+      return null;
+    }
+  }
+
+  static int? getQueryStringOverrideFromUrl(String id, Uri url, int numberOfVariations) {
+     var queryString = url.query;
+     var queryMap = parseQuery(queryString);
+
+     String? possibleValue = queryMap[id];
+     if (possibleValue == null) {
+       return null;
+     }
+
+     try {
+       int variationValue = int.parse(possibleValue);
+       if (variationValue < 0 || variationValue >= numberOfVariations) {
+         return null;
+       }
+
+       return variationValue;
+     } catch (e) {
+       print("Error parsing integer: $e");
+       return null;
+     }
+  }
+
+  static Map<String, String> parseQuery(String? query) {
+    Map<String, String> map = HashMap();
+    if (query == null || query.isEmpty) {
+      return map;
+    }
+    var params = query.split("&");
+    for (String param in params) {
+      try {
+        var keyValuePair = param.split("=");
+        var name = Uri.decodeComponent(keyValuePair[0]);
+        if (name.isEmpty) {
+          continue;
+        }
+        String value = (keyValuePair.length > 1) ? Uri.decodeComponent(
+            keyValuePair[1]) : "";
+        map[name] = value;
+      } catch(e) {
+        print("Error decoding query parameter: $e");
+      }
+    }
+    return map;
+  }
+
   static EvaluationContext initializeEvalContext(GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
       isCacheDisabled: false,
-      url: gbContext.hostURL,
+      hostUrl: gbContext.hostURL,
       clientKey: gbContext.apiKey,
       decryptionKey: gbContext.encryptionKey,
       stickyBucketIdentifierAttributes: gbContext.stickyBucketIdentifierAttributes,
@@ -548,6 +610,7 @@ class GBUtils {
       trackingCallBackWithUser: gbContext.trackingCallBack!,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
       featureRefreshCallback: refreshHandler,
+      url: gbContext.url,
     );
 
     var globalContext = GlobalContext(

@@ -7,7 +7,7 @@ class Options {
     this.enabled,
     required this.isQaMode,
     required this.isCacheDisabled,
-    this.url,
+    this.hostUrl,
     this.apiHost,
     this.clientKey,
     this.decryptionKey,
@@ -17,6 +17,7 @@ class Options {
     this.featureUsageCallbackWithUser,
     this.refreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
     this.featureRefreshCallback,
+    this.url,
   });
 
   /// Whether globally all experiments are enabled (default: true)
@@ -30,9 +31,9 @@ class Options {
   bool isCacheDisabled;
 
   // /// Boolean flag to allow URL overrides (default: false)
-  // bool allowUrlOverrides;
+  // bool? allowUrlOverrides;
 
-  String? url;
+  String? hostUrl;
 
   String? apiHost;
 
@@ -58,4 +59,5 @@ class Options {
   FeatureRefreshStrategy? refreshStrategy;
 
   FeatureRefreshCallback? featureRefreshCallback;
+  String? url;
 }

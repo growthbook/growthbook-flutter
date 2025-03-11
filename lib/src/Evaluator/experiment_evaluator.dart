@@ -21,6 +21,17 @@ class ExperimentEvaluator {
       );
     }
 
+    int? override = GBUtils.getQueryStringOverride(experiment.key, context.options.url, experiment.variations.length);
+    if (override != null) {
+      return _getExperimentResult(
+        featureId: featureId,
+        context: context,
+        experiment: experiment,
+        variationIndex: override,
+        hashUsed: false,
+      );
+    }
+
     if (context.userContext.forcedVariationsMap != null &&
         context.userContext.forcedVariationsMap!.containsKey(experiment.key)) {
       // Retrieve the forced variation for the experiment key

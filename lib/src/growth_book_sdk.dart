@@ -30,6 +30,7 @@ class GBSDKBuilderApp {
     this.stickyBucketService,
     this.backgroundSync = false,
     this.remoteEval = false,
+    this.url
   });
 
   final String apiKey;
@@ -45,10 +46,12 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
+  final String? url;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -65,6 +68,7 @@ class GBSDKBuilderApp {
       stickyBucketService: stickyBucketService,
       backgroundSync: backgroundSync,
       remoteEval: remoteEval,
+      url: url
     );
     final gb = GrowthBookSDK._(
       context: gbContext,

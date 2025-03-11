@@ -57,6 +57,7 @@ class GBFeaturesTest {
     this.forcedVariations,
     this.stickyBucketAssignmentDocs,
   });
+
   final Map<String, GBFeature>? features;
   final Map<String, dynamic>? attributes;
   final dynamic forcedVariations;
@@ -69,8 +70,10 @@ class GBFeaturesTest {
       features: (map['features'] as Map<String, dynamic>?)?.map(
         (key, value) => MapEntry(key, GBFeature.fromJson(value)),
       ),
-      stickyBucketAssignmentDocs: (map['stickyBucketAssignmentDocs'] as Map<String, dynamic>?)?.map(
-        (key, value) => MapEntry(key, StickyAssignmentsDocument.fromJson(value)),
+      stickyBucketAssignmentDocs:
+          (map['stickyBucketAssignmentDocs'] as Map<String, dynamic>?)?.map(
+        (key, value) =>
+            MapEntry(key, StickyAssignmentsDocument.fromJson(value)),
       ),
     );
   }
@@ -85,18 +88,23 @@ class GBFeatureResultTest {
     this.experiment,
     this.experimentResult,
   });
+
   dynamic value;
   bool? on;
   bool? off;
   String? source;
   GBExperimentResultTest? experimentResult;
   GBExperiment? experiment;
-  factory GBFeatureResultTest.fromMap(Map<String, dynamic> map) => GBFeatureResultTest(
+
+  factory GBFeatureResultTest.fromMap(Map<String, dynamic> map) =>
+      GBFeatureResultTest(
         value: map['value'],
         on: map['on'],
         off: map['off'],
         source: map['source'],
-        experiment: map['experiment'] != null ? GBExperiment.fromJson(map['experiment']) : null,
+        experiment: map['experiment'] != null
+            ? GBExperiment.fromJson(map['experiment'])
+            : null,
         experimentResult: map['experimentResult'] != null
             ? GBExperimentResultTest.fromMap(
                 map['experimentResult'],
@@ -106,14 +114,14 @@ class GBFeatureResultTest {
 }
 
 class GBContextTest {
-  GBContextTest({
-    this.attributes,
-    this.features = const <String, GBFeature>{},
-    this.qaMode = false,
-    this.enabled = true,
-    this.forcedVariations,
-    this.savedGroups,
-  });
+  GBContextTest(
+      {this.attributes,
+      this.features = const <String, GBFeature>{},
+      this.qaMode = false,
+      this.enabled = true,
+      this.forcedVariations,
+      this.savedGroups,
+      this.url});
 
   dynamic attributes;
   Map<String, GBFeature> features;
@@ -121,17 +129,19 @@ class GBContextTest {
   bool enabled;
   Map<String, dynamic>? forcedVariations;
   SavedGroupsValues? savedGroups;
+  String? url;
 
   factory GBContextTest.fromMap(Map<String, dynamic> map) => GBContextTest(
-        attributes: map['attributes'],
-        features: (map['features'] as Map<String, dynamic>?)
-                ?.map((key, value) => MapEntry(key, GBFeature.fromJson(value as Map<String, dynamic>))) ??
-            <String, GBFeature>{},
-        qaMode: map['qaMode'] ?? false,
-        enabled: map['enabled'] ?? true,
-        forcedVariations: map['forcedVariations'],
-        savedGroups: map['savedGroups'],
-      );
+      attributes: map['attributes'],
+      features: (map['features'] as Map<String, dynamic>?)?.map((key, value) =>
+              MapEntry(
+                  key, GBFeature.fromJson(value as Map<String, dynamic>))) ??
+          <String, GBFeature>{},
+      qaMode: map['qaMode'] ?? false,
+      enabled: map['enabled'] ?? true,
+      forcedVariations: map['forcedVariations'],
+      savedGroups: map['savedGroups'],
+      url: map["url"] ?? "");
 }
 
 class GBExperimentResultTest {
@@ -186,7 +196,8 @@ class GBExperimentResultTest {
   /// If sticky bucketing was used to assign a variation
   bool? stickyBucketUsed;
 
-  factory GBExperimentResultTest.fromMap(Map<String, dynamic> map) => GBExperimentResultTest(
+  factory GBExperimentResultTest.fromMap(Map<String, dynamic> map) =>
+      GBExperimentResultTest(
         value: map['value'],
         inExperiment: map['inExperiment'],
         variationId: map['variationId'],
