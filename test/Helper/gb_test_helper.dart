@@ -87,6 +87,7 @@ class GBFeatureResultTest {
     this.source,
     this.experiment,
     this.experimentResult,
+    this.ruleId = ""
   });
 
   dynamic value;
@@ -95,6 +96,7 @@ class GBFeatureResultTest {
   String? source;
   GBExperimentResultTest? experimentResult;
   GBExperiment? experiment;
+  String? ruleId = "";
 
   factory GBFeatureResultTest.fromMap(Map<String, dynamic> map) =>
       GBFeatureResultTest(
@@ -102,6 +104,7 @@ class GBFeatureResultTest {
         on: map['on'],
         off: map['off'],
         source: map['source'],
+        ruleId: map['ruleId'],
         experiment: map['experiment'] != null
             ? GBExperiment.fromJson(map['experiment'])
             : null,

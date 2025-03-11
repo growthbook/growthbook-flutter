@@ -30,7 +30,7 @@ class GBFeature {
 @JsonSerializable()
 class GBFeatureRule {
   GBFeatureRule({
-    this.id,
+    this.id = "",
     this.condition,
     this.coverage,
     this.force,
@@ -56,7 +56,7 @@ class GBFeatureRule {
   });
 
   /// Unique feature rule id
-  String? id;
+  String? id = "";
 
   /// Optional targeting condition
   GBCondition? condition;
@@ -195,6 +195,7 @@ class GBFeatureResult {
     this.source,
     this.experiment,
     this.experimentResult,
+    this.ruleId = ""
   });
 
   /// The assigned value of the feature
@@ -215,6 +216,7 @@ class GBFeatureResult {
 
   ///When source is "experiment", this will be an ExperimentResult object
   GBExperimentResult? experimentResult;
+  String? ruleId = "";
 
   factory GBFeatureResult.fromJson(Map<String, dynamic> value) => _$GBFeatureResultFromJson(value);
 

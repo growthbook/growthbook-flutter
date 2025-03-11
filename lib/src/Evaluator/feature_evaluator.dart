@@ -173,7 +173,7 @@ class FeatureEvaluator {
               }
             }
           }
-          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force);
+          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force, ruleId: rule.id);
           onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
@@ -212,6 +212,7 @@ class FeatureEvaluator {
                 source: GBFeatureSource.experiment,
                 experiment: exp,
                 result: result,
+                ruleId: rule.id
               );
               onFeatureUsageCallbackWithUser?.call(featureKey, experimentFeatureResult);
               return experimentFeatureResult;
@@ -233,6 +234,7 @@ class FeatureEvaluator {
     required GBFeatureSource source,
     GBExperiment? experiment,
     GBExperimentResult? result,
+    String? ruleId = ""
   }) {
     var isFalse = value == null ||
         value.toString() == 'false' ||
@@ -245,6 +247,7 @@ class FeatureEvaluator {
       source: source,
       experiment: experiment,
       experimentResult: result,
+      ruleId: ruleId
     );
   }
 
