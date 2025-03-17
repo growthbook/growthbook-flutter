@@ -16,7 +16,7 @@ void main() {
       int failingIndex = 0;
       final listOfFailingIndex = <int>[];
 
-      for (int i = 49; i < evaluateCondition.length; i++) {
+      for (int i = 0; i < evaluateCondition.length; i++) {
         var item = evaluateCondition[i];
         if (item is List) {
           final testContext = GBContextTest.fromMap(item[1]);
