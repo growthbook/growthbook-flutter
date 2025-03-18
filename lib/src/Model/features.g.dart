@@ -20,7 +20,7 @@ Map<String, dynamic> _$GBFeatureToJson(GBFeature instance) => <String, dynamic>{
 
 GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
     GBFeatureRule(
-      id: json['id'] as String?,
+      id: json['id'] as String? ?? "",
       condition: json['condition'] as Map<String, dynamic>?,
       coverage: (json['coverage'] as num?)?.toDouble(),
       force: json['force'],
@@ -100,6 +100,7 @@ GBFeatureResult _$GBFeatureResultFromJson(Map<String, dynamic> json) =>
           ? null
           : GBExperimentResult.fromJson(
               json['experimentResult'] as Map<String, dynamic>),
+      ruleId: json['ruleId'] as String? ?? "",
     );
 
 Map<String, dynamic> _$GBFeatureResultToJson(GBFeatureResult instance) =>
@@ -110,6 +111,7 @@ Map<String, dynamic> _$GBFeatureResultToJson(GBFeatureResult instance) =>
       'source': _$GBFeatureSourceEnumMap[instance.source],
       'experiment': instance.experiment,
       'experimentResult': instance.experimentResult,
+      'ruleId': instance.ruleId,
     };
 
 const _$GBFeatureSourceEnumMap = {

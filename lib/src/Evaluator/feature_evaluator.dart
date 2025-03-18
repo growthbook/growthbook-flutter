@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 /// Feature Evaluator Class
 /// Takes Context and Feature Key
@@ -46,6 +45,7 @@ class FeatureEvaluator {
     }
 
     if (targetFeature.rules != null && targetFeature.rules!.isNotEmpty) {
+      final evaluatedFeatures = context.stackContext.evaluatedFeatures.toSet();
       // Iterate through each rule in the target feature's rules
       ruleLoop:
       for (var rule in targetFeature.rules!) {
@@ -53,6 +53,7 @@ class FeatureEvaluator {
         if (rule.parentConditions != null) {
           // Iterate through each parent condition
           for (var parentCondition in rule.parentConditions!) {
+            context.stackContext.evaluatedFeatures = evaluatedFeatures.toSet();
             // Evaluate the parent condition using a new FeatureEvaluator
             GBFeatureResult parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
@@ -172,7 +173,7 @@ class FeatureEvaluator {
               }
             }
           }
-          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force);
+          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force, ruleId: rule.id);
           onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
@@ -211,6 +212,7 @@ class FeatureEvaluator {
                 source: GBFeatureSource.experiment,
                 experiment: exp,
                 result: result,
+                ruleId: rule.id
               );
               onFeatureUsageCallbackWithUser?.call(featureKey, experimentFeatureResult);
               return experimentFeatureResult;
@@ -232,6 +234,7 @@ class FeatureEvaluator {
     required GBFeatureSource source,
     GBExperiment? experiment,
     GBExperimentResult? result,
+    String? ruleId = ""
   }) {
     var isFalse = value == null ||
         value.toString() == 'false' ||
@@ -244,6 +247,7 @@ class FeatureEvaluator {
       source: source,
       experiment: experiment,
       experimentResult: result,
+      ruleId: ruleId
     );
   }
 

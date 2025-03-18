@@ -8,7 +8,6 @@ import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dar
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 typedef VoidCallback = void Function();
 
@@ -31,6 +30,7 @@ class GBSDKBuilderApp {
     this.stickyBucketService,
     this.backgroundSync = false,
     this.remoteEval = false,
+    this.url
   });
 
   final String apiKey;
@@ -46,10 +46,12 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
+  final String? url;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -66,6 +68,7 @@ class GBSDKBuilderApp {
       stickyBucketService: stickyBucketService,
       backgroundSync: backgroundSync,
       remoteEval: remoteEval,
+      url: url
     );
     final gb = GrowthBookSDK._(
       context: gbContext,

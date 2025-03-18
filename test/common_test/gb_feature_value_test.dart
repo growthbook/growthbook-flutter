@@ -47,7 +47,8 @@ void main() {
             result.off.toString() == expectedResult.off.toString() &&
             result.source?.name.toString() == expectedResult.source &&
             result.experiment?.key == expectedResult.experiment?.key &&
-            result.experimentResult?.variationID == expectedResult.experimentResult?.variationId) {
+            result.experimentResult?.variationID == expectedResult.experimentResult?.variationId &&
+            result.ruleId == expectedResult.ruleId) {
           passedScenarios.add(status);
         } else {
           failedScenarios.add(status);

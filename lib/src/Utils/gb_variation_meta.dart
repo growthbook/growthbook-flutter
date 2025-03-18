@@ -52,31 +52,3 @@ class GBTrack {
         "featureResult: $featureResult \n";
   }
 }
-
-/// Used for remote feature evaluation to trigger the `TrackingCallback`
-@JsonSerializable()
-class GBTrackData {
-  GBTrackData({
-    required this.experiment,
-    required this.experimentResult,
-  });
-
-  final GBExperiment experiment;
-
-  final GBExperimentResult experimentResult;
-
-  factory GBTrackData.fromJson(Map<String, dynamic> value) => _$GBTrackDataFromJson(value);
-
-  Map<String, dynamic> toJson() => _$GBTrackDataToJson(this);
-}
-
-@JsonSerializable()
-class AssignedExperiment {
-  AssignedExperiment({
-    required this.experiment,
-    required this.experimentResult,
-  });
-
-  final GBExperiment experiment;
-  final GBExperimentResult experimentResult;
-}

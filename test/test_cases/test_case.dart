@@ -1,6 +1,6 @@
 const String gbTestCases = r'''
 {
-  "specVersion": "0.5.4",
+  "specVersion": "0.7.1",
   "evalCondition": [
     [
       "$not - pass",
@@ -64,32 +64,24 @@ const String gbTestCases = r'''
         "$and": [
           {
             "$groups": {
-              "$elemMatch": {
-                "$eq": "a"
-              }
+              "$elemMatch": { "$eq": "a" }
             }
           },
           {
             "$groups": {
-              "$elemMatch": {
-                "$eq": "b"
-              }
+              "$elemMatch": { "$eq": "b" }
             }
           },
           {
             "$or": [
               {
                 "$groups": {
-                  "$elemMatch": {
-                    "$eq": "c"
-                  }
+                  "$elemMatch": { "$eq": "c" }
                 }
               },
               {
                 "$groups": {
-                  "$elemMatch": {
-                    "$eq": "e"
-                  }
+                  "$elemMatch": { "$eq": "e" }
                 }
               }
             ]
@@ -97,30 +89,21 @@ const String gbTestCases = r'''
           {
             "$not": {
               "$groups": {
-                "$elemMatch": {
-                  "$eq": "f"
-                }
+                "$elemMatch": { "$eq": "f" }
               }
             }
           },
           {
             "$not": {
               "$groups": {
-                "$elemMatch": {
-                  "$eq": "g"
-                }
+                "$elemMatch": { "$eq": "g" }
               }
             }
           }
         ]
       },
       {
-        "$groups": [
-          "a",
-          "b",
-          "c",
-          "d"
-        ]
+        "$groups": ["a", "b", "c", "d"]
       },
       true
     ],
@@ -130,32 +113,24 @@ const String gbTestCases = r'''
         "$and": [
           {
             "$groups": {
-              "$elemMatch": {
-                "$eq": "a"
-              }
+              "$elemMatch": { "$eq": "a" }
             }
           },
           {
             "$groups": {
-              "$elemMatch": {
-                "$eq": "b"
-              }
+              "$elemMatch": { "$eq": "b" }
             }
           },
           {
             "$or": [
               {
                 "$groups": {
-                  "$elemMatch": {
-                    "$eq": "c"
-                  }
+                  "$elemMatch": { "$eq": "c" }
                 }
               },
               {
                 "$groups": {
-                  "$elemMatch": {
-                    "$eq": "e"
-                  }
+                  "$elemMatch": { "$eq": "e" }
                 }
               }
             ]
@@ -163,30 +138,21 @@ const String gbTestCases = r'''
           {
             "$not": {
               "$groups": {
-                "$elemMatch": {
-                  "$eq": "d"
-                }
+                "$elemMatch": { "$eq": "d" }
               }
             }
           },
           {
             "$not": {
               "$groups": {
-                "$elemMatch": {
-                  "$eq": "g"
-                }
+                "$elemMatch": { "$eq": "g" }
               }
             }
           }
         ]
       },
       {
-        "$groups": [
-          "a",
-          "b",
-          "c",
-          "d"
-        ]
+        "$groups": ["a", "b", "c", "d"]
       },
       false
     ],
@@ -424,11 +390,7 @@ const String gbTestCases = r'''
       "$in - pass",
       {
         "num": {
-          "$in": [
-            1,
-            2,
-            3
-          ]
+          "$in": [1, 2, 3]
         }
       },
       {
@@ -440,11 +402,7 @@ const String gbTestCases = r'''
       "$in - fail",
       {
         "num": {
-          "$in": [
-            1,
-            2,
-            3
-          ]
+          "$in": [1, 2, 3]
         }
       },
       {
@@ -468,18 +426,11 @@ const String gbTestCases = r'''
       "$in - array pass 1",
       {
         "tags": {
-          "$in": [
-            "a",
-            "b"
-          ]
+          "$in": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "a"
-        ]
+        "tags": ["d", "e", "a"]
       },
       true
     ],
@@ -487,18 +438,11 @@ const String gbTestCases = r'''
       "$in - array pass 2",
       {
         "tags": {
-          "$in": [
-            "a",
-            "b"
-          ]
+          "$in": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "b",
-          "f"
-        ]
+        "tags": ["d", "b", "f"]
       },
       true
     ],
@@ -506,18 +450,11 @@ const String gbTestCases = r'''
       "$in - array pass 3",
       {
         "tags": {
-          "$in": [
-            "a",
-            "b"
-          ]
+          "$in": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "b",
-          "a"
-        ]
+        "tags": ["d", "b", "a"]
       },
       true
     ],
@@ -525,18 +462,11 @@ const String gbTestCases = r'''
       "$in - array fail 1",
       {
         "tags": {
-          "$in": [
-            "a",
-            "b"
-          ]
+          "$in": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "f"
-        ]
+        "tags": ["d", "e", "f"]
       },
       false
     ],
@@ -544,10 +474,7 @@ const String gbTestCases = r'''
       "$in - array fail 2",
       {
         "tags": {
-          "$in": [
-            "a",
-            "b"
-          ]
+          "$in": ["a", "b"]
         }
       },
       {
@@ -559,11 +486,7 @@ const String gbTestCases = r'''
       "$nin - pass",
       {
         "num": {
-          "$nin": [
-            1,
-            2,
-            3
-          ]
+          "$nin": [1, 2, 3]
         }
       },
       {
@@ -575,11 +498,7 @@ const String gbTestCases = r'''
       "$nin - fail",
       {
         "num": {
-          "$nin": [
-            1,
-            2,
-            3
-          ]
+          "$nin": [1, 2, 3]
         }
       },
       {
@@ -603,18 +522,11 @@ const String gbTestCases = r'''
       "$nin - array fail 1",
       {
         "tags": {
-          "$nin": [
-            "a",
-            "b"
-          ]
+          "$nin": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "a"
-        ]
+        "tags": ["d", "e", "a"]
       },
       false
     ],
@@ -622,18 +534,11 @@ const String gbTestCases = r'''
       "$nin - array fail 2",
       {
         "tags": {
-          "$nin": [
-            "a",
-            "b"
-          ]
+          "$nin": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "b",
-          "f"
-        ]
+        "tags": ["d", "b", "f"]
       },
       false
     ],
@@ -641,18 +546,11 @@ const String gbTestCases = r'''
       "$nin - array fail 3",
       {
         "tags": {
-          "$nin": [
-            "a",
-            "b"
-          ]
+          "$nin": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "b",
-          "a"
-        ]
+        "tags": ["d", "b", "a"]
       },
       false
     ],
@@ -660,18 +558,11 @@ const String gbTestCases = r'''
       "$nin - array pass 1",
       {
         "tags": {
-          "$nin": [
-            "a",
-            "b"
-          ]
+          "$nin": ["a", "b"]
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "f"
-        ]
+        "tags": ["d", "e", "f"]
       },
       true
     ],
@@ -679,10 +570,7 @@ const String gbTestCases = r'''
       "$nin - array pass 2",
       {
         "tags": {
-          "$nin": [
-            "a",
-            "b"
-          ]
+          "$nin": ["a", "b"]
         }
       },
       {
@@ -700,12 +588,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "nums": [
-          0,
-          5,
-          -20,
-          15
-        ]
+        "nums": [0, 5, -20, 15]
       },
       true
     ],
@@ -719,12 +602,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "nums": [
-          0,
-          5,
-          -20,
-          8
-        ]
+        "nums": [0, 5, -20, 8]
       },
       false
     ],
@@ -732,9 +610,7 @@ const String gbTestCases = r'''
       "missing attribute - fail",
       {
         "pets.dog.name": {
-          "$in": [
-            "fido"
-          ]
+          "$in": ["fido"]
         }
       },
       {
@@ -1188,10 +1064,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "a": [
-          1,
-          2
-        ]
+        "a": [1, 2]
       },
       true
     ],
@@ -1246,9 +1119,7 @@ const String gbTestCases = r'''
     [
       "$size empty - pass",
       {
-        "tags": {
-          "$size": 0
-        }
+        "tags": { "$size": 0 }
       },
       {
         "tags": []
@@ -1258,14 +1129,10 @@ const String gbTestCases = r'''
     [
       "$size empty - fail",
       {
-        "tags": {
-          "$size": 0
-        }
+        "tags": { "$size": 0 }
       },
       {
-        "tags": [
-          10
-        ]
+        "tags": [10]
       },
       false
     ],
@@ -1277,11 +1144,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "a",
-          "b",
-          "c"
-        ]
+        "tags": ["a", "b", "c"]
       },
       true
     ],
@@ -1293,10 +1156,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "a",
-          "b"
-        ]
+        "tags": ["a", "b"]
       },
       false
     ],
@@ -1308,12 +1168,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "a",
-          "b",
-          "c",
-          "d"
-        ]
+        "tags": ["a", "b", "c", "d"]
       },
       false
     ],
@@ -1339,11 +1194,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          0,
-          1,
-          2
-        ]
+        "tags": [0, 1, 2]
       },
       true
     ],
@@ -1357,10 +1208,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          0,
-          1
-        ]
+        "tags": [0, 1]
       },
       false
     ],
@@ -1374,9 +1222,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          0
-        ]
+        "tags": [0]
       },
       false
     ],
@@ -1390,11 +1236,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "foo",
-          "bar",
-          "baz"
-        ]
+        "tags": ["foo", "bar", "baz"]
       },
       true
     ],
@@ -1408,10 +1250,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "foo",
-          "baz"
-        ]
+        "tags": ["foo", "baz"]
       },
       false
     ],
@@ -1420,19 +1259,12 @@ const String gbTestCases = r'''
       {
         "tags": {
           "$elemMatch": {
-            "$in": [
-              "a",
-              "b"
-            ]
+            "$in": ["a", "b"]
           }
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "b"
-        ]
+        "tags": ["d", "e", "b"]
       },
       true
     ],
@@ -1441,19 +1273,12 @@ const String gbTestCases = r'''
       {
         "tags": {
           "$elemMatch": {
-            "$in": [
-              "a",
-              "b"
-            ]
+            "$in": ["a", "b"]
           }
         }
       },
       {
-        "tags": [
-          "d",
-          "e",
-          "f"
-        ]
+        "tags": ["d", "e", "f"]
       },
       false
     ],
@@ -1469,10 +1294,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "foo",
-          "baz"
-        ]
+        "tags": ["foo", "baz"]
       },
       true
     ],
@@ -1488,11 +1310,7 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [
-          "foo",
-          "bar",
-          "baz"
-        ]
+        "tags": ["foo", "bar", "baz"]
       },
       false
     ],
@@ -1593,18 +1411,11 @@ const String gbTestCases = r'''
       "$all - pass",
       {
         "tags": {
-          "$all": [
-            "one",
-            "three"
-          ]
+          "$all": ["one", "three"]
         }
       },
       {
-        "tags": [
-          "one",
-          "two",
-          "three"
-        ]
+        "tags": ["one", "two", "three"]
       },
       true
     ],
@@ -1612,18 +1423,11 @@ const String gbTestCases = r'''
       "$all - fail",
       {
         "tags": {
-          "$all": [
-            "one",
-            "three"
-          ]
+          "$all": ["one", "three"]
         }
       },
       {
-        "tags": [
-          "one",
-          "two",
-          "four"
-        ]
+        "tags": ["one", "two", "four"]
       },
       false
     ],
@@ -1631,10 +1435,7 @@ const String gbTestCases = r'''
       "$all - fail not array",
       {
         "tags": {
-          "$all": [
-            "one",
-            "three"
-          ]
+          "$all": ["one", "three"]
         }
       },
       {
@@ -1725,74 +1526,47 @@ const String gbTestCases = r'''
     [
       "equals array - pass",
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       true
     ],
     [
       "equals array - fail order",
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       {
-        "tags": [
-          "world",
-          "hello"
-        ]
+        "tags": ["world", "hello"]
       },
       false
     ],
     [
       "equals array - fail missing item",
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       {
-        "tags": [
-          "hello"
-        ]
+        "tags": ["hello"]
       },
       false
     ],
     [
       "equals array - fail extra item",
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       {
-        "tags": [
-          "hello",
-          "world",
-          "foo"
-        ]
+        "tags": ["hello", "world", "foo"]
       },
       false
     ],
     [
       "equals array - fail type mismatch",
       {
-        "tags": [
-          "hello",
-          "world"
-        ]
+        "tags": ["hello", "world"]
       },
       {
         "tags": "hello world"
@@ -1898,6 +1672,32 @@ const String gbTestCases = r'''
       {
         "userId": ""
       },
+      false
+    ],
+    [
+      "null condition - false attribute",
+      {
+        "userId": null
+      },
+      {
+        "userId": false
+      },
+      false
+    ],
+    [
+      "false condition - missing attribute",
+      {
+        "userId": false
+      },
+      {},
+      false
+    ],
+    [
+      "false strict condition - missing attribute",
+      {
+        "userId": { "$eq": false }
+      },
+      {},
       false
     ],
     [
@@ -2246,816 +2046,816 @@ const String gbTestCases = r'''
         "v": "1.2.3-alpha"
       },
       true
-  ],
-  [
-    "version 0.9.99 < 1.0.0",
-    {
-      "version": {
-        "$vlt": "1.0.0"
-      }
-    },
-    {
-      "version": "0.9.99"
-    },
-    true
-  ],
-  [
-    "version 0.9.0 < 0.10.0",
-    {
-      "version": {
-        "$vlt": "0.10.0"
-      }
-    },
-    {
-      "version": "0.9.0"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-0.0 < 1.0.0-0.0.0",
-    {
-      "version": {
-        "$vlt": "1.0.0-0.0.0"
-      }
-    },
-    {
-      "version": "1.0.0-0.0"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-9999 < 1.0.0--",
-    {
-      "version": {
-        "$vlt": "1.0.0--"
-      }
-    },
-    {
-      "version": "1.0.0-9999"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-99 < 1.0.0-100",
-    {
-      "version": {
-        "$vlt": "1.0.0-100"
-      }
-    },
-    {
-      "version": "1.0.0-99"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-alpha < 1.0.0-alpha.1",
-    {
-      "version": {
-        "$vlt": "1.0.0-alpha.1"
-      }
-    },
-    {
-      "version": "1.0.0-alpha"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-alpha.1 < 1.0.0-alpha.beta",
-    {
-      "version": {
-        "$vlt": "1.0.0-alpha.beta"
-      }
-    },
-    {
-      "version": "1.0.0-alpha.1"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-alpha.beta < 1.0.0-beta",
-    {
-      "version": {
-        "$vlt": "1.0.0-beta"
-      }
-    },
-    {
-      "version": "1.0.0-alpha.beta"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-beta < 1.0.0-beta.2",
-    {
-      "version": {
-        "$vlt": "1.0.0-beta.2"
-      }
-    },
-    {
-      "version": "1.0.0-beta"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-beta.2 < 1.0.0-beta.11",
-    {
-      "version": {
-        "$vlt": "1.0.0-beta.11"
-      }
-    },
-    {
-      "version": "1.0.0-beta.2"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-beta.11 < 1.0.0-rc.1",
-    {
-      "version": {
-        "$vlt": "1.0.0-rc.1"
-      }
-    },
-    {
-      "version": "1.0.0-beta.11"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-rc.1 < 1.0.0",
-    {
-      "version": {
-        "$vlt": "1.0.0"
-      }
-    },
-    {
-      "version": "1.0.0-rc.1"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-0 < 1.0.0--1",
-    {
-      "version": {
-        "$vlt": "1.0.0--1"
-      }
-    },
-    {
-      "version": "1.0.0-0"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-0 < 1.0.0-1",
-    {
-      "version": {
-        "$vlt": "1.0.0-1"
-      }
-    },
-    {
-      "version": "1.0.0-0"
-    },
-    true
-  ],
-  [
-    "version 1.0.0-1.0 < 1.0.0-1.-1",
-    {
-      "version": {
-        "$vlt": "1.0.0-1.-1"
-      }
-    },
-    {
-      "version": "1.0.0-1.0"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-a.b.c < 1.2.3-a.b.c.d",
-    {
-      "version": {
-        "$vlt": "1.2.3-a.b.c.d"
-      }
-    },
-    {
-      "version": "1.2.3-a.b.c"
-    },
-    true
-  ],
-  [
-    "version 0.0.0 > 0.0.0-foo",
-    {
-      "version": {
-        "$vgt": "0.0.0-foo"
-      }
-    },
-    {
-      "version": "0.0.0"
-    },
-    true
-  ],
-  [
-    "version 0.0.1 > 0.0.0",
-    {
-      "version": {
-        "$vgt": "0.0.0"
-      }
-    },
-    {
-      "version": "0.0.1"
-    },
-    true
-  ],
-  [
-    "version 1.0.0 > 0.9.9",
-    {
-      "version": {
-        "$vgt": "0.9.9"
-      }
-    },
-    {
-      "version": "1.0.0"
-    },
-    true
-  ],
-  [
-    "version 0.10.0 > 0.9.0",
-    {
-      "version": {
-        "$vgt": "0.9.0"
-      }
-    },
-    {
-      "version": "0.10.0"
-    },
-    true
-  ],
-  [
-    "version 0.99.0 > 0.10.0",
-    {
-      "version": {
-        "$vgt": "0.10.0"
-      }
-    },
-    {
-      "version": "0.99.0"
-    },
-    true
-  ],
-  [
-    "version 2.0.0 > 1.2.3",
-    {
-      "version": {
-        "$vgt": "1.2.3"
-      }
-    },
-    {
-      "version": "2.0.0"
-    },
-    true
-  ],
-  [
-    "version v0.0.0 > 0.0.0-foo",
-    {
-      "version": {
-        "$vgt": "0.0.0-foo"
-      }
-    },
-    {
-      "version": "v0.0.0"
-    },
-    true
-  ],
-  [
-    "version v0.0.1 > 0.0.0",
-    {
-      "version": {
-        "$vgt": "0.0.0"
-      }
-    },
-    {
-      "version": "v0.0.1"
-    },
-    true
-  ],
-  [
-    "version v1.0.0 > 0.9.9",
-    {
-      "version": {
-        "$vgt": "0.9.9"
-      }
-    },
-    {
-      "version": "v1.0.0"
-    },
-    true
-  ],
-  [
-    "version v0.10.0 > 0.9.0",
-    {
-      "version": {
-        "$vgt": "0.9.0"
-      }
-    },
-    {
-      "version": "v0.10.0"
-    },
-    true
-  ],
-  [
-    "version v0.99.0 > 0.10.0",
-    {
-      "version": {
-        "$vgt": "0.10.0"
-      }
-    },
-    {
-      "version": "v0.99.0"
-    },
-    true
-  ],
-  [
-    "version v2.0.0 > 1.2.3",
-    {
-      "version": {
-        "$vgt": "1.2.3"
-      }
-    },
-    {
-      "version": "v2.0.0"
-    },
-    true
-  ],
-  [
-    "version 0.0.0 > v0.0.0-foo",
-    {
-      "version": {
-        "$vgt": "v0.0.0-foo"
-      }
-    },
-    {
-      "version": "0.0.0"
-    },
-    true
-  ],
-  [
-    "version 0.0.1 > v0.0.0",
-    {
-      "version": {
-        "$vgt": "v0.0.0"
-      }
-    },
-    {
-      "version": "0.0.1"
-    },
-    true
-  ],
-  [
-    "version 1.0.0 > v0.9.9",
-    {
-      "version": {
-        "$vgt": "v0.9.9"
-      }
-    },
-    {
-      "version": "1.0.0"
-    },
-    true
-  ],
-  [
-    "version 0.10.0 > v0.9.0",
-    {
-      "version": {
-        "$vgt": "v0.9.0"
-      }
-    },
-    {
-      "version": "0.10.0"
-    },
-    true
-  ],
-  [
-    "version 0.99.0 > v0.10.0",
-    {
-      "version": {
-        "$vgt": "v0.10.0"
-      }
-    },
-    {
-      "version": "0.99.0"
-    },
-    true
-  ],
-  [
-    "version 2.0.0 > v1.2.3",
-    {
-      "version": {
-        "$vgt": "v1.2.3"
-      }
-    },
-    {
-      "version": "2.0.0"
-    },
-    true
-  ],
-  [
-    "version 1.2.3 > 1.2.3-asdf",
-    {
-      "version": {
-        "$vgt": "1.2.3-asdf"
-      }
-    },
-    {
-      "version": "1.2.3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3 > 1.2.3-4",
-    {
-      "version": {
-        "$vgt": "1.2.3-4"
-      }
-    },
-    {
-      "version": "1.2.3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3 > 1.2.3-4-foo",
-    {
-      "version": {
-        "$vgt": "1.2.3-4-foo"
-      }
-    },
-    {
-      "version": "1.2.3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-5-foo > 1.2.3-5",
-    {
-      "version": {
-        "$vgt": "1.2.3-5"
-      }
-    },
-    {
-      "version": "1.2.3-5-foo"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-5 > 1.2.3-4",
-    {
-      "version": {
-        "$vgt": "1.2.3-4"
-      }
-    },
-    {
-      "version": "1.2.3-5"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-5-foo > 1.2.3-5-Foo",
-    {
-      "version": {
-        "$vgt": "1.2.3-5-Foo"
-      }
-    },
-    {
-      "version": "1.2.3-5-foo"
-    },
-    true
-  ],
-  [
-    "version 3.0.0 > 2.7.2+asdf",
-    {
-      "version": {
-        "$vgt": "2.7.2+asdf"
-      }
-    },
-    {
-      "version": "3.0.0"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-a.10 > 1.2.3-a.5",
-    {
-      "version": {
-        "$vgt": "1.2.3-a.5"
-      }
-    },
-    {
-      "version": "1.2.3-a.10"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-a.b > 1.2.3-a.5",
-    {
-      "version": {
-        "$vgt": "1.2.3-a.5"
-      }
-    },
-    {
-      "version": "1.2.3-a.b"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-a.b > 1.2.3-a",
-    {
-      "version": {
-        "$vgt": "1.2.3-a"
-      }
-    },
-    {
-      "version": "1.2.3-a.b"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-a.b.c.10.d.5 > 1.2.3-a.b.c.5.d.100",
-    {
-      "version": {
-        "$vgt": "1.2.3-a.b.c.5.d.100"
-      }
-    },
-    {
-      "version": "1.2.3-a.b.c.10.d.5"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-r2 > 1.2.3-r100",
-    {
-      "version": {
-        "$vgt": "1.2.3-r100"
-      }
-    },
-    {
-      "version": "1.2.3-r2"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-r100 > 1.2.3-R2",
-    {
-      "version": {
-        "$vgt": "1.2.3-R2"
-      }
-    },
-    {
-      "version": "1.2.3-r100"
-    },
-    true
-  ],
-  [
-    "version a.b.c.d.e.f > 1.2.3",
-    {
-      "version": {
-        "$vgt": "1.2.3"
-      }
-    },
-    {
-      "version": "a.b.c.d.e.f"
-    },
-    true
-  ],
-  [
-    "version 10.0.0 > 9.0.0",
-    {
-      "version": {
-        "$vgt": "9.0.0"
-      }
-    },
-    {
-      "version": "10.0.0"
-    },
-    true
-  ],
-  [
-    "version 10000.0.0 > 9999.0.0",
-    {
-      "version": {
-        "$vgt": "9999.0.0"
-      }
-    },
-    {
-      "version": "10000.0.0"
-    },
-    true
-  ],
-  [
-    "version 1.2.3 == 1.2.3",
-    {
-      "version": {
-        "$veq": "1.2.3"
-      }
-    },
-    {
-      "version": "1.2.3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3 == v1.2.3",
-    {
-      "version": {
-        "$veq": "v1.2.3"
-      }
-    },
-    {
-      "version": "1.2.3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-0 == v1.2.3-0",
-    {
-      "version": {
-        "$veq": "v1.2.3-0"
-      }
-    },
-    {
-      "version": "1.2.3-0"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-1 == 1.2.3-1",
-    {
-      "version": {
-        "$veq": "1.2.3-1"
-      }
-    },
-    {
-      "version": "1.2.3-1"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-1 == v1.2.3-1",
-    {
-      "version": {
-        "$veq": "v1.2.3-1"
-      }
-    },
-    {
-      "version": "1.2.3-1"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-beta == 1.2.3-beta",
-    {
-      "version": {
-        "$veq": "1.2.3-beta"
-      }
-    },
-    {
-      "version": "1.2.3-beta"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-beta == v1.2.3-beta",
-    {
-      "version": {
-        "$veq": "v1.2.3-beta"
-      }
-    },
-    {
-      "version": "1.2.3-beta"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-beta+build == 1.2.3-beta+otherbuild",
-    {
-      "version": {
-        "$veq": "1.2.3-beta+otherbuild"
-      }
-    },
-    {
-      "version": "1.2.3-beta+build"
-    },
-    true
-  ],
-  [
-    "version 1.2.3-beta+build == v1.2.3-beta+otherbuild",
-    {
-      "version": {
-        "$veq": "v1.2.3-beta+otherbuild"
-      }
-    },
-    {
-      "version": "1.2.3-beta+build"
-    },
-    true
-  ],
-  [
-    "version 1-2-3 == 1.2.3",
-    {
-      "version": {
-        "$veq": "1.2.3"
-      }
-    },
-    {
-      "version": "1-2-3"
-    },
-    true
-  ],
-  [
-    "version 1-2-3 == 1-2.3+build99",
-    {
-      "version": {
-        "$veq": "1-2.3+build99"
-      }
-    },
-    {
-      "version": "1-2-3"
-    },
-    true
-  ],
-  [
-    "version 1-2-3 == v1.2.3",
-    {
-      "version": {
-        "$veq": "v1.2.3"
-      }
-    },
-    {
-      "version": "1-2-3"
-    },
-    true
-  ],
-  [
-    "version 1.2.3.4 == 1.2.3-4",
-    {
-      "version": {
-        "$veq": "1.2.3-4"
-      }
-    },
-    {
-      "version": "1.2.3.4"
-    },
-    true
-],
-        [
-          "$or pass but second condition fail",
-          {
-            "$or": [{ "foo": 1 }, { "bar": 1 }],
-            "baz": 2
-          },
-          {
-            "foo": 1,
-            "bar": 2,
-            "baz": 1
-          },
-          false
-        ],
-        [
-          "$or and second condition both pass",
-          {
-            "$or": [{ "foo": 1 }, { "bar": 1 }],
-            "baz": 2
-          },
-          {
-            "foo": 1,
-            "bar": 2,
-            "baz": 2
-          },
-          true
-        ],
-        [
-          "$and condition pass but $or fail",
-          {
-            "$and": [{ "foo": 1 }, { "bar": 1 }],
-            "$or": [{ "baz": 1 }, { "empty": 1 }]
-          },
-          {
-            "foo": 1,
-            "bar": 1,
-            "baz": 2
-          },
-          false
-        ],
-        [
-          "$and and $or both pass",
-          {
-            "$and": [{ "foo": 1 }, { "bar": 1 }],
-            "$or": [{ "baz": 1 }, { "empty": 1 }]
-          },
-          {
-            "foo": 1,
-            "bar": 1,
-            "baz": 2,
-            "empty": 1
-          },
-          true    
-      ],
+    ],
+    [
+      "version 0.9.99 < 1.0.0",
+      {
+        "version": {
+          "$vlt": "1.0.0"
+        }
+      },
+      {
+        "version": "0.9.99"
+      },
+      true
+    ],
+    [
+      "version 0.9.0 < 0.10.0",
+      {
+        "version": {
+          "$vlt": "0.10.0"
+        }
+      },
+      {
+        "version": "0.9.0"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-0.0 < 1.0.0-0.0.0",
+      {
+        "version": {
+          "$vlt": "1.0.0-0.0.0"
+        }
+      },
+      {
+        "version": "1.0.0-0.0"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-9999 < 1.0.0--",
+      {
+        "version": {
+          "$vlt": "1.0.0--"
+        }
+      },
+      {
+        "version": "1.0.0-9999"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-99 < 1.0.0-100",
+      {
+        "version": {
+          "$vlt": "1.0.0-100"
+        }
+      },
+      {
+        "version": "1.0.0-99"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-alpha < 1.0.0-alpha.1",
+      {
+        "version": {
+          "$vlt": "1.0.0-alpha.1"
+        }
+      },
+      {
+        "version": "1.0.0-alpha"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-alpha.1 < 1.0.0-alpha.beta",
+      {
+        "version": {
+          "$vlt": "1.0.0-alpha.beta"
+        }
+      },
+      {
+        "version": "1.0.0-alpha.1"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-alpha.beta < 1.0.0-beta",
+      {
+        "version": {
+          "$vlt": "1.0.0-beta"
+        }
+      },
+      {
+        "version": "1.0.0-alpha.beta"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-beta < 1.0.0-beta.2",
+      {
+        "version": {
+          "$vlt": "1.0.0-beta.2"
+        }
+      },
+      {
+        "version": "1.0.0-beta"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-beta.2 < 1.0.0-beta.11",
+      {
+        "version": {
+          "$vlt": "1.0.0-beta.11"
+        }
+      },
+      {
+        "version": "1.0.0-beta.2"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-beta.11 < 1.0.0-rc.1",
+      {
+        "version": {
+          "$vlt": "1.0.0-rc.1"
+        }
+      },
+      {
+        "version": "1.0.0-beta.11"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-rc.1 < 1.0.0",
+      {
+        "version": {
+          "$vlt": "1.0.0"
+        }
+      },
+      {
+        "version": "1.0.0-rc.1"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-0 < 1.0.0--1",
+      {
+        "version": {
+          "$vlt": "1.0.0--1"
+        }
+      },
+      {
+        "version": "1.0.0-0"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-0 < 1.0.0-1",
+      {
+        "version": {
+          "$vlt": "1.0.0-1"
+        }
+      },
+      {
+        "version": "1.0.0-0"
+      },
+      true
+    ],
+    [
+      "version 1.0.0-1.0 < 1.0.0-1.-1",
+      {
+        "version": {
+          "$vlt": "1.0.0-1.-1"
+        }
+      },
+      {
+        "version": "1.0.0-1.0"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-a.b.c < 1.2.3-a.b.c.d",
+      {
+        "version": {
+          "$vlt": "1.2.3-a.b.c.d"
+        }
+      },
+      {
+        "version": "1.2.3-a.b.c"
+      },
+      true
+    ],
+    [
+      "version 0.0.0 > 0.0.0-foo",
+      {
+        "version": {
+          "$vgt": "0.0.0-foo"
+        }
+      },
+      {
+        "version": "0.0.0"
+      },
+      true
+    ],
+    [
+      "version 0.0.1 > 0.0.0",
+      {
+        "version": {
+          "$vgt": "0.0.0"
+        }
+      },
+      {
+        "version": "0.0.1"
+      },
+      true
+    ],
+    [
+      "version 1.0.0 > 0.9.9",
+      {
+        "version": {
+          "$vgt": "0.9.9"
+        }
+      },
+      {
+        "version": "1.0.0"
+      },
+      true
+    ],
+    [
+      "version 0.10.0 > 0.9.0",
+      {
+        "version": {
+          "$vgt": "0.9.0"
+        }
+      },
+      {
+        "version": "0.10.0"
+      },
+      true
+    ],
+    [
+      "version 0.99.0 > 0.10.0",
+      {
+        "version": {
+          "$vgt": "0.10.0"
+        }
+      },
+      {
+        "version": "0.99.0"
+      },
+      true
+    ],
+    [
+      "version 2.0.0 > 1.2.3",
+      {
+        "version": {
+          "$vgt": "1.2.3"
+        }
+      },
+      {
+        "version": "2.0.0"
+      },
+      true
+    ],
+    [
+      "version v0.0.0 > 0.0.0-foo",
+      {
+        "version": {
+          "$vgt": "0.0.0-foo"
+        }
+      },
+      {
+        "version": "v0.0.0"
+      },
+      true
+    ],
+    [
+      "version v0.0.1 > 0.0.0",
+      {
+        "version": {
+          "$vgt": "0.0.0"
+        }
+      },
+      {
+        "version": "v0.0.1"
+      },
+      true
+    ],
+    [
+      "version v1.0.0 > 0.9.9",
+      {
+        "version": {
+          "$vgt": "0.9.9"
+        }
+      },
+      {
+        "version": "v1.0.0"
+      },
+      true
+    ],
+    [
+      "version v0.10.0 > 0.9.0",
+      {
+        "version": {
+          "$vgt": "0.9.0"
+        }
+      },
+      {
+        "version": "v0.10.0"
+      },
+      true
+    ],
+    [
+      "version v0.99.0 > 0.10.0",
+      {
+        "version": {
+          "$vgt": "0.10.0"
+        }
+      },
+      {
+        "version": "v0.99.0"
+      },
+      true
+    ],
+    [
+      "version v2.0.0 > 1.2.3",
+      {
+        "version": {
+          "$vgt": "1.2.3"
+        }
+      },
+      {
+        "version": "v2.0.0"
+      },
+      true
+    ],
+    [
+      "version 0.0.0 > v0.0.0-foo",
+      {
+        "version": {
+          "$vgt": "v0.0.0-foo"
+        }
+      },
+      {
+        "version": "0.0.0"
+      },
+      true
+    ],
+    [
+      "version 0.0.1 > v0.0.0",
+      {
+        "version": {
+          "$vgt": "v0.0.0"
+        }
+      },
+      {
+        "version": "0.0.1"
+      },
+      true
+    ],
+    [
+      "version 1.0.0 > v0.9.9",
+      {
+        "version": {
+          "$vgt": "v0.9.9"
+        }
+      },
+      {
+        "version": "1.0.0"
+      },
+      true
+    ],
+    [
+      "version 0.10.0 > v0.9.0",
+      {
+        "version": {
+          "$vgt": "v0.9.0"
+        }
+      },
+      {
+        "version": "0.10.0"
+      },
+      true
+    ],
+    [
+      "version 0.99.0 > v0.10.0",
+      {
+        "version": {
+          "$vgt": "v0.10.0"
+        }
+      },
+      {
+        "version": "0.99.0"
+      },
+      true
+    ],
+    [
+      "version 2.0.0 > v1.2.3",
+      {
+        "version": {
+          "$vgt": "v1.2.3"
+        }
+      },
+      {
+        "version": "2.0.0"
+      },
+      true
+    ],
+    [
+      "version 1.2.3 > 1.2.3-asdf",
+      {
+        "version": {
+          "$vgt": "1.2.3-asdf"
+        }
+      },
+      {
+        "version": "1.2.3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3 > 1.2.3-4",
+      {
+        "version": {
+          "$vgt": "1.2.3-4"
+        }
+      },
+      {
+        "version": "1.2.3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3 > 1.2.3-4-foo",
+      {
+        "version": {
+          "$vgt": "1.2.3-4-foo"
+        }
+      },
+      {
+        "version": "1.2.3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-5-foo > 1.2.3-5",
+      {
+        "version": {
+          "$vgt": "1.2.3-5"
+        }
+      },
+      {
+        "version": "1.2.3-5-foo"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-5 > 1.2.3-4",
+      {
+        "version": {
+          "$vgt": "1.2.3-4"
+        }
+      },
+      {
+        "version": "1.2.3-5"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-5-foo > 1.2.3-5-Foo",
+      {
+        "version": {
+          "$vgt": "1.2.3-5-Foo"
+        }
+      },
+      {
+        "version": "1.2.3-5-foo"
+      },
+      true
+    ],
+    [
+      "version 3.0.0 > 2.7.2+asdf",
+      {
+        "version": {
+          "$vgt": "2.7.2+asdf"
+        }
+      },
+      {
+        "version": "3.0.0"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-a.10 > 1.2.3-a.5",
+      {
+        "version": {
+          "$vgt": "1.2.3-a.5"
+        }
+      },
+      {
+        "version": "1.2.3-a.10"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-a.b > 1.2.3-a.5",
+      {
+        "version": {
+          "$vgt": "1.2.3-a.5"
+        }
+      },
+      {
+        "version": "1.2.3-a.b"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-a.b > 1.2.3-a",
+      {
+        "version": {
+          "$vgt": "1.2.3-a"
+        }
+      },
+      {
+        "version": "1.2.3-a.b"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-a.b.c.10.d.5 > 1.2.3-a.b.c.5.d.100",
+      {
+        "version": {
+          "$vgt": "1.2.3-a.b.c.5.d.100"
+        }
+      },
+      {
+        "version": "1.2.3-a.b.c.10.d.5"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-r2 > 1.2.3-r100",
+      {
+        "version": {
+          "$vgt": "1.2.3-r100"
+        }
+      },
+      {
+        "version": "1.2.3-r2"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-r100 > 1.2.3-R2",
+      {
+        "version": {
+          "$vgt": "1.2.3-R2"
+        }
+      },
+      {
+        "version": "1.2.3-r100"
+      },
+      true
+    ],
+    [
+      "version a.b.c.d.e.f > 1.2.3",
+      {
+        "version": {
+          "$vgt": "1.2.3"
+        }
+      },
+      {
+        "version": "a.b.c.d.e.f"
+      },
+      true
+    ],
+    [
+      "version 10.0.0 > 9.0.0",
+      {
+        "version": {
+          "$vgt": "9.0.0"
+        }
+      },
+      {
+        "version": "10.0.0"
+      },
+      true
+    ],
+    [
+      "version 10000.0.0 > 9999.0.0",
+      {
+        "version": {
+          "$vgt": "9999.0.0"
+        }
+      },
+      {
+        "version": "10000.0.0"
+      },
+      true
+    ],
+    [
+      "version 1.2.3 == 1.2.3",
+      {
+        "version": {
+          "$veq": "1.2.3"
+        }
+      },
+      {
+        "version": "1.2.3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3 == v1.2.3",
+      {
+        "version": {
+          "$veq": "v1.2.3"
+        }
+      },
+      {
+        "version": "1.2.3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-0 == v1.2.3-0",
+      {
+        "version": {
+          "$veq": "v1.2.3-0"
+        }
+      },
+      {
+        "version": "1.2.3-0"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-1 == 1.2.3-1",
+      {
+        "version": {
+          "$veq": "1.2.3-1"
+        }
+      },
+      {
+        "version": "1.2.3-1"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-1 == v1.2.3-1",
+      {
+        "version": {
+          "$veq": "v1.2.3-1"
+        }
+      },
+      {
+        "version": "1.2.3-1"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-beta == 1.2.3-beta",
+      {
+        "version": {
+          "$veq": "1.2.3-beta"
+        }
+      },
+      {
+        "version": "1.2.3-beta"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-beta == v1.2.3-beta",
+      {
+        "version": {
+          "$veq": "v1.2.3-beta"
+        }
+      },
+      {
+        "version": "1.2.3-beta"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-beta+build == 1.2.3-beta+otherbuild",
+      {
+        "version": {
+          "$veq": "1.2.3-beta+otherbuild"
+        }
+      },
+      {
+        "version": "1.2.3-beta+build"
+      },
+      true
+    ],
+    [
+      "version 1.2.3-beta+build == v1.2.3-beta+otherbuild",
+      {
+        "version": {
+          "$veq": "v1.2.3-beta+otherbuild"
+        }
+      },
+      {
+        "version": "1.2.3-beta+build"
+      },
+      true
+    ],
+    [
+      "version 1-2-3 == 1.2.3",
+      {
+        "version": {
+          "$veq": "1.2.3"
+        }
+      },
+      {
+        "version": "1-2-3"
+      },
+      true
+    ],
+    [
+      "version 1-2-3 == 1-2.3+build99",
+      {
+        "version": {
+          "$veq": "1-2.3+build99"
+        }
+      },
+      {
+        "version": "1-2-3"
+      },
+      true
+    ],
+    [
+      "version 1-2-3 == v1.2.3",
+      {
+        "version": {
+          "$veq": "v1.2.3"
+        }
+      },
+      {
+        "version": "1-2-3"
+      },
+      true
+    ],
+    [
+      "version 1.2.3.4 == 1.2.3-4",
+      {
+        "version": {
+          "$veq": "1.2.3-4"
+        }
+      },
+      {
+        "version": "1.2.3.4"
+      },
+      true
+    ],
+    [
+      "$or pass but second condition fail",
+      {
+        "$or": [{ "foo": 1 }, { "bar": 1 }],
+        "baz": 2
+      },
+      {
+        "foo": 1,
+        "bar": 2,
+        "baz": 1
+      },
+      false
+    ],
+    [
+      "$or and second condition both pass",
+      {
+        "$or": [{ "foo": 1 }, { "bar": 1 }],
+        "baz": 2
+      },
+      {
+        "foo": 1,
+        "bar": 2,
+        "baz": 2
+      },
+      true
+    ],
+    [
+      "$and condition pass but $or fail",
+      {
+        "$and": [{ "foo": 1 }, { "bar": 1 }],
+        "$or": [{ "baz": 1 }, { "empty": 1 }]
+      },
+      {
+        "foo": 1,
+        "bar": 1,
+        "baz": 2
+      },
+      false
+    ],
+    [
+      "$and and $or both pass",
+      {
+        "$and": [{ "foo": 1 }, { "bar": 1 }],
+        "$or": [{ "baz": 1 }, { "empty": 1 }]
+      },
+      {
+        "foo": 1,
+        "bar": 1,
+        "baz": 2,
+        "empty": 1
+      },
+      true
+    ],
     [
       "$inGroup passes for member of known group id",
       {
@@ -3127,345 +2927,134 @@ const String gbTestCases = r'''
       { "id": "3" },
       false,
       { "group_id": [1, "2", 3] }
-    ]    
+    ]
   ],
   "hash": [
-    [
-      "a",
-      0.22,
-      1,
-      ""
-    ],
-    [
-      "b",
-      0.077,
-      1,
-      ""
-    ],
-    [
-      "ab",
-      0.946,
-      1,
-      ""
-    ],
-    [
-      "def",
-      0.652,
-      1,
-      ""
-    ],
-    [
-      "8952klfjas09ujkasdf",
-      0.549,
-      1,
-      ""
-    ],
-    [
-      "123",
-      0.011,
-      1,
-      ""
-    ],
-    [
-      "___)((*\":&",
-      0.563,
-      1,
-      ""
-    ],
-    [
-      "a",
-      0.0505,
-      2,
-      "seed"
-    ],
-    [
-      "def",
-      null,
-      99,
-      "abc"
-    ]
+    ["", "a", 1, 0.22],
+    ["", "b", 1, 0.077],
+    ["b", "a", 1, 0.946],
+    ["ef", "d", 1, 0.652],
+    ["asdf", "8952klfjas09ujk", 1, 0.549],
+    ["", "123", 1, 0.011],
+    ["", "___)((*\":&", 1, 0.563],
+    ["seed", "a", 2, 0.0505],
+    ["seed", "b", 2, 0.2696],
+    ["foo", "ab", 2, 0.2575],
+    ["foo", "def", 2, 0.2019],
+    ["89123klj", "8952klfjas09ujkasdf", 2, 0.124],
+    ["90850943850283058242805", "123", 2, 0.7516],
+    ["()**(%$##$%#$#", "___)((*\":&", 2, 0.0128],
+    ["abc", "def", 99, null]
   ],
   "getBucketRange": [
     [
       "normal 50/50",
+      [2, 1, null],
       [
-        2,
-        1,
-        null
-      ],
-      [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ]
     ],
     [
       "reduced coverage",
+      [2, 0.5, null],
       [
-        2,
-        0.5,
-        null
-      ],
-      [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ]
     ],
     [
       "zero coverage",
+      [2, 0, null],
       [
-        2,
-        0,
-        null
-      ],
-      [
-        [
-          0,
-          0
-        ],
-        [
-          0.5,
-          0.5
-        ]
+        [0, 0],
+        [0.5, 0.5]
       ]
     ],
     [
       "4 variations",
+      [4, 1, null],
       [
-        4,
-        1,
-        null
-      ],
-      [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.25,
-          0.5
-        ],
-        [
-          0.5,
-          0.75
-        ],
-        [
-          0.75,
-          1
-        ]
+        [0, 0.25],
+        [0.25, 0.5],
+        [0.5, 0.75],
+        [0.75, 1]
       ]
     ],
     [
       "uneven weights",
+      [2, 1, [0.4, 0.6]],
       [
-        2,
-        1,
-        [
-          0.4,
-          0.6
-        ]
-      ],
-      [
-        [
-          0,
-          0.4
-        ],
-        [
-          0.4,
-          1
-        ]
+        [0, 0.4],
+        [0.4, 1]
       ]
     ],
     [
       "uneven weights, 3 variations",
+      [3, 1, [0.2, 0.3, 0.5]],
       [
-        3,
-        1,
-        [
-          0.2,
-          0.3,
-          0.5
-        ]
-      ],
-      [
-        [
-          0,
-          0.2
-        ],
-        [
-          0.2,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.2],
+        [0.2, 0.5],
+        [0.5, 1]
       ]
     ],
     [
       "uneven weights, reduced coverage, 3 variations",
+      [3, 0.2, [0.2, 0.3, 0.5]],
       [
-        3,
-        0.2,
-        [
-          0.2,
-          0.3,
-          0.5
-        ]
-      ],
-      [
-        [
-          0,
-          0.04
-        ],
-        [
-          0.2,
-          0.26
-        ],
-        [
-          0.5,
-          0.6
-        ]
+        [0, 0.04],
+        [0.2, 0.26],
+        [0.5, 0.6]
       ]
     ],
     [
       "negative coverage",
+      [2, -0.2, null],
       [
-        2,
-        -0.2,
-        null
-      ],
-      [
-        [
-          0,
-          0
-        ],
-        [
-          0.5,
-          0.5
-        ]
+        [0, 0],
+        [0.5, 0.5]
       ]
     ],
     [
       "coverage above 1",
+      [2, 1.5, null],
       [
-        2,
-        1.5,
-        null
-      ],
-      [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ]
     ],
     [
       "weights sum below 1",
+      [2, 1, [0.4, 0.1]],
       [
-        2,
-        1,
-        [
-          0.4,
-          0.1
-        ]
-      ],
-      [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ]
     ],
     [
       "weights sum above 1",
+      [2, 1, [0.7, 0.6]],
       [
-        2,
-        1,
-        [
-          0.7,
-          0.6
-        ]
-      ],
-      [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ]
     ],
     [
       "weights.length not equal to num variations",
+      [4, 1, [0.4, 0.4, 0.2]],
       [
-        4,
-        1,
-        [
-          0.4,
-          0.4,
-          0.2
-        ]
-      ],
-      [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.25,
-          0.5
-        ],
-        [
-          0.5,
-          0.75
-        ],
-        [
-          0.75,
-          1
-        ]
+        [0, 0.25],
+        [0.25, 0.5],
+        [0.5, 0.75],
+        [0.75, 1]
       ]
     ],
     [
       "weights sum almost equals 1",
+      [2, 1, [0.4, 0.5999]],
       [
-        2,
-        1,
-        [
-          0.4,
-          0.5999
-        ]
-      ],
-      [
-        [
-          0,
-          0.4
-        ],
-        [
-          0.4,
-          0.9999
-        ]
+        [0, 0.4],
+        [0.4, 0.9999]
       ]
     ]
   ],
@@ -3478,56 +3067,44 @@ const String gbTestCases = r'''
         "value": null,
         "on": false,
         "off": true,
-        "source": "unknownFeature"
+        "source": "unknownFeature",
+        "ruleId": ""
       }
     ],
     [
       "defaults when empty",
-      {
-        "features": {
-          "feature": {}
-        }
-      },
+      { "features": { "feature": {} } },
       "feature",
       {
         "value": null,
         "on": false,
         "off": true,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
       "uses defaultValue - number",
-      {
-        "features": {
-          "feature": {
-            "defaultValue": 1
-          }
-        }
-      },
+      { "features": { "feature": { "defaultValue": 1 } } },
       "feature",
       {
         "value": 1,
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
       "uses custom values - string",
-      {
-        "features": {
-          "feature": {
-            "defaultValue": "yes"
-          }
-        }
-      },
+      { "features": { "feature": { "defaultValue": "yes" } } },
       "feature",
       {
         "value": "yes",
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -3549,7 +3126,32 @@ const String gbTestCases = r'''
         "value": 1,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
+      }
+    ],
+    [
+      "force rule with rule id",
+      {
+        "features": {
+          "feature": {
+            "defaultValue": 2,
+            "rules": [
+              {
+                "id": "a",
+                "force": 1
+              }
+            ]
+          }
+        }
+      },
+      "feature",
+      {
+        "value": 1,
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": "a"
       }
     ],
     [
@@ -3571,7 +3173,8 @@ const String gbTestCases = r'''
         "value": false,
         "on": false,
         "off": true,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -3597,7 +3200,8 @@ const String gbTestCases = r'''
         "value": 1,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -3623,7 +3227,8 @@ const String gbTestCases = r'''
         "value": 1,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -3637,6 +3242,7 @@ const String gbTestCases = r'''
             "defaultValue": 2,
             "rules": [
               {
+                "id": "a",
                 "force": 1,
                 "coverage": 0.5
               }
@@ -3649,7 +3255,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -3673,35 +3280,37 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
-        "force rules - coverage 0",
-        {
-            "attributes": {
-                "id": "d0bc0a5a"
-            },
-            "features": {
-                "8d156": {
-                    "defaultValue": 0,
-                    "rules": [
-                        {
-                            "force": 1,
-                            "coverage": 0,
-                            "hashVersion": 2
-                        }
-                    ]
-                }
-            }
+      "force rules - coverage 0",
+      {
+        "attributes": {
+          "id": "d0bc0a5a"
         },
-        "8d156",
-        {
-            "value": 0,
-            "on": false,
-            "off": true,
-            "source": "defaultValue"
+        "features": {
+          "8d156": {
+            "defaultValue": 0,
+            "rules": [
+              {
+                "force": 1,
+                "coverage": 0,
+                "hashVersion": 2
+              }
+            ]
+          }
         }
+      },
+      "8d156",
+      {
+        "value": 0,
+        "on": false,
+        "off": true,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
     ],
     [
       "force rules - condition pass",
@@ -3717,12 +3326,7 @@ const String gbTestCases = r'''
               {
                 "force": 1,
                 "condition": {
-                  "country": {
-                    "$in": [
-                      "US",
-                      "CA"
-                    ]
-                  },
+                  "country": { "$in": ["US", "CA"] },
                   "browser": "firefox"
                 }
               }
@@ -3735,7 +3339,8 @@ const String gbTestCases = r'''
         "value": 1,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -3752,12 +3357,7 @@ const String gbTestCases = r'''
               {
                 "force": 1,
                 "condition": {
-                  "country": {
-                    "$in": [
-                      "US",
-                      "CA"
-                    ]
-                  },
+                  "country": { "$in": ["US", "CA"] },
                   "browser": "firefox"
                 }
               }
@@ -3770,7 +3370,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -3785,7 +3386,7 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "coverage": 1,
+                "coverage": 1.0,
                 "hashVersion": 99
               }
             ]
@@ -3797,7 +3398,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -3805,9 +3407,7 @@ const String gbTestCases = r'''
       {
         "features": {
           "feature": {
-            "rules": [
-              {}
-            ]
+            "rules": [{}]
           }
         }
       },
@@ -3816,7 +3416,8 @@ const String gbTestCases = r'''
         "value": null,
         "on": false,
         "off": true,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -3829,11 +3430,7 @@ const String gbTestCases = r'''
           "feature": {
             "rules": [
               {
-                "variations": [
-                  "a",
-                  "b",
-                  "c"
-                ]
+                "variations": ["a", "b", "c"]
               }
             ]
           }
@@ -3846,11 +3443,7 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": [
-            "a",
-            "b",
-            "c"
-          ]
+          "variations": ["a", "b", "c"]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3864,7 +3457,8 @@ const String gbTestCases = r'''
           "key": "2",
           "stickyBucketUsed": false
         },
-        "source": "experiment"
+        "source": "experiment",
+        "ruleId": ""
       }
     ],
     [
@@ -3877,11 +3471,8 @@ const String gbTestCases = r'''
           "feature": {
             "rules": [
               {
-                "variations": [
-                  "a",
-                  "b",
-                  "c"
-                ]
+                "id": "id",
+                "variations": ["a", "b", "c"]
               }
             ]
           }
@@ -3894,11 +3485,7 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": [
-            "a",
-            "b",
-            "c"
-          ]
+          "variations": ["a", "b", "c"]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3912,7 +3499,8 @@ const String gbTestCases = r'''
           "key": "0",
           "stickyBucketUsed": false
         },
-        "source": "experiment"
+        "source": "experiment",
+        "ruleId": "id"
       }
     ],
     [
@@ -3925,11 +3513,7 @@ const String gbTestCases = r'''
           "feature": {
             "rules": [
               {
-                "variations": [
-                  "a",
-                  "b",
-                  "c"
-                ]
+                "variations": ["a", "b", "c"]
               }
             ]
           }
@@ -3942,11 +3526,7 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": [
-            "a",
-            "b",
-            "c"
-          ]
+          "variations": ["a", "b", "c"]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3960,7 +3540,8 @@ const String gbTestCases = r'''
           "key": "1",
           "stickyBucketUsed": false
         },
-        "source": "experiment"
+        "source": "experiment",
+        "ruleId": ""
       }
     ],
     [
@@ -3981,14 +3562,8 @@ const String gbTestCases = r'''
                 "name": "Test",
                 "phase": "1",
                 "ranges": [
-                  [
-                    0,
-                    0.1
-                  ],
-                  [
-                    0.1,
-                    1
-                  ]
+                  [0, 0.1],
+                  [0.1, 1.0]
                 ],
                 "meta": [
                   {
@@ -4004,31 +3579,15 @@ const String gbTestCases = r'''
                   {
                     "attribute": "anonId",
                     "seed": "pricing",
-                    "ranges": [
-                      [
-                        0,
-                        1
-                      ]
-                    ]
+                    "ranges": [[0, 1]]
                   }
                 ],
-                "namespace": [
-                  "pricing",
-                  0,
-                  1
-                ],
+                "namespace": ["pricing", 0, 1],
                 "key": "hello",
-                "variations": [
-                  true,
-                  false
-                ],
-                "weights": [
-                  0.1,
-                  0.9
-                ],
-                "condition": {
-                  "premium": true
-                }
+                "variations": [true, false],
+                "weights": [0.1, 0.9],
+                "condition": { "premium": true },
+                "foo": "bar"
               }
             ]
           }
@@ -4043,14 +3602,8 @@ const String gbTestCases = r'''
         "experiment": {
           "coverage": 0.99,
           "ranges": [
-            [
-              0,
-              0.1
-            ],
-            [
-              0.1,
-              1
-            ]
+            [0, 0.1],
+            [0.1, 1.0]
           ],
           "meta": [
             {
@@ -4066,12 +3619,7 @@ const String gbTestCases = r'''
             {
               "attribute": "anonId",
               "seed": "pricing",
-              "ranges": [
-                [
-                  0,
-                  1
-                ]
-              ]
+              "ranges": [[0, 1]]
             }
           ],
           "name": "Test",
@@ -4079,23 +3627,11 @@ const String gbTestCases = r'''
           "seed": "feature",
           "hashVersion": 2,
           "hashAttribute": "anonId",
-          "namespace": [
-            "pricing",
-            0,
-            1
-          ],
+          "namespace": ["pricing", 0, 1],
           "key": "hello",
-          "variations": [
-            true,
-            false
-          ],
-          "weights": [
-            0.1,
-            0.9
-          ],
-          "condition": {
-            "premium": true
-          }
+          "variations": [true, false],
+          "weights": [0.1, 0.9],
+          "condition": { "premium": true }
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4109,7 +3645,8 @@ const String gbTestCases = r'''
           "key": "v1",
           "name": "variation 1",
           "stickyBucketUsed": false
-        }
+        },
+        "ruleId": ""
       }
     ],
     [
@@ -4124,21 +3661,15 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "condition": {
-                  "browser": "chrome"
-                }
+                "condition": { "browser": "chrome" }
               },
               {
                 "force": 2,
-                "condition": {
-                  "browser": "firefox"
-                }
+                "condition": { "browser": "firefox" }
               },
               {
                 "force": 3,
-                "condition": {
-                  "browser": "safari"
-                }
+                "condition": { "browser": "safari" }
               }
             ]
           }
@@ -4149,7 +3680,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -4164,21 +3696,18 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "condition": {
-                  "browser": "chrome"
-                }
+                "id": "1",
+                "condition": { "browser": "chrome" }
               },
               {
+                "id": "2",
                 "force": 2,
-                "condition": {
-                  "browser": "firefox"
-                }
+                "condition": { "browser": "firefox" }
               },
               {
+                "id": "3",
                 "force": 3,
-                "condition": {
-                  "browser": "safari"
-                }
+                "condition": { "browser": "safari" }
               }
             ]
           }
@@ -4189,7 +3718,8 @@ const String gbTestCases = r'''
         "value": 3,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": "3"
       }
     ],
     [
@@ -4204,21 +3734,15 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "condition": {
-                  "browser": "chrome"
-                }
+                "condition": { "browser": "chrome" }
               },
               {
                 "force": 2,
-                "condition": {
-                  "browser": "firefox"
-                }
+                "condition": { "browser": "firefox" }
               },
               {
                 "force": 3,
-                "condition": {
-                  "browser": "safari"
-                }
+                "condition": { "browser": "safari" }
               }
             ]
           }
@@ -4229,26 +3753,20 @@ const String gbTestCases = r'''
         "value": 0,
         "on": false,
         "off": true,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
       "skips experiment on coverage",
       {
-        "attributes": {
-          "id": "123"
-        },
+        "attributes": { "id": "123" },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1,
-                  2,
-                  3
-                ],
+                "variations": [0, 1, 2, 3],
                 "coverage": 0.01
               },
               {
@@ -4263,31 +3781,21 @@ const String gbTestCases = r'''
         "value": 3,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
       "skips experiment on namespace",
       {
-        "attributes": {
-          "id": "123"
-        },
+        "attributes": { "id": "123" },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1,
-                  2,
-                  3
-                ],
-                "namespace": [
-                  "pricing",
-                  0,
-                  0.01
-                ]
+                "variations": [0, 1, 2, 3],
+                "namespace": ["pricing", 0, 0.01]
               },
               {
                 "force": 3
@@ -4301,24 +3809,20 @@ const String gbTestCases = r'''
         "value": 3,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
       "handles integer hashAttribute",
       {
-        "attributes": {
-          "id": 123
-        },
+        "attributes": { "id": 123 },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1
-                ]
+                "variations": [0, 1]
               }
             ]
           }
@@ -4332,10 +3836,7 @@ const String gbTestCases = r'''
         "source": "experiment",
         "experiment": {
           "key": "feature",
-          "variations": [
-            0,
-            1
-          ]
+          "variations": [0, 1]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4348,26 +3849,20 @@ const String gbTestCases = r'''
           "key": "1",
           "bucket": 0.863,
           "stickyBucketUsed": false
-        }
+        },
+        "ruleId": ""
       }
     ],
     [
       "skip experiment on missing hashAttribute",
       {
-        "attributes": {
-          "id": "123"
-        },
+        "attributes": { "id": "123" },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1,
-                  2,
-                  3
-                ],
+                "variations": [0, 1, 2, 3],
                 "hashAttribute": "company"
               },
               {
@@ -4382,15 +3877,14 @@ const String gbTestCases = r'''
         "value": 3,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
       "include experiments when forced",
       {
-        "attributes": {
-          "id": "123"
-        },
+        "attributes": { "id": "123" },
         "forcedVariations": {
           "feature": 1
         },
@@ -4399,12 +3893,7 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1,
-                  2,
-                  3
-                ]
+                "variations": [0, 1, 2, 3]
               },
               {
                 "force": 3
@@ -4421,12 +3910,7 @@ const String gbTestCases = r'''
         "source": "experiment",
         "experiment": {
           "key": "feature",
-          "variations": [
-            0,
-            1,
-            2,
-            3
-          ]
+          "variations": [0, 1, 2, 3]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4438,7 +3922,8 @@ const String gbTestCases = r'''
           "hashValue": "123",
           "key": "1",
           "stickyBucketUsed": false
-        }
+        },
+        "ruleId": ""
       }
     ],
     [
@@ -4454,10 +3939,7 @@ const String gbTestCases = r'''
               {
                 "force": 2,
                 "coverage": 0.01,
-                "range": [
-                  0,
-                  0.99
-                ]
+                "range": [0, 0.99]
               }
             ]
           }
@@ -4468,7 +3950,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -4484,10 +3967,7 @@ const String gbTestCases = r'''
               {
                 "force": 2,
                 "hashVersion": 2,
-                "range": [
-                  0.96,
-                  0.97
-                ]
+                "range": [0.96, 0.97]
               }
             ]
           }
@@ -4498,7 +3978,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -4513,10 +3994,7 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 2,
-                "range": [
-                  0,
-                  0.01
-                ]
+                "range": [0, 0.01]
               }
             ]
           }
@@ -4527,7 +4005,8 @@ const String gbTestCases = r'''
         "value": 0,
         "on": false,
         "off": true,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -4545,12 +4024,7 @@ const String gbTestCases = r'''
                 "filters": [
                   {
                     "seed": "seed",
-                    "ranges": [
-                      [
-                        0,
-                        0.01
-                      ]
-                    ]
+                    "ranges": [[0, 0.01]]
                   }
                 ]
               }
@@ -4563,7 +4037,8 @@ const String gbTestCases = r'''
         "value": 0,
         "on": false,
         "off": true,
-        "source": "defaultValue"
+        "source": "defaultValue",
+        "ruleId": ""
       }
     ],
     [
@@ -4578,10 +4053,7 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 2,
-                "range": [
-                  0,
-                  0.5
-                ],
+                "range": [0, 0.5],
                 "seed": "fjdslafdsa",
                 "hashVersion": 2
               }
@@ -4594,7 +4066,8 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -4609,20 +4082,11 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "holdout",
-                "variations": [
-                  1,
-                  2
-                ],
+                "variations": [1, 2],
                 "hashVersion": 2,
                 "ranges": [
-                  [
-                    0,
-                    0.01
-                  ],
-                  [
-                    0.01,
-                    1
-                  ]
+                  [0, 0.01],
+                  [0.01, 1.0]
                 ],
                 "meta": [
                   {},
@@ -4633,20 +4097,11 @@ const String gbTestCases = r'''
               },
               {
                 "key": "experiment",
-                "variations": [
-                  3,
-                  4
-                ],
+                "variations": [3, 4],
                 "hashVersion": 2,
                 "ranges": [
-                  [
-                    0,
-                    0.5
-                  ],
-                  [
-                    0.5,
-                    1
-                  ]
+                  [0, 0.5],
+                  [0.5, 1.0]
                 ]
               }
             ]
@@ -4662,19 +4117,10 @@ const String gbTestCases = r'''
         "experiment": {
           "key": "experiment",
           "hashVersion": 2,
-          "variations": [
-            3,
-            4
-          ],
+          "variations": [3, 4],
           "ranges": [
-            [
-              0,
-              0.5
-            ],
-            [
-              0.5,
-              1
-            ]
+            [0, 0.5],
+            [0.5, 1.0]
           ]
         },
         "experimentResult": {
@@ -4688,7 +4134,8 @@ const String gbTestCases = r'''
           "variationId": 0,
           "bucket": 0.4413,
           "stickyBucketUsed": false
-        }
+        },
+        "ruleId": ""
       }
     ],
     [
@@ -4704,19 +4151,10 @@ const String gbTestCases = r'''
               {
                 "key": "holdout",
                 "hashVersion": 2,
-                "variations": [
-                  1,
-                  2
-                ],
+                "variations": [1, 2],
                 "ranges": [
-                  [
-                    0,
-                    0.99
-                  ],
-                  [
-                    0.99,
-                    1
-                  ]
+                  [0, 0.99],
+                  [0.99, 1.0]
                 ],
                 "meta": [
                   {},
@@ -4728,19 +4166,10 @@ const String gbTestCases = r'''
               {
                 "key": "experiment",
                 "hashVersion": 2,
-                "variations": [
-                  3,
-                  4
-                ],
+                "variations": [3, 4],
                 "ranges": [
-                  [
-                    0,
-                    0.5
-                  ],
-                  [
-                    0.5,
-                    1
-                  ]
+                  [0, 0.5],
+                  [0.5, 1.0]
                 ]
               }
             ]
@@ -4756,14 +4185,8 @@ const String gbTestCases = r'''
         "experiment": {
           "hashVersion": 2,
           "ranges": [
-            [
-              0,
-              0.99
-            ],
-            [
-              0.99,
-              1
-            ]
+            [0, 0.99],
+            [0.99, 1.0]
           ],
           "meta": [
             {},
@@ -4772,10 +4195,7 @@ const String gbTestCases = r'''
             }
           ],
           "key": "holdout",
-          "variations": [
-            1,
-            2
-          ]
+          "variations": [1, 2]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4788,7 +4208,8 @@ const String gbTestCases = r'''
           "variationId": 0,
           "bucket": 0.8043,
           "stickyBucketUsed": false
-        }
+        },
+        "ruleId": ""
       }
     ],
     [
@@ -4804,20 +4225,11 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": {
-                  "country": "Canada"
-                },
+                "condition": { "country": "Canada" },
                 "force": "red"
               },
               {
-                "condition": {
-                  "country": {
-                    "$in": [
-                      "USA",
-                      "Mexico"
-                    ]
-                  }
-                },
+                "condition": { "country": { "$in": ["USA", "Mexico"] } },
                 "force": "green"
               }
             ]
@@ -4829,17 +4241,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": {
-                      "value": "green"
-                    },
+                    "condition": { "value": "green" },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -4851,7 +4259,8 @@ const String gbTestCases = r'''
         "value": null,
         "on": false,
         "off": true,
-        "source": "prerequisite"
+        "source": "prerequisite",
+        "ruleId": ""
       }
     ],
     [
@@ -4870,17 +4279,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": {
-                      "value": "green"
-                    },
+                    "condition": { "value": "green" },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -4892,7 +4297,8 @@ const String gbTestCases = r'''
         "value": null,
         "on": false,
         "off": true,
-        "source": "prerequisite"
+        "source": "prerequisite",
+        "ruleId": ""
       }
     ],
     [
@@ -4908,20 +4314,11 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": {
-                  "country": "Canada"
-                },
+                "condition": { "country": "Canada" },
                 "force": "red"
               },
               {
-                "condition": {
-                  "country": {
-                    "$in": [
-                      "USA",
-                      "Mexico"
-                    ]
-                  }
-                },
+                "condition": { "country": { "$in": ["USA", "Mexico"] } },
                 "force": "green"
               }
             ]
@@ -4933,17 +4330,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": {
-                      "value": "green"
-                    },
+                    "condition": { "value": "green" },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -4955,7 +4348,8 @@ const String gbTestCases = r'''
         "value": "success",
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -4971,20 +4365,11 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": {
-                  "country": "Canada"
-                },
+                "condition": { "country": "Canada" },
                 "force": "red"
               },
               {
-                "condition": {
-                  "country": {
-                    "$in": [
-                      "USA",
-                      "Mexico"
-                    ]
-                  }
-                },
+                "condition": { "country": { "$in": ["USA", "Mexico"] } },
                 "force": "green"
               }
             ]
@@ -4993,9 +4378,7 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "condition": {
-                  "id": "123"
-                },
+                "condition": { "id": "123" },
                 "force": 2
               }
             ]
@@ -5007,9 +4390,7 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag1",
-                    "condition": {
-                      "value": "green"
-                    },
+                    "condition": { "value": "green" },
                     "gate": true
                   }
                 ]
@@ -5018,19 +4399,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag2",
-                    "condition": {
-                      "value": {
-                        "$gt": 1
-                      }
-                    },
+                    "condition": { "value": { "$gt": 1 } },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -5042,7 +4417,8 @@ const String gbTestCases = r'''
         "value": "success",
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -5061,30 +4437,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag2",
-                    "condition": {
-                      "value": {
-                        "$gt": 1
-                      }
-                    },
+                    "condition": { "value": { "$gt": 1 } },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "country": "Canada"
-                },
+                "condition": { "country": "Canada" },
                 "force": "red"
               },
               {
-                "condition": {
-                  "country": {
-                    "$in": [
-                      "USA",
-                      "Mexico"
-                    ]
-                  }
-                },
+                "condition": { "country": { "$in": ["USA", "Mexico"] } },
                 "force": "green"
               }
             ]
@@ -5093,9 +4456,7 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "condition": {
-                  "id": "123"
-                },
+                "condition": { "id": "123" },
                 "force": 2
               }
             ]
@@ -5107,17 +4468,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag1",
-                    "condition": {
-                      "value": "green"
-                    },
+                    "condition": { "value": "green" },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -5129,7 +4486,8 @@ const String gbTestCases = r'''
         "value": "success",
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -5146,21 +4504,12 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "experiment",
-                "variations": [
-                  0,
-                  1
-                ],
+                "variations": [0, 1],
                 "hashAttribute": "id",
                 "hashVersion": 2,
                 "ranges": [
-                  [
-                    0,
-                    0.5
-                  ],
-                  [
-                    0.5,
-                    1
-                  ]
+                  [0, 0.5],
+                  [0.5, 1.0]
                 ]
               }
             ]
@@ -5172,17 +4521,13 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentExperimentFlag",
-                    "condition": {
-                      "value": 1
-                    },
+                    "condition": { "value": 1 },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": {
-                  "memberType": "basic"
-                },
+                "condition": { "memberType": "basic" },
                 "force": "success"
               }
             ]
@@ -5194,7 +4539,61 @@ const String gbTestCases = r'''
         "value": "success",
         "on": true,
         "off": false,
-        "source": "force"
+        "source": "force",
+        "ruleId": ""
+      }
+    ],
+    [
+      "Prerequisite experiment flag in target bucket, evaluate skip dependent flag if not bucketed",
+      {
+        "attributes": {
+          "id": "1234",
+          "memberType": "basic",
+          "country": "USA"
+        },
+        "features": {
+          "parentExperimentFlag": {
+            "defaultValue": 0,
+            "rules": [
+              {
+                "key": "experiment",
+                "variations": [0, 1],
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "ranges": [
+                  [0, 0.5],
+                  [0.5, 1.0]
+                ]
+              }
+            ]
+          },
+          "childFlag": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "parentConditions": [
+                  {
+                    "id": "parentExperimentFlag",
+                    "condition": { "value": 0 },
+                    "gate": true
+                  }
+                ]
+              },
+              {
+                "condition": { "memberType": "basic" },
+                "force": "success"
+              }
+            ]
+          }
+        }
+      },
+      "childFlag",
+      {
+        "value": null,
+        "on": false,
+        "off": true,
+        "source": "prerequisite",
+        "ruleId": ""
       }
     ],
     [
@@ -5211,9 +4610,7 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "flag2",
-                    "condition": {
-                      "value": true
-                    },
+                    "condition": { "value": true },
                     "gate": true
                   }
                 ]
@@ -5227,9 +4624,7 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "flag1",
-                    "condition": {
-                      "value": true
-                    },
+                    "condition": { "value": true },
                     "gate": true
                   }
                 ]
@@ -5243,7 +4638,73 @@ const String gbTestCases = r'''
         "value": null,
         "on": false,
         "off": true,
-        "source": "cyclicPrerequisite"
+        "source": "cyclicPrerequisite",
+        "ruleId": ""
+      }
+    ],
+    [
+      "Multiple references to same prerequisite, do not break",
+      {
+        "attributes": {
+          "id": "123",
+          "browser": "edge"
+        },
+        "features": {
+          "childFlag": {
+            "defaultValue": true,
+            "rules": [
+              {
+                "parentConditions": [
+                  {
+                    "id": "parentFlag",
+                    "condition": { "value": { "$ne": false } },
+                    "gate": true
+                  },
+                  {
+                    "id": "parentFlag",
+                    "condition": { "value": true },
+                    "gate": true
+                  }
+                ]
+              },
+              {
+                "condition": {
+                  "browser": "safari"
+                },
+                "parentConditions": [
+                  {
+                    "id": "parentFlag",
+                    "condition": { "value": true }
+                  }
+                ],
+                "force": "C"
+              },
+              {
+                "condition": {
+                  "browser": { "$ne": "safari" }
+                },
+                "parentConditions": [
+                  {
+                    "id": "parentFlag",
+                    "condition": { "value": true }
+                  }
+                ],
+                "force": "T"
+              }
+            ]
+          },
+          "parentFlag": {
+            "defaultValue": true
+          }
+        }
+      },
+      "childFlag",
+      {
+        "value": "T",
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
       }
     ],
     [
@@ -5268,7 +4729,13 @@ const String gbTestCases = r'''
         }
       },
       "inGroup_force_rule",
-      { "value": true, "on": true, "off": false, "source": "force" }
+      {
+        "value": true,
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
+      }
     ],
     [
       "SavedGroups correctly pulled from context for experiment rule",
@@ -5324,797 +4791,336 @@ const String gbTestCases = r'''
           "variationId": 0,
           "bucket": 0.1736,
           "stickyBucketUsed": false
-        }
-      }  
+        },
+        "ruleId": ""
+      }
     ]
   ],
   "run": [
     [
       "default weights - 1",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "default weights - 2",
-      {
-        "attributes": {
-          "id": "2"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "2" } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       true,
       true
     ],
     [
       "default weights - 3",
-      {
-        "attributes": {
-          "id": "3"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "3" } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       true,
       true
     ],
     [
       "default weights - 4",
-      {
-        "attributes": {
-          "id": "4"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "4" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "default weights - 5",
-      {
-        "attributes": {
-          "id": "5"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "5" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "default weights - 6",
-      {
-        "attributes": {
-          "id": "6"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "6" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "default weights - 7",
-      {
-        "attributes": {
-          "id": "7"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "7" } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       true,
       true
     ],
     [
       "default weights - 8",
-      {
-        "attributes": {
-          "id": "8"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "8" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "default weights - 9",
-      {
-        "attributes": {
-          "id": "9"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "9" } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       true,
       true
     ],
     [
       "uneven weights - 1",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 2",
-      {
-        "attributes": {
-          "id": "2"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "2" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 3",
-      {
-        "attributes": {
-          "id": "3"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "3" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       0,
       true,
       true
     ],
     [
       "uneven weights - 4",
-      {
-        "attributes": {
-          "id": "4"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "4" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 5",
-      {
-        "attributes": {
-          "id": "5"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "5" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 6",
-      {
-        "attributes": {
-          "id": "6"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "6" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 7",
-      {
-        "attributes": {
-          "id": "7"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "7" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       0,
       true,
       true
     ],
     [
       "uneven weights - 8",
-      {
-        "attributes": {
-          "id": "8"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "8" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "uneven weights - 9",
-      {
-        "attributes": {
-          "id": "9"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.1,
-          0.9
-        ]
-      },
+      { "attributes": { "id": "9" } },
+      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
       1,
       true,
       true
     ],
     [
       "coverage - 1",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       false,
       false
     ],
     [
       "coverage - 2",
-      {
-        "attributes": {
-          "id": "2"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "2" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       true,
       true
     ],
     [
       "coverage - 3",
-      {
-        "attributes": {
-          "id": "3"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "3" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       true,
       true
     ],
     [
       "coverage - 4",
-      {
-        "attributes": {
-          "id": "4"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "4" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       false,
       false
     ],
     [
       "coverage - 5",
-      {
-        "attributes": {
-          "id": "5"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "5" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       1,
       true,
       true
     ],
     [
       "coverage - 6",
-      {
-        "attributes": {
-          "id": "6"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "6" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       false,
       false
     ],
     [
       "coverage - 7",
-      {
-        "attributes": {
-          "id": "7"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "7" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       true,
       true
     ],
     [
       "coverage - 8",
-      {
-        "attributes": {
-          "id": "8"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "8" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       1,
       true,
       true
     ],
     [
       "coverage - 9",
-      {
-        "attributes": {
-          "id": "9"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "coverage": 0.4
-      },
+      { "attributes": { "id": "9" } },
+      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
       0,
       false,
       false
     ],
     [
       "three way test - 1",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       2,
       true,
       true
     ],
     [
       "three way test - 2",
-      {
-        "attributes": {
-          "id": "2"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "2" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       0,
       true,
       true
     ],
     [
       "three way test - 3",
-      {
-        "attributes": {
-          "id": "3"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "3" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       0,
       true,
       true
     ],
     [
       "three way test - 4",
-      {
-        "attributes": {
-          "id": "4"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "4" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       2,
       true,
       true
     ],
     [
       "three way test - 5",
-      {
-        "attributes": {
-          "id": "5"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "5" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       1,
       true,
       true
     ],
     [
       "three way test - 6",
-      {
-        "attributes": {
-          "id": "6"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "6" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       2,
       true,
       true
     ],
     [
       "three way test - 7",
-      {
-        "attributes": {
-          "id": "7"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "7" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       0,
       true,
       true
     ],
     [
       "three way test - 8",
-      {
-        "attributes": {
-          "id": "8"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "8" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       1,
       true,
       true
     ],
     [
       "three way test - 9",
-      {
-        "attributes": {
-          "id": "9"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1,
-          2
-        ]
-      },
+      { "attributes": { "id": "9" } },
+      { "key": "my-test", "variations": [0, 1, 2] },
       0,
       true,
       true
     ],
     [
       "test name - my-test",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1] },
       1,
       true,
       true
     ],
     [
       "test name - my-test-3",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test-3",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test-3", "variations": [0, 1] },
       0,
       true,
       true
     ],
     [
       "empty id",
-      {
-        "attributes": {
-          "id": ""
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": "" } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       false,
       false
     ],
     [
       "null id",
-      {
-        "attributes": {
-          "id": null
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": { "id": null } },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       false,
       false
     ],
     [
       "missing id",
-      {
-        "attributes": {}
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "attributes": {} },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       false,
       false
@@ -6122,68 +5128,31 @@ const String gbTestCases = r'''
     [
       "missing attributes",
       {},
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
-      },
+      { "key": "my-test", "variations": [0, 1] },
       0,
       false,
       false
     ],
     [
       "single variation",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0
-        ]
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0] },
       0,
       false,
       false
     ],
     [
       "negative forced variation",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "force": -8
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1], "force": -8 },
       0,
       false,
       false
     ],
     [
       "high forced variation",
-      {
-        "attributes": {
-          "id": "1"
-        }
-      },
-      {
-        "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "force": 25
-      },
+      { "attributes": { "id": "1" } },
+      { "key": "my-test", "variations": [0, 1], "force": 25 },
       0,
       false,
       false
@@ -6198,10 +5167,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "condition": {
           "browser": "firefox"
         }
@@ -6220,10 +5186,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "condition": {
           "browser": "firefox"
         }
@@ -6242,10 +5205,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "hashAttribute": "companyId"
       },
       1,
@@ -6262,13 +5222,26 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       0,
       false,
+      false
+    ],
+    [
+      "querystring force",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "url": "http://example.com?forced-test-qs=1#someanchor"
+      },
+      {
+        "key": "forced-test-qs",
+        "variations": [0, 1]
+      },
+      1,
+      true,
       false
     ],
     [
@@ -6281,10 +5254,7 @@ const String gbTestCases = r'''
       {
         "key": "my-test",
         "active": true,
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       1,
       true,
@@ -6300,13 +5270,27 @@ const String gbTestCases = r'''
       {
         "key": "my-test",
         "active": false,
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       0,
       false,
+      false
+    ],
+    [
+      "querystring force with inactive",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "url": "http://example.com/?my-test=1"
+      },
+      {
+        "key": "my-test",
+        "active": false,
+        "variations": [0, 1]
+      },
+      1,
+      true,
       false
     ],
     [
@@ -6320,10 +5304,7 @@ const String gbTestCases = r'''
         "key": "my-test",
         "force": 1,
         "coverage": 0.01,
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       0,
       false,
@@ -6359,19 +5340,12 @@ const String gbTestCases = r'''
     [
       "Force variation from context",
       {
-        "attributes": {
-          "id": "1"
-        },
-        "forcedVariations": {
-          "my-test": 0
-        }
+        "attributes": { "id": "1" },
+        "forcedVariations": { "my-test": 0 }
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       0,
       true,
@@ -6380,17 +5354,12 @@ const String gbTestCases = r'''
     [
       "Skips experiments in QA mode",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "qaMode": true
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       0,
       false,
@@ -6399,20 +5368,13 @@ const String gbTestCases = r'''
     [
       "Works in QA mode if forced in context",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "qaMode": true,
-        "forcedVariations": {
-          "my-test": 1
-        }
+        "forcedVariations": { "my-test": 1 }
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       1,
       true,
@@ -6421,17 +5383,12 @@ const String gbTestCases = r'''
     [
       "Works in QA mode if forced in experiment",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "qaMode": true
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "force": 1
       },
       1,
@@ -6447,15 +5404,8 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "namespace": [
-          "namespace",
-          0.1,
-          1
-        ]
+        "variations": [0, 1],
+        "namespace": ["namespace", 0.1, 1]
       },
       1,
       true,
@@ -6470,15 +5420,8 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
-        "namespace": [
-          "namespace",
-          0,
-          0.1
-        ]
+        "variations": [0, 1],
+        "namespace": ["namespace", 0, 0.1]
       },
       0,
       false,
@@ -6493,10 +5436,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "no-coverage",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "coverage": 0
       },
       0,
@@ -6513,33 +5453,19 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [
-                0,
-                0.1
-              ],
-              [
-                0.2,
-                0.4
-              ]
+              [0, 0.1],
+              [0.2, 0.4]
             ]
           },
           {
             "seed": "seed",
             "attribute": "anonId",
-            "ranges": [
-              [
-                0.8,
-                1
-              ]
-            ]
+            "ranges": [[0.8, 1.0]]
           }
         ]
       },
@@ -6557,33 +5483,19 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [
-                0,
-                0.1
-              ],
-              [
-                0.2,
-                0.4
-              ]
+              [0, 0.1],
+              [0.2, 0.4]
             ]
           },
           {
             "seed": "seed",
             "attribute": "anonId",
-            "ranges": [
-              [
-                0.6,
-                0.8
-              ]
-            ]
+            "ranges": [[0.6, 0.8]]
           }
         ]
       },
@@ -6600,30 +5512,17 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [
-                0,
-                0.1
-              ],
-              [
-                0.2,
-                0.4
-              ]
+              [0, 0.1],
+              [0.2, 0.4]
             ]
           }
         ],
-        "namespace": [
-          "test",
-          0,
-          0.001
-        ]
+        "namespace": ["test", 0, 0.001]
       },
       1,
       true,
@@ -6638,25 +5537,13 @@ const String gbTestCases = r'''
       },
       {
         "key": "ranges",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "ranges": [
-          [
-            0.99,
-            1
-          ],
-          [
-            0,
-            0.99
-          ]
+          [0.99, 1.0],
+          [0.0, 0.99]
         ],
         "coverage": 0.01,
-        "weights": [
-          0.99,
-          0.01
-        ]
+        "weights": [0.99, 0.01]
       },
       1,
       true,
@@ -6671,19 +5558,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "configs",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "ranges": [
-          [
-            0,
-            0.1
-          ],
-          [
-            0.9,
-            1
-          ]
+          [0, 0.1],
+          [0.9, 1.0]
         ]
       },
       0,
@@ -6701,19 +5579,10 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "ranges": [
-          [
-            0,
-            0.5
-          ],
-          [
-            0.5,
-            1
-          ]
+          [0, 0.5],
+          [0.5, 1.0]
         ]
       },
       1,
@@ -6731,10 +5600,7 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [
-          0,
-          1
-        ]
+        "variations": [0, 1]
       },
       1,
       true,
@@ -6751,14 +5617,8 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [
-          0,
-          1
-        ],
-        "weights": [
-          0.5,
-          0.5
-        ],
+        "variations": [0, 1],
+        "weights": [0.5, 0.5],
         "coverage": 0.99
       },
       1,
@@ -6768,9 +5628,7 @@ const String gbTestCases = r'''
     [
       "Prerequisite condition passes",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "features": {
           "parentFlag": {
             "defaultValue": true
@@ -6779,10 +5637,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "parentConditions": [
           {
             "id": "parentFlag",
@@ -6799,9 +5654,7 @@ const String gbTestCases = r'''
     [
       "Prerequisite condition fails",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "features": {
           "parentFlag": {
             "defaultValue": false
@@ -6810,10 +5663,7 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [
-          0,
-          1
-        ],
+        "variations": [0, 1],
         "parentConditions": [
           {
             "id": "parentFlag",
@@ -6826,7 +5676,7 @@ const String gbTestCases = r'''
       0,
       false,
       false
-     ],
+    ],
     [
       "SavedGroups correctly pulled from context for experiment",
       {
@@ -6842,7 +5692,7 @@ const String gbTestCases = r'''
       },
       0,
       true,
-      true  
+      true
     ]
   ],
   "chooseVariation": [
@@ -6850,14 +5700,8 @@ const String gbTestCases = r'''
       "even range, 0.2",
       0.2,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       0
     ],
@@ -6865,14 +5709,8 @@ const String gbTestCases = r'''
       "even range, 0.4",
       0.4,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       0
     ],
@@ -6880,14 +5718,8 @@ const String gbTestCases = r'''
       "even range, 0.6",
       0.6,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       1
     ],
@@ -6895,14 +5727,8 @@ const String gbTestCases = r'''
       "even range, 0.8",
       0.8,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       1
     ],
@@ -6910,14 +5736,8 @@ const String gbTestCases = r'''
       "even range, 0",
       0,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       0
     ],
@@ -6925,14 +5745,8 @@ const String gbTestCases = r'''
       "even range, 0.5",
       0.5,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 1]
       ],
       1
     ],
@@ -6940,14 +5754,8 @@ const String gbTestCases = r'''
       "reduced range, 0.2",
       0.2,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       0
     ],
@@ -6955,14 +5763,8 @@ const String gbTestCases = r'''
       "reduced range, 0.4",
       0.4,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       -1
     ],
@@ -6970,14 +5772,8 @@ const String gbTestCases = r'''
       "reduced range, 0.6",
       0.6,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       1
     ],
@@ -6985,14 +5781,8 @@ const String gbTestCases = r'''
       "reduced range, 0.8",
       0.8,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       -1
     ],
@@ -7000,14 +5790,8 @@ const String gbTestCases = r'''
       "reduced range, 0.25",
       0.25,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       -1
     ],
@@ -7015,14 +5799,8 @@ const String gbTestCases = r'''
       "reduced range, 0.5",
       0.5,
       [
-        [
-          0,
-          0.25
-        ],
-        [
-          0.5,
-          0.75
-        ]
+        [0, 0.25],
+        [0.5, 0.75]
       ],
       1
     ],
@@ -7030,44 +5808,17 @@ const String gbTestCases = r'''
       "zero range",
       0.5,
       [
-        [
-          0,
-          0.5
-        ],
-        [
-          0.5,
-          0.5
-        ],
-        [
-          0.5,
-          1
-        ]
+        [0, 0.5],
+        [0.5, 0.5],
+        [0.5, 1]
       ],
       2
     ]
   ],
   "getQueryStringOverride": [
-    [
-      "empty url",
-      "my-test",
-      "",
-      2,
-      null
-    ],
-    [
-      "no query string",
-      "my-test",
-      "http://example.com",
-      2,
-      null
-    ],
-    [
-      "empty query string",
-      "my-test",
-      "http://example.com?",
-      2,
-      null
-    ],
+    ["empty url", "my-test", "", 2, null],
+    ["no query string", "my-test", "http://example.com", 2, null],
+    ["empty query string", "my-test", "http://example.com?", 2, null],
     [
       "no query string match",
       "my-test",
@@ -7075,62 +5826,14 @@ const String gbTestCases = r'''
       2,
       null
     ],
-    [
-      "invalid query string",
-      "my-test",
-      "http://example.com??&&&?#",
-      2,
-      null
-    ],
-    [
-      "simple match 0",
-      "my-test",
-      "http://example.com?my-test=0",
-      2,
-      0
-    ],
-    [
-      "simple match 1",
-      "my-test",
-      "http://example.com?my-test=1",
-      2,
-      1
-    ],
-    [
-      "negative variation",
-      "my-test",
-      "http://example.com?my-test=-1",
-      2,
-      null
-    ],
-    [
-      "float",
-      "my-test",
-      "http://example.com?my-test=2.054",
-      2,
-      null
-    ],
-    [
-      "string",
-      "my-test",
-      "http://example.com?my-test=foo",
-      2,
-      null
-    ],
-    [
-      "variation too high",
-      "my-test",
-      "http://example.com?my-test=5",
-      2,
-      null
-    ],
-    [
-      "high numVariations",
-      "my-test",
-      "http://example.com?my-test=5",
-      6,
-      5
-    ],
+    ["invalid query string", "my-test", "http://example.com??&&&?#", 2, null],
+    ["simple match 0", "my-test", "http://example.com?my-test=0", 2, 0],
+    ["simple match 1", "my-test", "http://example.com?my-test=1", 2, 1],
+    ["negative variation", "my-test", "http://example.com?my-test=-1", 2, null],
+    ["float", "my-test", "http://example.com?my-test=2.054", 2, null],
+    ["string", "my-test", "http://example.com?my-test=foo", 2, null],
+    ["variation too high", "my-test", "http://example.com?my-test=5", 2, null],
+    ["high numVariations", "my-test", "http://example.com?my-test=5", 6, 5],
     [
       "equal to numVariations",
       "my-test",
@@ -7152,215 +5855,33 @@ const String gbTestCases = r'''
       2,
       1
     ],
-    [
-      "anchor",
-      "my-test",
-      "http://example.com?my-test=1#foo",
-      2,
-      1
-    ]
+    ["anchor", "my-test", "http://example.com?my-test=1#foo", 2, 1]
   ],
   "inNamespace": [
-    [
-      "user 1, namespace1, 1",
-      "1",
-      [
-        "namespace1",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 1, namespace1, 2",
-      "1",
-      [
-        "namespace1",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 1, namespace2, 1",
-      "1",
-      [
-        "namespace2",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 1, namespace2, 2",
-      "1",
-      [
-        "namespace2",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 2, namespace1, 1",
-      "2",
-      [
-        "namespace1",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 2, namespace1, 2",
-      "2",
-      [
-        "namespace1",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 2, namespace2, 1",
-      "2",
-      [
-        "namespace2",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 2, namespace2, 2",
-      "2",
-      [
-        "namespace2",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 3, namespace1, 1",
-      "3",
-      [
-        "namespace1",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 3, namespace1, 2",
-      "3",
-      [
-        "namespace1",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 3, namespace2, 1",
-      "3",
-      [
-        "namespace2",
-        0,
-        0.4
-      ],
-      true
-    ],
-    [
-      "user 3, namespace2, 2",
-      "3",
-      [
-        "namespace2",
-        0.4,
-        1
-      ],
-      false
-    ],
-    [
-      "user 4, namespace1, 1",
-      "4",
-      [
-        "namespace1",
-        0,
-        0.4
-      ],
-      false
-    ],
-    [
-      "user 4, namespace1, 2",
-      "4",
-      [
-        "namespace1",
-        0.4,
-        1
-      ],
-      true
-    ],
-    [
-      "user 4, namespace2, 1",
-      "4",
-      [
-        "namespace2",
-        0,
-        0.4
-      ],
-      true
-    ],
-    [
-      "user 4, namespace2, 2",
-      "4",
-      [
-        "namespace2",
-        0.4,
-        1
-      ],
-      false
-    ]
+    ["user 1, namespace1, 1", "1", ["namespace1", 0, 0.4], false],
+    ["user 1, namespace1, 2", "1", ["namespace1", 0.4, 1], true],
+    ["user 1, namespace2, 1", "1", ["namespace2", 0, 0.4], false],
+    ["user 1, namespace2, 2", "1", ["namespace2", 0.4, 1], true],
+    ["user 2, namespace1, 1", "2", ["namespace1", 0, 0.4], false],
+    ["user 2, namespace1, 2", "2", ["namespace1", 0.4, 1], true],
+    ["user 2, namespace2, 1", "2", ["namespace2", 0, 0.4], false],
+    ["user 2, namespace2, 2", "2", ["namespace2", 0.4, 1], true],
+    ["user 3, namespace1, 1", "3", ["namespace1", 0, 0.4], false],
+    ["user 3, namespace1, 2", "3", ["namespace1", 0.4, 1], true],
+    ["user 3, namespace2, 1", "3", ["namespace2", 0, 0.4], true],
+    ["user 3, namespace2, 2", "3", ["namespace2", 0.4, 1], false],
+    ["user 4, namespace1, 1", "4", ["namespace1", 0, 0.4], false],
+    ["user 4, namespace1, 2", "4", ["namespace1", 0.4, 1], true],
+    ["user 4, namespace2, 1", "4", ["namespace2", 0, 0.4], true],
+    ["user 4, namespace2, 2", "4", ["namespace2", 0.4, 1], false]
   ],
   "getEqualWeights": [
-    [
-      -1,
-      []
-    ],
-    [
-      0,
-      []
-    ],
-    [
-      1,
-      [
-        1
-      ]
-    ],
-    [
-      2,
-      [
-        0.5,
-        0.5
-      ]
-    ],
-    [
-      3,
-      [
-        0.33333333,
-        0.33333333,
-        0.33333333
-      ]
-    ],
-    [
-      4,
-      [
-        0.25,
-        0.25,
-        0.25,
-        0.25
-      ]
-    ]
+    [-1, []],
+    [0, []],
+    [1, [1]],
+    [2, [0.5, 0.5]],
+    [3, [0.33333333, 0.33333333, 0.33333333]],
+    [4, [0.25, 0.25, 0.25, 0.25]]
   ],
   "decrypt": [
     [
@@ -7428,20 +5949,13 @@ const String gbTestCases = r'''
     [
       "use fallbackAttribute when missing hashAttribute",
       {
-        "attributes": {
-          "anonymousId": "123"
-        },
+        "attributes": { "anonymousId": "123" },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [
-                  0,
-                  1,
-                  2,
-                  3
-                ],
+                "variations": [0, 1, 2, 3],
                 "hashAttribute": "id",
                 "fallbackAttribute": "anonymousId"
               }
@@ -7465,9 +5979,7 @@ const String gbTestCases = r'''
       },
       {
         "anonymousId||123": {
-          "assignments": {
-            "feature__0": "3"
-          },
+          "assignments": { "feature__0": "3" },
           "attributeName": "anonymousId",
           "attributeValue": "123"
         }
@@ -7493,31 +6005,11 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -7541,9 +6033,7 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": {
-            "feature-exp__0": "1"
-          },
+          "assignments": { "feature-exp__0": "1" },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -7569,31 +6059,11 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -7624,9 +6094,7 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": {
-            "feature-exp__0": "2"
-          },
+          "assignments": { "feature-exp__0": "2" },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -7652,31 +6120,11 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -7707,74 +6155,72 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": {
-            "feature-exp__0": "1"
-          },
+          "assignments": { "feature-exp__0": "1" },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
       }
     ],
     [
-        "upgrades a sticky bucket doc from a fallbackAttribute to a hashAttribute",
-        {
-          "attributes": {
-            "id": "i123",
-            "anonymousId": "ses123",
-            "foo": "bar",
-            "country": "USA"
-          },
-          "features": {
-            "exp1": {
-              "defaultValue": "control",
-              "rules": [
-                {
-                  "key": "feature-exp",
-                  "seed": "feature-exp",
-                  "hashAttribute": "id",
-                  "fallbackAttribute": "anonymousId",
-                  "hashVersion": 2,
-                  "bucketVersion": 0,
-                  "condition": { "country": "USA" },
-                  "variations": ["control", "red", "blue"],
-                  "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
-                  "coverage": 1,
-                  "weights": [0.3334, 0.3333, 0.3333],
-                  "phase": "0"
-                }
-              ]
-            }
-          }
+      "upgrades a sticky bucket doc from a fallbackAttribute to a hashAttribute",
+      {
+        "attributes": {
+          "id": "i123",
+          "anonymousId": "ses123",
+          "foo": "bar",
+          "country": "USA"
         },
-        [
-          {
-            "attributeName": "anonymousId",
-            "attributeValue": "ses123",
-            "assignments": {
-              "feature-exp__0": "1"
-            }
+        "features": {
+          "exp1": {
+            "defaultValue": "control",
+            "rules": [
+              {
+                "key": "feature-exp",
+                "seed": "feature-exp",
+                "hashAttribute": "id",
+                "fallbackAttribute": "anonymousId",
+                "hashVersion": 2,
+                "bucketVersion": 0,
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "coverage": 1,
+                "weights": [0.3334, 0.3333, 0.3333],
+                "phase": "0"
+              }
+            ]
           }
-        ],
-        "exp1",
+        }
+      },
+      [
         {
-          "bucket": 0.9943,
-          "featureId": "exp1",
-          "hashAttribute": "id",
-          "hashUsed": true,
-          "hashValue": "i123",
-          "inExperiment": true,
-          "key": "1",
-          "stickyBucketUsed": true,
-          "value": "red",
-          "variationId": 1
-        },
-        {
-          "anonymousId||ses123": {
+          "attributeName": "anonymousId",
+          "attributeValue": "ses123",
+          "assignments": {
+            "feature-exp__0": "1"
+          }
+        }
+      ],
+      "exp1",
+      {
+        "bucket": 0.9943,
+        "featureId": "exp1",
+        "hashAttribute": "id",
+        "hashUsed": true,
+        "hashValue": "i123",
+        "inExperiment": true,
+        "key": "1",
+        "stickyBucketUsed": true,
+        "value": "red",
+        "variationId": 1
+      },
+      {
+        "anonymousId||ses123": {
           "assignments": { "feature-exp__0": "1" },
           "attributeName": "anonymousId",
-           "attributeValue": "ses123"
+          "attributeValue": "ses123"
         },
-          "id||i123": {
+        "id||i123": {
           "assignments": { "feature-exp__0": "1" },
           "attributeName": "id",
           "attributeValue": "i123"
@@ -7801,31 +6247,11 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "anonymousId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -7863,16 +6289,12 @@ const String gbTestCases = r'''
       },
       {
         "anonymousId||ses123": {
-          "assignments": {
-            "feature-exp__0": "2"
-          },
+          "assignments": { "feature-exp__0": "2" },
           "attributeName": "anonymousId",
           "attributeValue": "ses123"
         },
         "id||i123": {
-          "assignments": {
-            "feature-exp__0": "1"
-          },
+          "assignments": { "feature-exp__0": "1" },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -7897,31 +6319,11 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 3,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -7930,9 +6332,7 @@ const String gbTestCases = r'''
       },
       [
         {
-          "assignments": {
-            "feature-exp__0": "1"
-          },
+          "assignments": { "feature-exp__0": "1" },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -7981,31 +6381,11 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 3,
                 "minBucketVersion": 3,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -8014,9 +6394,7 @@ const String gbTestCases = r'''
       },
       [
         {
-          "assignments": {
-            "feature-exp__0": "1"
-          },
+          "assignments": { "feature-exp__0": "1" },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -8053,31 +6431,11 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 1,
                 "disableStickyBucketing": true,
-                "condition": {
-                  "country": "USA"
-                },
-                "variations": [
-                  "control",
-                  "red",
-                  "blue"
-                ],
-                "meta": [
-                  {
-                    "key": "0"
-                  },
-                  {
-                    "key": "1"
-                  },
-                  {
-                    "key": "2"
-                  }
-                ],
+                "condition": { "country": "USA" },
+                "variations": ["control", "red", "blue"],
+                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
                 "coverage": 1,
-                "weights": [
-                  0.3334,
-                  0.3333,
-                  0.3333
-                ],
+                "weights": [0.3334, 0.3333, 0.3333],
                 "phase": "0"
               }
             ]
@@ -8088,9 +6446,7 @@ const String gbTestCases = r'''
         {
           "attributeName": "id",
           "attributeValue": "i123",
-          "assignments": {
-            "feature-exp__0": "1"
-          }
+          "assignments": { "feature-exp__0": "1" }
         }
       ],
       "exp1",
@@ -8110,9 +6466,7 @@ const String gbTestCases = r'''
         "id||i123": {
           "attributeName": "id",
           "attributeValue": "i123",
-          "assignments": {
-            "feature-exp__0": "1"
-          }
+          "assignments": { "feature-exp__0": "1" }
         }
       }
     ]
@@ -8121,9 +6475,7 @@ const String gbTestCases = r'''
     [
       "redirects correctly without query strings",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "url": "http://www.example.com/home",
         "experiments": [
           {
@@ -8135,10 +6487,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {
@@ -8159,9 +6508,7 @@ const String gbTestCases = r'''
     [
       "redirects with query string on original url and persistQueryString enabled",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "url": "http://www.example.com/home?color=blue&food=sushi",
         "experiments": [
           {
@@ -8173,10 +6520,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {
@@ -8198,9 +6542,7 @@ const String gbTestCases = r'''
     [
       "merges query strings on original url & redirect url with param conflicts correctly when persistQueryString enabled",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "url": "http://www.example.com/home?color=blue&food=sushi&title=original",
         "experiments": [
           {
@@ -8212,10 +6554,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {
@@ -8237,9 +6576,7 @@ const String gbTestCases = r'''
     [
       "only performs a redirect for first eligible experiment when there are multiple eligible experiments",
       {
-        "attributes": {
-          "id": "1"
-        },
+        "attributes": { "id": "1" },
         "url": "http://www.example.com/home",
         "experiments": [
           {
@@ -8251,10 +6588,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {
@@ -8271,10 +6605,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {
@@ -8291,10 +6622,7 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [
-              0.1,
-              0.9
-            ],
+            "weights": [0.1, 0.9],
             "variations": [
               {},
               {

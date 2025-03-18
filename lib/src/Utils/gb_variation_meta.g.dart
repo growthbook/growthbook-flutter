@@ -34,30 +34,3 @@ Map<String, dynamic> _$GBTrackToJson(GBTrack instance) => <String, dynamic>{
       'experiment': instance.experiment,
       'featureResult': instance.featureResult,
     };
-
-GBTrackData _$GBTrackDataFromJson(Map<String, dynamic> json) => GBTrackData(
-      experiment:
-          GBExperiment.fromJson(json['experiment'] as Map<String, dynamic>),
-      experimentResult: GBExperimentResult.fromJson(
-          json['experimentResult'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$GBTrackDataToJson(GBTrackData instance) =>
-    <String, dynamic>{
-      'experiment': instance.experiment,
-      'experimentResult': instance.experimentResult,
-    };
-
-AssignedExperiment _$AssignedExperimentFromJson(Map<String, dynamic> json) =>
-    AssignedExperiment(
-      experiment:
-          GBExperiment.fromJson(json['experiment'] as Map<String, dynamic>),
-      experimentResult: GBExperimentResult.fromJson(
-          json['experimentResult'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$AssignedExperimentToJson(AssignedExperiment instance) =>
-    <String, dynamic>{
-      'experiment': instance.experiment,
-      'experimentResult': instance.experimentResult,
-    };

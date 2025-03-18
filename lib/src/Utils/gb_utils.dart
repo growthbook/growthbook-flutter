@@ -1,3 +1,6 @@
+import 'dart:collection';
+import 'dart:ffi';
+
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
@@ -535,12 +538,115 @@ class GBUtils {
     return StickyBucketDocumentChange(key, doc, hasChanged);
   }
 
+  /// Checks if an experiment variation is being forced via a URL query string.
+  /// This may not be applicable for all SDKs (e.g., mobile).
+  ///
+  /// For example, if the `id` is `"my-test"` and the URL is `http://localhost/?my-test=1`,
+  /// this function would return `1`.
+  ///
+  /// Returns `null` if any of the following conditions are met:
+  ///
+  /// - There is no query string.
+  /// - The `id` is not a key in the query string.
+  /// - The variation is not an integer.
+  /// - The variation is less than `0` or greater than or equal to `numberOfVariations`.
+  ///
+  ///
+  /// - [id] The experiment identifier.
+  /// - [urlString] The desired page URL as a string.
+  /// - [numberOfVariations] The number of variations.
+  ///
+  /// Returns an `int` or `null`.
+  static int? getQueryStringOverride(String id, String? urlString, int variations)  {
+    if (urlString == null || urlString.isEmpty) {
+      return null;
+    }
+
+    try {
+      Uri url = Uri.parse(urlString);
+      return getQueryStringOverrideFromUrl(id, url, variations);
+    } catch (e) {
+      print("Error parsing URL: $e");
+      return null;
+    }
+  }
+
+  /// Checks if an experiment variation is being forced via a URL query string.
+  /// This may not be applicable for all SDKs (e.g., mobile).
+  ///
+  /// For example, if the `id` is `"my-test"` and the URL is `http://localhost/?my-test=1`,
+  /// this function would return `1`.
+  ///
+  /// Returns `null` if any of the following conditions are met:
+  ///
+  /// - There is no query string.
+  /// - The `id` is not a key in the query string.
+  /// - The variation is not an integer.
+  /// - The variation is less than `0` or greater than or equal to `numberOfVariations`.
+  ///
+  ///
+  /// - [id] The experiment identifier.
+  /// - [url] The desired page URL.
+  /// - [numberOfVariations] The number of variations.
+  ///
+  /// Returns an `int` or `null`.
+  static int? getQueryStringOverrideFromUrl(String id, Uri url, int numberOfVariations) {
+     var queryString = url.query;
+     var queryMap = parseQuery(queryString);
+
+     String? possibleValue = queryMap[id];
+     if (possibleValue == null) {
+       return null;
+     }
+
+     try {
+       int variationValue = int.parse(possibleValue);
+       if (variationValue < 0 || variationValue >= numberOfVariations) {
+         return null;
+       }
+
+       return variationValue;
+     } catch (e) {
+       print("Error parsing integer: $e");
+       return null;
+     }
+  }
+
+  /// Parses a query string into a map of key/value pairs.
+  ///
+  /// - [queryString]: The string to parse (without the `?`).
+  ///
+  /// Returns a `Map<String, String>` containing the key/value pairs
+  /// from the query string.
+  static Map<String, String> parseQuery(String? query) {
+    Map<String, String> map = HashMap();
+    if (query == null || query.isEmpty) {
+      return map;
+    }
+    var params = query.split("&");
+    for (String param in params) {
+      try {
+        var keyValuePair = param.split("=");
+        var name = Uri.decodeComponent(keyValuePair[0]);
+        if (name.isEmpty) {
+          continue;
+        }
+        String value = (keyValuePair.length > 1) ? Uri.decodeComponent(
+            keyValuePair[1]) : "";
+        map[name] = value;
+      } catch(e) {
+        print("Error decoding query parameter: $e");
+      }
+    }
+    return map;
+  }
+
   static EvaluationContext initializeEvalContext(GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
       isCacheDisabled: false,
-      url: gbContext.hostURL,
+      hostUrl: gbContext.hostURL,
       clientKey: gbContext.apiKey,
       decryptionKey: gbContext.encryptionKey,
       stickyBucketIdentifierAttributes: gbContext.stickyBucketIdentifierAttributes,
@@ -548,6 +654,7 @@ class GBUtils {
       trackingCallBackWithUser: gbContext.trackingCallBack!,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
       featureRefreshCallback: refreshHandler,
+      url: gbContext.url,
     );
 
     var globalContext = GlobalContext(

@@ -16,7 +16,8 @@ void main() {
       int failingIndex = 0;
       final listOfFailingIndex = <int>[];
 
-      for (var item in evaluateCondition) {
+      for (int i = 0; i < evaluateCondition.length; i++) {
+        var item = evaluateCondition[i];
         if (item is List) {
           final testContext = GBContextTest.fromMap(item[1]);
 
@@ -35,6 +36,7 @@ void main() {
             backgroundSync: false,
             features: testContext.features,
             savedGroups: testContext.savedGroups,
+            url: testContext.url
           );
 
           final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
