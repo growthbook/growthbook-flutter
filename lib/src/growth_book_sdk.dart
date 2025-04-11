@@ -197,12 +197,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         context: _context,
       ),
     );
-    if (_gbFeatures != null) {
-      _context.features = _gbFeatures!;
-    }
-    if (_savedGroups != null) {
-      _context.savedGroups = _savedGroups!;
-    }
     if (_context.remoteEval) {
       refreshForRemoteEval();
     } else {
