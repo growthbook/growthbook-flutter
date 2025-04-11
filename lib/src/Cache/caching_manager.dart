@@ -1,11 +1,15 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:pointycastle/digests/sha256.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class CachingLayer {
   Future<Uint8List?> getContent({required String fileName});
+  void setCacheKey(String key);
   Future<void> saveContent({
     required String fileName,
     required Uint8List content,
@@ -13,12 +17,30 @@ abstract class CachingLayer {
 }
 
 class CachingManager extends CachingLayer {
-  static final CachingManager _instance = CachingManager._internal();
-  CachingManager._internal();
   final _key = 'GrowthBook-Cache';
 
-  factory CachingManager() {
-    return _instance;
+  CacheDirectoryWrapper _cacheDirectory =
+      DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport);
+  String _cacheKey = '';
+
+  CachingManager({String? apiKey}) {
+    if (apiKey != null) {
+      setCacheKey(apiKey);
+    }
+  }
+
+  @override
+  void setCacheKey(String key) {
+    _cacheKey = _sha256Hash(key);
+  }
+
+  String _sha256Hash(String input) {
+    final inputBytes = utf8.encode(input);
+    final digest = SHA256Digest().process(Uint8List.fromList(inputBytes));
+
+    final hashString =
+        digest.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return hashString.substring(0, 5);
   }
 
   Future<Uint8List?> getData({required String fileName}) {
@@ -32,6 +54,10 @@ class CachingManager extends CachingLayer {
     saveContent(fileName: fileName, content: content);
   }
 
+  void setCacheDirectory(CacheDirectoryWrapper directory) {
+    _cacheDirectory = directory;
+  }
+
   @override
   Future<void> saveContent({
     required String fileName,
@@ -40,11 +66,12 @@ class CachingManager extends CachingLayer {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
       final mapedContent = content.map((value) => value.toString());
-      prefs.setStringList('$_key/$fileName', mapedContent.toList());
+      prefs.setStringList('$_key/$_cacheKey/$fileName', mapedContent.toList());
       return;
     }
 
     final fileManager = File(await getTargetFile(fileName));
+
     if (fileManager.existsSync()) {
       try {
         fileManager.deleteSync();
@@ -61,8 +88,8 @@ class CachingManager extends CachingLayer {
   }
 
   Future<String> getTargetFile(String fileName) async {
-    final cacheDirectoryPath = localPath;
-    String targetFolderPath = '$cacheDirectoryPath/$_key';
+    final cacheDirectoryPath = await _cacheDirectory.path;
+    String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
     final fileManager = Directory(targetFolderPath);
     if (!fileManager.existsSync()) {
       try {
@@ -76,13 +103,11 @@ class CachingManager extends CachingLayer {
     return '$targetFolderPath/$file.txt';
   }
 
-  String get localPath => Directory.systemTemp.path;
-
   @override
   Future<Uint8List?> getContent({required String fileName}) async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
-      final result = prefs.getStringList('$_key/$fileName');
+      final result = prefs.getStringList('$_key/$_cacheKey/$fileName');
       final mapedResult = result?.map((value) => int.parse(value)).toList();
       if (mapedResult != null) return Uint8List.fromList(mapedResult);
 
@@ -108,10 +133,11 @@ class CachingManager extends CachingLayer {
       for (String key in keys) {
         prefs.remove(key);
       }
+      return;
     }
 
-    String cacheDirectoryPath = localPath;
-    String targetFolderPath = '$cacheDirectoryPath/$_key';
+    final cacheDirectoryPath = await _cacheDirectory.path;
+    String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
     final fileManager = Directory(targetFolderPath);
 
     if (fileManager.existsSync()) {

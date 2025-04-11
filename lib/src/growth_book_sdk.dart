@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
@@ -8,6 +9,9 @@ import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dar
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+
+import 'package:growthbook_sdk_flutter/src/Cache/cache_directory.dart';
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 typedef VoidCallback = void Function();
 
@@ -30,8 +34,20 @@ class GBSDKBuilderApp {
     this.stickyBucketService,
     this.backgroundSync = false,
     this.remoteEval = false,
-    this.url
-  });
+    this.url,
+    CacheDirectoryWrapper? cacheDirectory,
+    CachingManager? cachingManager,
+  })  : cacheDirectory = cacheDirectory ??
+            DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
+        cachingManager = cachingManager ??
+            CachingManager(
+              apiKey: apiKey,
+            )
+          ..setCacheDirectory(
+            cacheDirectory ??
+                DefaultCacheDirectoryWrapper(
+                    CacheDirectoryType.applicationSupport),
+          );
 
   final String apiKey;
   final String? encryptionKey;
@@ -46,36 +62,42 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
+  final CacheDirectoryWrapper cacheDirectory;
   final String? url;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
-
+  CachingManager cachingManager;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
-      apiKey: apiKey,
-      encryptionKey: encryptionKey,
-      hostURL: hostURL,
-      enabled: enable,
-      qaMode: qaMode,
-      attributes: attributes,
-      forcedVariation: forcedVariations,
-      trackingCallBack: growthBookTrackingCallBack,
-      featureUsageCallback: featureUsageCallback,
-      features: gbFeatures,
-      stickyBucketService: stickyBucketService,
-      backgroundSync: backgroundSync,
-      remoteEval: remoteEval,
-      url: url
-    );
+        apiKey: apiKey,
+        encryptionKey: encryptionKey,
+        hostURL: hostURL,
+        enabled: enable,
+        qaMode: qaMode,
+        attributes: attributes,
+        forcedVariation: forcedVariations,
+        trackingCallBack: growthBookTrackingCallBack,
+        featureUsageCallback: featureUsageCallback,
+        features: gbFeatures,
+        stickyBucketService: stickyBucketService,
+        backgroundSync: backgroundSync,
+        remoteEval: remoteEval,
+        url: url);
     final gb = GrowthBookSDK._(
       context: gbContext,
       client: client,
       onInitializationFailure: onInitializationFailure,
+      cachingManager: cachingManager,
       refreshHandler: refreshHandler,
       gbFeatures: gbFeatures,
+    );
+    cachingManager.setCacheKey(apiKey);
+    await cachingManager.saveContent(
+      fileName: Constant.featureCache,
+      content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))),
     );
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
@@ -87,13 +109,20 @@ class GBSDKBuilderApp {
     return this;
   }
 
-  GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
+    GBSDKBuilderApp setCacheDirectory(CacheDirectoryWrapper systemDirectory) {
+    cachingManager.setCacheDirectory(systemDirectory);
+    return this;
+  }
+
+  GBSDKBuilderApp setStickyBucketService(
+      StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
     return this;
   }
 
   /// Setter for featureUsageCallback. A callback that will be invoked every time a feature is viewed.
-  GBSDKBuilderApp setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback) {
+  GBSDKBuilderApp setFeatureUsageCallback(
+      GBFeatureUsageCallback featureUsageCallback) {
     this.featureUsageCallback = featureUsageCallback;
     return this;
   }
@@ -103,19 +132,21 @@ class GBSDKBuilderApp {
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
-  GrowthBookSDK._({
-    OnInitializationFailure? onInitializationFailure,
-    required GBContext context,
-    EvaluationContext? evaluationContext,
-    BaseClient? client,
-    CacheRefreshHandler? refreshHandler,
-    GBFeatures? gbFeatures,
-    SavedGroupsValues? savedGroups,
-  })  : _context = context,
+  GrowthBookSDK._(
+      {OnInitializationFailure? onInitializationFailure,
+      required GBContext context,
+      EvaluationContext? evaluationContext,
+      BaseClient? client,
+      CacheRefreshHandler? refreshHandler,
+      GBFeatures? gbFeatures,
+      SavedGroupsValues? savedGroups,
+      required CachingManager cachingManager})
+      : _context = context,
         _evaluationContext = evaluationContext,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _gbFeatures = gbFeatures,
+        _cachingManager=cachingManager,
         _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
@@ -124,6 +155,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final GBContext _context;
 
   final EvaluationContext? _evaluationContext;
+
+  final CachingManager _cachingManager;
 
   final BaseClient _baseClient;
 
@@ -175,6 +208,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   Future<void> autoRefresh() async {
     final featureViewModel = FeatureViewModel(
       backgroundSync: _context.backgroundSync,
+      manager: _cachingManager,
       encryptionKey: _context.encryptionKey ?? "",
       delegate: this,
       source: FeatureDataSource(
@@ -191,6 +225,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     final featureViewModel = FeatureViewModel(
       backgroundSync: _context.backgroundSync,
       encryptionKey: _context.encryptionKey ?? "",
+      manager: _cachingManager,
       delegate: this,
       source: FeatureDataSource(
         client: _baseClient,
@@ -218,16 +253,25 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (assigned.containsKey(key)) {
       var assignedExperiment = assigned[key];
 
-      if (assignedExperiment!.experimentResult.inExperiment != result.inExperiment ||
-          assignedExperiment.experimentResult.variationID != result.variationID) {
+      if (assignedExperiment!.experimentResult.inExperiment !=
+              result.inExperiment ||
+          assignedExperiment.experimentResult.variationID !=
+              result.variationID) {
         updateSubscriptions(key: key, experiment: experiment, result: result);
       }
     }
   }
 
+   void clearCache() {
+    _cachingManager.clearCache();
+  }
+
   void updateSubscriptions(
-      {required String key, required GBExperiment experiment, required GBExperimentResult result}) {
-    assigned[key] = AssignedExperiment(experiment: experiment, experimentResult: result);
+      {required String key,
+      required GBExperiment experiment,
+      required GBExperimentResult result}) {
+    assigned[key] =
+        AssignedExperiment(experiment: experiment, experimentResult: result);
     for (var subscription in subscriptions) {
       subscription(experiment, result);
     }
@@ -242,7 +286,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    return FeatureEvaluator().evaluateFeature(GBUtils.initializeEvalContext(context, _refreshHandler), id);
+    return FeatureEvaluator().evaluateFeature(
+        GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
@@ -253,7 +298,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     return result;
   }
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
+  Map<StickyAttributeKey, StickyAssignmentsDocument>
+      getStickyBucketAssignmentDocs() {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
@@ -276,7 +322,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _forcedFeatures = forcedFeatures;
   }
 
-  void setEncryptedFeatures(String encryptedString, String encryptionKey, [CryptoProtocol? subtle]) {
+  void setEncryptedFeatures(String encryptedString, String encryptionKey,
+      [CryptoProtocol? subtle]) {
     CryptoProtocol crypto = subtle ?? Crypto();
     var features = crypto.getFeaturesFromEncryptedFeatures(
       encryptedString,
@@ -300,7 +347,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_evaluationContext!, data, _evaluationContext!.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(_evaluationContext!, data,
+          _evaluationContext!.userContext.attributes ?? {});
     }
   }
 
@@ -308,6 +356,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (!context.remoteEval) return;
     final featureViewModel = FeatureViewModel(
       backgroundSync: _context.backgroundSync,
+      manager: _cachingManager,
       encryptionKey: _context.encryptionKey ?? "",
       delegate: this,
       source: FeatureDataSource(
@@ -319,7 +368,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     RemoteEvalModel payload = RemoteEvalModel(
       attributes: _evaluationContext?.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
-      forcedVariations: _evaluationContext?.userContext.forcedVariationsMap ?? {},
+      forcedVariations:
+          _evaluationContext?.userContext.forcedVariationsMap ?? {},
     );
 
     await featureViewModel.fetchFeatures(
@@ -331,7 +381,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    return FeatureEvaluator().evaluateFeature(GBUtils.initializeEvalContext(context, _refreshHandler), id);
+    return FeatureEvaluator().evaluateFeature(
+        GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
@@ -340,7 +391,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   @override
-  void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
+  void savedGroupsFetchFailed(
+      {required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
       if (_refreshHandler != null) {
@@ -350,7 +402,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   @override
-  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
+  void savedGroupsFetchedSuccessfully(
+      {required SavedGroupsValues savedGroups, required bool isRemote}) {
     _context.savedGroups = savedGroups;
     if (isRemote) {
       if (_refreshHandler != null) {
