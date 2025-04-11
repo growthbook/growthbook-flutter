@@ -43,7 +43,7 @@ class GBSDKBuilderApp {
             CachingManager(
               apiKey: apiKey,
             )
-          ..setSystemCacheDirectory(
+          ..setCacheDirectory(
             cacheDirectory ??
                 DefaultCacheDirectoryWrapper(
                     CacheDirectoryType.applicationSupport),
@@ -109,8 +109,8 @@ class GBSDKBuilderApp {
     return this;
   }
 
-    GBSDKBuilderApp setSystemCacheDirectory(CacheDirectoryWrapper systemDirectory) {
-    cachingManager.setSystemCacheDirectory(systemDirectory);
+    GBSDKBuilderApp setCacheDirectory(CacheDirectoryWrapper systemDirectory) {
+    cachingManager.setCacheDirectory(systemDirectory);
     return this;
   }
 
