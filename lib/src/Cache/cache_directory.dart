@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
+
 enum CacheDirectoryType {
   applicationSupport,
   caches,
@@ -49,7 +50,7 @@ class DefaultCacheDirectoryWrapper implements CacheDirectoryWrapper {
         if (Platform.isIOS || Platform.isMacOS) {
           return (await getLibraryDirectory()).path;
         } else {
-          throw UnsupportedError("Library only on iOS/macOS");
+         return (await getApplicationSupportDirectory()).path;
         }
       case CacheDirectoryType.customPath:
         return customCachePath ?? (await getApplicationSupportDirectory()).path;

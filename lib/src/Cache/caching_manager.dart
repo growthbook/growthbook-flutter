@@ -72,7 +72,6 @@ class CachingManager extends CachingLayer {
 
     final fileManager = File(await getTargetFile(fileName));
 
-    log(fileManager.path);
     if (fileManager.existsSync()) {
       try {
         fileManager.deleteSync();
