@@ -13,6 +13,7 @@ class FeatureViewModel {
     required this.delegate,
     required this.source,
     required this.encryptionKey,
+    required this.manager,
     this.backgroundSync,
   });
   final FeaturesFlowDelegate delegate;
@@ -20,7 +21,7 @@ class FeatureViewModel {
   final String encryptionKey;
   final bool? backgroundSync;
 
-  final CachingManager manager = CachingManager();
+  final CachingManager manager;
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
@@ -129,7 +130,7 @@ class FeatureViewModel {
     if (data.features != null && data.encryptedFeatures == null) {
       delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
-      final featureData = utf8Encoder.convert(jsonEncode(data));
+      final featureData = utf8Encoder.convert(jsonEncode(data.features));
       final featureDataOnUint8List = Uint8List.fromList(featureData);
       manager.putData(
         fileName: Constant.featureCache,

@@ -5,6 +5,7 @@ import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dar
 import '../Helper/gb_test_helper.dart';
 
 void main() {
+    TestWidgetsFlutterBinding.ensureInitialized();
   group('GBStickyBucketingFeatureTests', () {
     late List<dynamic> evalConditions;
     late GBStickyBucketingService service;
