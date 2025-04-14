@@ -74,8 +74,7 @@ class GBSDKBuilderApp {
       context: gbContext,
       client: client,
       onInitializationFailure: onInitializationFailure,
-      refreshHandler: refreshHandler,
-      gbFeatures: gbFeatures,
+      refreshHandler: refreshHandler
     );
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
@@ -109,14 +108,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
-    GBFeatures? gbFeatures,
-    SavedGroupsValues? savedGroups,
   })  : _context = context,
         _evaluationContext = evaluationContext,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
-        _gbFeatures = gbFeatures,
-        _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {};
@@ -130,10 +125,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final OnInitializationFailure? _onInitializationFailure;
 
   final CacheRefreshHandler? _refreshHandler;
-
-  final GBFeatures? _gbFeatures;
-
-  final SavedGroupsValues? _savedGroups;
 
   List<dynamic> _forcedFeatures;
 
