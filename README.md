@@ -68,6 +68,8 @@ There are additional properties which can be setup at the time of initialization
     qaMode: true, // Set qamode
 );
 newSdkInstance.setStickyBucketService(stickyBucketService: GBStickyBucketingService());
+newSdkInstance.setLogLevel(LogLevel logLevel); //Set logging level for logger
+newSdkInstance.setLogFormat(Formatter format); //Set FormatterTheme for log style
 
 await newSdkInstance.initialize();
 

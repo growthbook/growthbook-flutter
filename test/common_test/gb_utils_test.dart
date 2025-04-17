@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:growthbook_sdk_flutter/src/LoggingManager/logging_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 import '../Helper/gb_test_helper.dart';
@@ -103,8 +104,9 @@ void main() {
           }
         }
       }
-      customLogger(
-          'Passed Test ${passedScenarios.length} out of ${evalCondition.length}');
+      logger.info([
+        'Passed Test ${passedScenarios.length} out of ${evalCondition.length}'
+      ]);
       expect(failedScenarios.length, 0);
     });
 
@@ -125,8 +127,9 @@ void main() {
           failedScenarios.add(status);
         }
       }
-      customLogger(
-          'Passed Test ${passedScenarios.length} out of ${evaluateConditions.length}');
+      logger.info([
+        'Passed Test ${passedScenarios.length} out of ${evaluateConditions.length}'
+      ]);
       expect(failedScenarios.length, 0);
     });
 
@@ -167,8 +170,9 @@ void main() {
       expect(testResult, true);
       expect(failedScenarios.length, 0);
 
-      customLogger(
-          'Passed Test ${passedScenarios.length} out of ${evalCondition.length}');
+      logger.info([
+        'Passed Test ${passedScenarios.length} out of ${evalCondition.length}'
+      ]);
       expect(failedScenarios.length, 0);
     });
 
@@ -208,7 +212,7 @@ void main() {
               expect(actual, expectedElem);
             }
           } on DecryptionException catch (error) {
-            customLogger("message ${error.errorMessage}");
+            logger.error(["message ${error.errorMessage}"]);
 
             if (expectedElem == null) {
               expect(true, isTrue);
@@ -218,7 +222,7 @@ void main() {
           }
         }
       } catch (error) {
-        customLogger("An unexpected error occurred: $error");
+        logger.error(["An unexpected error occurred: $error"]);
       }
     });
   });

@@ -1,9 +1,8 @@
 import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
+import 'package:growthbook_sdk_flutter/src/LoggingManager/logging_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
@@ -28,7 +27,8 @@ class FeatureViewModel {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
       (data) {
-        delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: false);
+        delegate.featuresFetchedSuccessfully(
+            gbFeatures: data.features!, isRemote: false);
         prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
@@ -41,8 +41,10 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl, {bool remoteEval = false, RemoteEvalModel? payload}) async {
-    final receivedData = await manager.getContent(fileName: Constant.featureCache);
+  Future<void> fetchFeatures(String? apiUrl,
+      {bool remoteEval = false, RemoteEvalModel? payload}) async {
+    final receivedData =
+        await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData == null) {
       await source.fetchFeatures(
@@ -73,10 +75,12 @@ class FeatureViewModel {
           }
         });
       } else {
-        featureMap = FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+        featureMap =
+            FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
       }
 
-      delegate.featuresFetchedSuccessfully(gbFeatures: featureMap, isRemote: false);
+      delegate.featuresFetchedSuccessfully(
+          gbFeatures: featureMap, isRemote: false);
     }
 
     if (apiUrl != null) {
@@ -116,7 +120,7 @@ class FeatureViewModel {
   void prepareFeaturesData(FeaturedDataModel data) {
     try {
       if (data.features == null && data.encryptedFeatures == null) {
-        log("JSON is null.");
+        logger.info(["JSON is null."]);
       } else {
         handleValidFeatures(data);
       }
@@ -128,7 +132,8 @@ class FeatureViewModel {
   void handleValidFeatures(FeaturedDataModel data) {
     if (data.features != null && data.encryptedFeatures == null) {
       delegate.featuresAPIModelSuccessfully(data);
-      delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
+      delegate.featuresFetchedSuccessfully(
+          gbFeatures: data.features!, isRemote: true);
       final featureData = utf8Encoder.convert(jsonEncode(data));
       final featureDataOnUint8List = Uint8List.fromList(featureData);
       manager.putData(
@@ -137,8 +142,10 @@ class FeatureViewModel {
       );
 
       if (data.savedGroups != null) {
-        delegate.savedGroupsFetchedSuccessfully(savedGroups: data.savedGroups!, isRemote: true);
-        final savedGroupsData = utf8Encoder.convert(jsonEncode(data.savedGroups));
+        delegate.savedGroupsFetchedSuccessfully(
+            savedGroups: data.savedGroups!, isRemote: true);
+        final savedGroupsData =
+            utf8Encoder.convert(jsonEncode(data.savedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
         manager.putData(
           fileName: Constant.savedGroupsCache,
@@ -174,7 +181,8 @@ class FeatureViewModel {
       );
 
       if (extractedFeatures != null) {
-        delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: true);
+        delegate.featuresFetchedSuccessfully(
+            gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
         final featureDataOnUint8List = Uint8List.fromList(featureData);
         manager.putData(
@@ -214,8 +222,10 @@ class FeatureViewModel {
       );
 
       if (extractedSavedGroups != null) {
-        delegate.savedGroupsFetchedSuccessfully(savedGroups: extractedSavedGroups, isRemote: false);
-        final savedGroupsData = utf8Encoder.convert(jsonEncode(extractedSavedGroups));
+        delegate.savedGroupsFetchedSuccessfully(
+            savedGroups: extractedSavedGroups, isRemote: false);
+        final savedGroupsData =
+            utf8Encoder.convert(jsonEncode(extractedSavedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
         manager.putData(
           fileName: Constant.savedGroupsCache,
@@ -246,7 +256,7 @@ class FeatureViewModel {
   }
 
   void logError(String message) {
-    log("Failed to parse data. $message");
+    logger.error(["Failed to parse data. $message"]);
   }
 
   void cacheFeatures(FeaturedDataModel data) {

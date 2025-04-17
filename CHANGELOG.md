@@ -1,3 +1,6 @@
+# 3.9.12
+- Implement a custom logger with log level and format customization
+
 # 3.9.10
 -   Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
 - - Updated project functionality to align with version 0.7.1 change log:

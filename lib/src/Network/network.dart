@@ -1,7 +1,6 @@
 import 'dart:convert';
-import 'dart:developer';
-
 import 'package:dio/dio.dart';
+import 'package:growthbook_sdk_flutter/src/LoggingManager/logging_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
 
 typedef OnSuccess = void Function(Map<String, dynamic> onSuccess);
@@ -52,7 +51,11 @@ class DioClient extends BaseClient {
       final statusCode = resp.statusCode;
 
       if (data is ResponseBody) {
-        data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
+        data.stream
+            .cast<List<int>>()
+            .transform(const Utf8Decoder())
+            .transform(const SseEventTransformer())
+            .listen(
           (sseModel) {
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";
@@ -104,10 +107,10 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      log('DioException: $e');
+      logger.error(['DioException: $e']);
       onError(e, s);
     } catch (e, s) {
-      log('Unexpected error: $e');
+      logger.error(['Unexpected error: $e']);
       onError(e, s);
     }
   }

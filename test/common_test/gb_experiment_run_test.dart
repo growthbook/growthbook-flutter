@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/LoggingManager/logging_manager.dart';
 
 import '../Helper/gb_test_helper.dart';
 
@@ -54,7 +55,7 @@ void main() {
           failingIndex++;
         }
       }
-      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      logger.info(['Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}']);
       expect(failedScenarios.length, 0);
     });
   });
