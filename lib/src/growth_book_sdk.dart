@@ -308,7 +308,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_evaluationContext, data,
+      await GBUtils.refreshStickyBuckets(_context, data,
           _evaluationContext.userContext.attributes ?? {});
     }
   }
