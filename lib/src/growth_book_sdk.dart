@@ -119,7 +119,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
-        _attributeOverrides = {};
+        _attributeOverrides = {}{
+          autoRefresh();
+        }
 
   final GBContext _context;
 
