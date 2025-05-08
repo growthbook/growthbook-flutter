@@ -5,6 +5,7 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 class ExperimentEvaluator {
   // Takes Context and Experiment and returns ExperimentResult
@@ -73,7 +74,7 @@ class ExperimentEvaluator {
     final hashValue = hashAttributeAndValue[1];
 
     if (hashValue.isEmpty || hashValue == "null") {
-      log('Skip because missing hashAttribute');
+      logger.w('Skip because missing hashAttribute');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -105,7 +106,7 @@ class ExperimentEvaluator {
     if (!foundStickyBucket) {
       if (experiment.filters != null) {
         if (GBUtils.isFilteredOut(experiment.filters!, context.userContext.attributes ?? {})) {
-          log('Skip because of filters');
+          logger.w('Skip because of filters');
           return _getExperimentResult(
             featureId: featureId,
             context: context,
@@ -118,7 +119,7 @@ class ExperimentEvaluator {
         final namespace = GBUtils.getGBNameSpace(experiment.namespace ?? []);
         if (namespace != null) {
           if (!GBUtils.inNamespace(hashValue, namespace)) {
-            log('Skip because of namespace');
+            logger.w('Skip because of namespace');
             return _getExperimentResult(
               featureId: featureId,
               context: context,
@@ -168,7 +169,7 @@ class ExperimentEvaluator {
           );
 
           if (!evalCondition) {
-            log("Feature blocked by prerequisite");
+            logger.w("Feature blocked by prerequisite");
             final value = _getExperimentResult(
               featureId: featureId,
               context: context,
@@ -189,7 +190,7 @@ class ExperimentEvaluator {
     );
 
     if (hash == null) {
-      log('Skip because of invalid hash version');
+      logger.w('Skip because of invalid hash version');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -210,7 +211,7 @@ class ExperimentEvaluator {
     }
 
     if (stickyBucketVersionIsBlocked) {
-      log('Skip because sticky bucket version is blocked');
+      logger.w('Skip because sticky bucket version is blocked');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -223,7 +224,7 @@ class ExperimentEvaluator {
     }
 
     if (assigned < 0) {
-      log('Skip because of coverage');
+      logger.w('Skip because of coverage');
       return _getExperimentResult(
         featureId: featureId,
         context: context,

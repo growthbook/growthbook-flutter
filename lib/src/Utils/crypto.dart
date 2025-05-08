@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:pointycastle/export.dart';
 
 // Dart equivalent of CryptoProtocol abstract class
@@ -82,7 +83,7 @@ class Crypto implements CryptoProtocol {
       final List<int> plainTextBuffer = decrypt(keyBase64, ivBase64, cipherTextBase64);
       return jsonDecode(utf8.decode(plainTextBuffer));
     } catch (e) {
-      log('Error decrypting: $e');
+      logger.e('Error decrypting: $e');
     }
     return null;
   }

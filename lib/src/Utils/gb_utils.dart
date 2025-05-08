@@ -10,6 +10,7 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit
@@ -565,7 +566,7 @@ class GBUtils {
       Uri url = Uri.parse(urlString);
       return getQueryStringOverrideFromUrl(id, url, variations);
     } catch (e) {
-      print("Error parsing URL: $e");
+      logger.e("Error parsing URL: $e");
       return null;
     }
   }
