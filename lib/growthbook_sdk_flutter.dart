@@ -12,3 +12,4 @@ export 'src/Network/network.dart';
 export 'src/Utils/utils.dart';
 export 'src/growth_book_sdk.dart';
 export 'src/Cache/cache_directory.dart';
+export 'src/Cache/caching_layer.dart';

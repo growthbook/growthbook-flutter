@@ -10,7 +10,6 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_contex
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
-import 'package:growthbook_sdk_flutter/src/Cache/cache_directory.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 typedef VoidCallback = void Function();
@@ -36,18 +35,17 @@ class GBSDKBuilderApp {
     this.remoteEval = false,
     this.url,
     CacheDirectoryWrapper? cacheDirectory,
-    CachingManager? cachingManager,
-  })  : cacheDirectory = cacheDirectory ??
-            DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
-        cachingManager = cachingManager ??
-            CachingManager(
-              apiKey: apiKey,
-            )
-          ..setCacheDirectory(
-            cacheDirectory ??
-                DefaultCacheDirectoryWrapper(
-                    CacheDirectoryType.applicationSupport),
-          );
+    CachingLayer? cachingManager,
+  }) {
+    if (cachingManager != null) {
+      this.cachingManager = cachingManager;
+    } else {
+      this.cachingManager = CachingManager(
+        apiKey: apiKey,
+      )..setCacheDirectory(cacheDirectory ??
+          DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
+    }
+  }
 
   final String apiKey;
   final String? encryptionKey;
@@ -62,13 +60,12 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
-  final CacheDirectoryWrapper cacheDirectory;
   final String? url;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
-  CachingManager cachingManager;
+  late CachingLayer cachingManager;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -109,8 +106,8 @@ class GBSDKBuilderApp {
     return this;
   }
 
-    GBSDKBuilderApp setCacheDirectory(CacheDirectoryWrapper systemDirectory) {
-    cachingManager.setCacheDirectory(systemDirectory);
+   GBSDKBuilderApp setCachingManager(CachingLayer cachingManager) {
+    this.cachingManager = cachingManager;
     return this;
   }
 
@@ -140,13 +137,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       CacheRefreshHandler? refreshHandler,
       GBFeatures? gbFeatures,
       SavedGroupsValues? savedGroups,
-      required CachingManager cachingManager})
+      required CachingLayer cachingManager})
       : _context = context,
         _evaluationContext = evaluationContext,
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _gbFeatures = gbFeatures,
-        _cachingManager=cachingManager,
+        _cachingManager = cachingManager,
         _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
@@ -156,7 +153,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final EvaluationContext? _evaluationContext;
 
-  final CachingManager _cachingManager;
+  final CachingLayer _cachingManager;
 
   final BaseClient _baseClient;
 
@@ -262,7 +259,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-   void clearCache() {
+  void clearCache() {
     _cachingManager.clearCache();
   }
 

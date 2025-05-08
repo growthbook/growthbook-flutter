@@ -7,14 +7,6 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:pointycastle/digests/sha256.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-abstract class CachingLayer {
-  Future<Uint8List?> getContent({required String fileName});
-  void setCacheKey(String key);
-  Future<void> saveContent({
-    required String fileName,
-    required Uint8List content,
-  });
-}
 
 class CachingManager extends CachingLayer {
   final _key = 'GrowthBook-Cache';
@@ -45,13 +37,6 @@ class CachingManager extends CachingLayer {
 
   Future<Uint8List?> getData({required String fileName}) {
     return getContent(fileName: fileName);
-  }
-
-  void putData({
-    required String fileName,
-    required Uint8List content,
-  }) {
-    saveContent(fileName: fileName, content: content);
   }
 
   void setCacheDirectory(CacheDirectoryWrapper directory) {
@@ -126,6 +111,7 @@ class CachingManager extends CachingLayer {
     return null;
   }
 
+  @override
   Future<void> clearCache() async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
