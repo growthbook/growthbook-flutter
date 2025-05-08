@@ -54,7 +54,7 @@ class CachingManager extends CachingLayer {
     saveContent(fileName: fileName, content: content);
   }
 
-  void setSystemCacheDirectory(CacheDirectoryWrapper directory) {
+  void setCacheDirectory(CacheDirectoryWrapper directory) {
     _cacheDirectory = directory;
   }
 

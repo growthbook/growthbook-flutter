@@ -20,7 +20,7 @@ void main() {
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
       CachingManager cachingManager = CachingManager();
-      cachingManager.setSystemCacheDirectory(
+      cachingManager.setCacheDirectory(
           MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
 
       setUp(

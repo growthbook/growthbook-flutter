@@ -12,7 +12,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('Caching manager test', () {
     final manager = CachingManager();
-    manager.setSystemCacheDirectory(
+    manager.setCacheDirectory(
         MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
     test('Caching file name', () async {
       const String fileName = "gb-features.txt";
