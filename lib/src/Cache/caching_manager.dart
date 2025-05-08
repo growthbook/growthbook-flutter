@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Utils/logger.dart';
+
 abstract class CachingLayer {
   Future<Uint8List?> getContent({required String fileName});
   Future<void> saveContent({
@@ -49,14 +51,14 @@ class CachingManager extends CachingLayer {
       try {
         fileManager.deleteSync();
       } catch (e) {
-        log('Failed to remove file: $e');
+        logger.e('Failed to remove file: $e');
       }
     }
     try {
       fileManager.writeAsBytesSync(content);
-      log('Content saved successfully to: $fileName');
+      logger.i('Content saved successfully to: $fileName');
     } catch (e) {
-      log('Failed to save content: $e');
+      logger.e('Failed to save content: $e');
     }
   }
 
@@ -68,7 +70,7 @@ class CachingManager extends CachingLayer {
       try {
         fileManager.createSync(recursive: true);
       } catch (e) {
-        log('Failed to create directory: $e');
+        logger.e('Failed to create directory: $e');
       }
     }
     String file = fileName.replaceAll('.txt', '');
@@ -96,7 +98,7 @@ class CachingManager extends CachingLayer {
         return await file.readAsBytes();
       }
     } catch (e) {
-      log('Failed to get content: $e');
+      logger.e('Failed to get content: $e');
     }
     return null;
   }
@@ -117,11 +119,12 @@ class CachingManager extends CachingLayer {
     if (fileManager.existsSync()) {
       try {
         fileManager.deleteSync(recursive: true);
+        logger.i('Cache cleared successfully.');
       } catch (e) {
-        log('Failed to clear cache: $e');
+        logger.e('Failed to clear cache: $e');
       }
     } else {
-      log('Cache directory does not exist. Nothing to clear.');
+      logger.w('Cache directory does not exist. Nothing to clear.');
     }
   }
 }

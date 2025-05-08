@@ -4,6 +4,8 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
 
+import '../Utils/logger.dart';
+
 typedef OnSuccess = void Function(Map<String, dynamic> onSuccess);
 typedef OnError = void Function(Object error, StackTrace stackTrace);
 
@@ -104,10 +106,10 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      log('DioException: $e');
+      logger.e('DioException: $e');
       onError(e, s);
     } catch (e, s) {
-      log('Unexpected error: $e');
+      logger.e('Unexpected error: $e');
       onError(e, s);
     }
   }
