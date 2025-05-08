@@ -1,11 +1,19 @@
+# 3.9.11
+- Added `CacheDirectoryType` enum and `CacheDirectoryWrapper`
+- Added cache key for storing cache entries
+- Removed singleton pattern from `CachingManager`
+- Enabled setting of system and custom cache directories
+- Added mock cache directory for testing
+- Updated tests to use mock cache directory
+
 # 3.9.10
--   Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
-- - Updated project functionality to align with version 0.7.1 change log:
-- - Added feature rule ID to the FeatureResult object and updated all related test cases.
-- - Added new tests for pre-requisite edge cases.
-- - Ensured only known properties are copied from feature rules to experiments.
-- - Expanded evalCondition tests to cover null/false edge cases.
-- - Added test cases for URL redirects.
+- Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
+- Updated project functionality to align with version 0.7.1 change log:
+- Added feature rule ID to the FeatureResult object and updated all related test cases.
+- Added new tests for pre-requisite edge cases.
+- Ensured only known properties are copied from feature rules to experiments.
+- Expanded evalCondition tests to cover null/false edge cases.
+- Added test cases for URL redirects.
 
 # 3.9.9
 - Enable Multi Context Support
