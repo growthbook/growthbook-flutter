@@ -33,7 +33,6 @@ class DefaultCacheDirectoryWrapper implements CacheDirectoryWrapper {
     }
   }
 
-
   @override
   Future<String> get path async {
     if (kIsWeb) {
@@ -50,10 +49,15 @@ class DefaultCacheDirectoryWrapper implements CacheDirectoryWrapper {
         if (Platform.isIOS || Platform.isMacOS) {
           return (await getLibraryDirectory()).path;
         } else {
-         return (await getApplicationSupportDirectory()).path;
+          return (await getApplicationSupportDirectory()).path;
         }
       case CacheDirectoryType.customPath:
-        return customCachePath ?? (await getApplicationSupportDirectory()).path;
+        if (customCachePath != null &&
+            await Directory(customCachePath!).exists()) {
+          return customCachePath!;
+        } else {
+          return (await getApplicationSupportDirectory()).path;
+        }
     }
   }
 
