@@ -7,7 +7,6 @@ class GBContext {
   GBContext({
     this.apiKey,
     this.encryptionKey,
-    this.hostURL,
     this.enabled,
     this.attributes,
     this.forcedVariation,
@@ -29,9 +28,6 @@ class GBContext {
 
   /// Encryption key for encrypted features.
   String? encryptionKey;
-
-  /// Host URL for GrowthBook
-  String? hostURL;
 
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
@@ -78,19 +74,19 @@ class GBContext {
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
 
-  String? getFeaturesURL() {
-    if (hostURL != null && apiKey != null) {
-      return '$hostURL/api/features/$apiKey';
-    } else {
-      return null;
-    }
-  }
+  // String? getFeaturesURL() {
+  //   if (hostURL != null && apiKey != null) {
+  //     return '$hostURL/api/features/$apiKey';
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
-  String? getRemoteEvalUrl() {
-    if (hostURL != null && apiKey != null) {
-      return '$hostURL/api/eval/$apiKey';
-    } else {
-      return null;
-    }
-  }
+  // String? getRemoteEvalUrl() {
+  //   if (hostURL != null && apiKey != null) {
+  //     return '$hostURL/api/eval/$apiKey';
+  //   } else {
+  //     return null;
+  //   }
+  // }
 }

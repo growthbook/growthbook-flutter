@@ -1,52 +1,61 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
 typedef FeatureFetchSuccessCallBack = void Function(
-    FeaturedDataModel featuredDataModel,
-    );
+  FeaturedDataModel featuredDataModel,
+);
 
 abstract class FeaturesFlowDelegate {
-  void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote});
+  void featuresFetchedSuccessfully(
+      {required GBFeatures gbFeatures, required bool isRemote});
   void featuresAPIModelSuccessfully(FeaturedDataModel model);
   void featuresFetchFailed({required GBError? error, required bool isRemote});
-  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote});
-  void savedGroupsFetchFailed({required GBError? error, required bool isRemote});
+  void savedGroupsFetchedSuccessfully(
+      {required SavedGroupsValues savedGroups, required bool isRemote});
+  void savedGroupsFetchFailed(
+      {required GBError? error, required bool isRemote});
 }
 
 class FeatureDataSource {
   FeatureDataSource({
     required this.context,
     required this.client,
+    required this.gbOptions,
   });
   final GBContext context;
+  final GBOptions gbOptions;
   final BaseClient client;
 
   Future<void> fetchFeatures(
-      FeatureFetchSuccessCallBack onSuccess,
-      OnError onError, {
-        FeatureRefreshStrategy featureRefreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
-      }) async {
-
+    FeatureFetchSuccessCallBack onSuccess,
+    OnError onError, {
+    FeatureRefreshStrategy featureRefreshStrategy =
+        FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
+  }) async {
     featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS
         ? await client.consumeSseConnections(
-      _getEndpoint(context: context, featureRefreshStrategy: featureRefreshStrategy),
-          (response) => onSuccess(
-        FeaturedDataModel.fromJson(response),
-      ),
-      onError,
-    )
+            _getEndpoint(
+                context: context,
+                featureRefreshStrategy: featureRefreshStrategy),
+            (response) => onSuccess(
+              FeaturedDataModel.fromJson(response),
+            ),
+            onError,
+          )
         : await client.consumeGetRequest(
-      _getEndpoint(context: context, featureRefreshStrategy: featureRefreshStrategy),
-          (response) => onSuccess(
-        FeaturedDataModel.fromJson(response),
-      ),
-      onError,
-    );
+            _getEndpoint(
+                context: context,
+                featureRefreshStrategy: featureRefreshStrategy),
+            (response) => onSuccess(
+              FeaturedDataModel.fromJson(response),
+            ),
+            onError,
+          );
   }
 
   Future<void> fetchRemoteEval({
-    required String apiUrl,
     required RemoteEvalModel? params,
     required FeatureFetchSuccessCallBack onSuccess,
     required OnError onError,
@@ -58,9 +67,12 @@ class FeatureDataSource {
     ).toJson();
 
     await client.consumePostRequest(
-      apiUrl,
+      _getEndpoint(
+        context: context,
+        featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL,
+      ),
       remoteEvalJson,
-          (response) => onSuccess(
+      (response) => onSuccess(
         FeaturedDataModel.fromJson(response),
       ),
       onError,
@@ -69,8 +81,9 @@ class FeatureDataSource {
 
   String _getEndpoint(
       {required GBContext context,
-        FeatureRefreshStrategy featureRefreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE}
-      ) {
-    return FeatureURLBuilder.buildUrl(context.hostURL, context.apiKey, featureRefreshStrategy: featureRefreshStrategy);
+      FeatureRefreshStrategy featureRefreshStrategy =
+          FeatureRefreshStrategy.STALE_WHILE_REVALIDATE}) {
+    return FeatureURLBuilder(gbOptions: gbOptions).buildUrl(context.apiKey,
+        featureRefreshStrategy: featureRefreshStrategy);
   }
 }
