@@ -73,20 +73,4 @@ class GBContext {
 
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
-
-  // String? getFeaturesURL() {
-  //   if (hostURL != null && apiKey != null) {
-  //     return '$hostURL/api/features/$apiKey';
-  //   } else {
-  //     return null;
-  //   }
-  // }
-
-  // String? getRemoteEvalUrl() {
-  //   if (hostURL != null && apiKey != null) {
-  //     return '$hostURL/api/eval/$apiKey';
-  //   } else {
-  //     return null;
-  //   }
-  // }
 }

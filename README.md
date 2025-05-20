@@ -39,6 +39,7 @@ Integration is super easy:
 2. Initialize the SDK at the start of your app using the API key, as below.
 
 Now you can start/stop tests, adjust coverage and variation weights, and apply a winning variation to 100% of traffic, all within the Growth Book App without deploying code changes to your site.
+You can differentiate streaming host URL from API host by setting different URLs
 
 ```dart
 final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
@@ -47,7 +48,8 @@ final GrowthBookSDK sdkInstance = await GBSDKBuilderApp(
     /// Specify attributes.
   },
   growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
-  hostURL: '<GrowthBook_URL>',
+  apiHost: '<GrowthBook_URL>', 
+  streamingHost: '<GrowthBook_StreamingHost_URL>',
   backroundSync: Bool?
 ).initialize();
 
@@ -63,7 +65,8 @@ There are additional properties which can be setup at the time of initialization
     },
     client: NetworkClient(), // Provide network dispatcher.
     growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
-    hostURL: '<GrowthBook_URL>',
+    apiHost: '<GrowthBook_URL>',
+    streamingHost: '<GrowthBook_StreamingHost_URL>',
     forcedVariations: {} // Optional provide force variation.
     qaMode: true, // Set qamode
 );
@@ -113,7 +116,6 @@ await newSdkInstance.initialize();
 class GBContext {
   GBContext({
     this.apiKey,
-    this.hostURL,
     this.enabled,
     this.attributes,
     this.forcedVariation,
@@ -124,9 +126,6 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
-
-  /// Host URL for GrowthBook
-  String? hostURL;
 
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
@@ -152,6 +151,19 @@ class GBContext {
 }
 ```
 
+
+```dart
+/// Defines the GrowthBook URL options, that helps to differentiate streaming host URL from API host
+class GBOptions {
+
+  /// Registered API host URL for GrowthBook SDK.
+  String apiHost;
+
+  /// Registered streaming host URL for GrowthBook SDK.
+  String? streamingHost;
+}
+
+```
 
 
 ```dart
