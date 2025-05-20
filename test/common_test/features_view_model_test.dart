@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 
 import '../mocks/network_mock.dart';
@@ -15,12 +16,14 @@ void main() {
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
+      GBOptions testGbOptions = GBOptions(
+        apiHost: testHostURL,
+      );
 
       setUp(
         () {
           context = GBContext(
             apiKey: testApiKey,
-            hostURL: testHostURL,
             attributes: attr,
             enabled: true,
             forcedVariation: {},
@@ -39,9 +42,10 @@ void main() {
             source: FeatureDataSource(
               client: const MockNetworkClient(),
               context: context,
+              gbOptions: testGbOptions,
             ),
           );
-          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+          await featureViewModel.fetchFeatures();
           expect(dataSourceMock.isSuccess, true);
         },
       );
@@ -51,12 +55,12 @@ void main() {
           encryptionKey: "3tfeoyW0wlo47bDnbWDkxg==",
           delegate: dataSourceMock,
           source: FeatureDataSource(
-            client: const MockNetworkClient(),
-            context: context,
-          ),
+              client: const MockNetworkClient(),
+              context: context,
+              gbOptions: testGbOptions),
         );
 
-        await featureViewModel.fetchFeatures(context.getFeaturesURL());
+        await featureViewModel.fetchFeatures();
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -67,6 +71,7 @@ void main() {
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,
+            gbOptions: testGbOptions,
           ),
         );
 
@@ -75,11 +80,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures(
+            remoteEval: true, payload: payload);
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -88,6 +96,7 @@ void main() {
           encryptionKey: '',
           delegate: dataSourceMock,
           source: FeatureDataSource(
+            gbOptions: testGbOptions,
             client: const MockNetworkClient(
               error: true,
             ),
@@ -100,11 +109,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures(
+            remoteEval: true, payload: payload);
 
         expect(dataSourceMock.isError, true);
       });
@@ -112,6 +124,7 @@ void main() {
         final viewModel = FeatureViewModel(
           delegate: dataSourceMock,
           source: FeatureDataSource(
+            gbOptions: testGbOptions,
             client: const MockNetworkClient(
               error: true,
             ),
@@ -120,7 +133,7 @@ void main() {
           encryptionKey: '',
         );
 
-        await viewModel.fetchFeatures('');
+        await viewModel.fetchFeatures();
         expect(dataSourceMock.isError, true);
       });
     },
