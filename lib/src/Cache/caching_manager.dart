@@ -39,6 +39,7 @@ class CachingManager extends CachingLayer {
     return getContent(fileName: fileName);
   }
 
+  @override
   void setCacheDirectory(CacheDirectoryWrapper directory) {
     _cacheDirectory = directory;
   }

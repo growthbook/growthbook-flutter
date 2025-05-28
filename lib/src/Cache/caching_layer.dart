@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 abstract class CachingLayer {
   Future<Uint8List?> getContent({required String fileName});
@@ -8,4 +9,5 @@ abstract class CachingLayer {
     required Uint8List content,
   });
   Future<void> clearCache();
+  void setCacheDirectory(CacheDirectoryWrapper directory);
 }

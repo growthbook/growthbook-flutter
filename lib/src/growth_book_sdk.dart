@@ -36,16 +36,15 @@ class GBSDKBuilderApp {
     this.url,
     CacheDirectoryWrapper? cacheDirectory,
     CachingLayer? cachingManager,
-  }) {
-    if (cachingManager != null) {
-      this.cachingManager = cachingManager;
-    } else {
-      this.cachingManager = CachingManager(
-        apiKey: apiKey,
-      )..setCacheDirectory(cacheDirectory ??
-          DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
-    }
-  }
+  })  : cacheDirectory = cacheDirectory ??
+            DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
+        cachingManager = cachingManager ??
+            CachingManager(
+              apiKey: apiKey,
+            )
+          ..setCacheDirectory(cacheDirectory ??
+              DefaultCacheDirectoryWrapper(
+                  CacheDirectoryType.applicationSupport));
 
   final String apiKey;
   final String? encryptionKey;
@@ -60,12 +59,12 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
+  final CacheDirectoryWrapper cacheDirectory;
   final String? url;
-
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
-  late CachingLayer cachingManager;
+  CachingLayer cachingManager;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -93,9 +92,8 @@ class GBSDKBuilderApp {
     );
     cachingManager.setCacheKey(apiKey);
     await cachingManager.saveContent(
-      fileName: Constant.featureCache,
-      content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))),
-    );
+        fileName: Constant.featureCache,
+        content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -106,8 +104,13 @@ class GBSDKBuilderApp {
     return this;
   }
 
-   GBSDKBuilderApp setCachingManager(CachingLayer cachingManager) {
+  GBSDKBuilderApp setCachingManager(CachingLayer cachingManager) {
     this.cachingManager = cachingManager;
+    return this;
+  }
+
+  GBSDKBuilderApp setCacheDirectory(CacheDirectoryWrapper systemDirectory) {
+    cachingManager.setCacheDirectory(systemDirectory);
     return this;
   }
 
