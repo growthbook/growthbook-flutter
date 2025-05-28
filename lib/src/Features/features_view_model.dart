@@ -13,6 +13,7 @@ class FeatureViewModel {
     required this.delegate,
     required this.source,
     required this.encryptionKey,
+    required this.manager,
     this.backgroundSync,
   });
   final FeaturesFlowDelegate delegate;
@@ -20,7 +21,7 @@ class FeatureViewModel {
   final String encryptionKey;
   final bool? backgroundSync;
 
-  final CachingManager manager = CachingManager();
+  final CachingLayer manager;
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
@@ -129,9 +130,9 @@ class FeatureViewModel {
     if (data.features != null && data.encryptedFeatures == null) {
       delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(gbFeatures: data.features!, isRemote: true);
-      final featureData = utf8Encoder.convert(jsonEncode(data));
+      final featureData = utf8Encoder.convert(jsonEncode(data.features));
       final featureDataOnUint8List = Uint8List.fromList(featureData);
-      manager.putData(
+      manager.saveContent(
         fileName: Constant.featureCache,
         content: featureDataOnUint8List,
       );
@@ -140,7 +141,7 @@ class FeatureViewModel {
         delegate.savedGroupsFetchedSuccessfully(savedGroups: data.savedGroups!, isRemote: true);
         final savedGroupsData = utf8Encoder.convert(jsonEncode(data.savedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: savedGroupsDataOnUint8List,
         );
@@ -177,7 +178,7 @@ class FeatureViewModel {
         delegate.featuresFetchedSuccessfully(gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
         final featureDataOnUint8List = Uint8List.fromList(featureData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.featureCache,
           content: featureDataOnUint8List,
         );
@@ -217,7 +218,7 @@ class FeatureViewModel {
         delegate.savedGroupsFetchedSuccessfully(savedGroups: extractedSavedGroups, isRemote: false);
         final savedGroupsData = utf8Encoder.convert(jsonEncode(extractedSavedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: savedGroupsDataOnUint8List,
         );
@@ -252,7 +253,7 @@ class FeatureViewModel {
   void cacheFeatures(FeaturedDataModel data) {
     final featureData = utf8Encoder.convert(jsonEncode(data.features));
     final featureDataOnUint8List = Uint8List.fromList(featureData);
-    manager.putData(
+    manager.saveContent(
       fileName: Constant.featureCache,
       content: featureDataOnUint8List,
     );
