@@ -300,7 +300,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       attributes: _evaluationContext?.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
       forcedVariations:
-          _evaluationContext?.userContext.forcedVariationsMap ?? {},
+          _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
 
     await _featureViewModel.fetchFeatures(
@@ -312,7 +312,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
+     _featureViewModel.fetchFeatures();
     return FeatureEvaluator().evaluateFeature(
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }

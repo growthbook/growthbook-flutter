@@ -52,38 +52,31 @@ class FeatureViewModel {
         await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData == null || isCacheExpired()) {
-      await source.fetchFeatures(
-        (data) {
-          delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features!,
-            isRemote: false,
-          );
-          refreshExpiresAt();
-          cacheFeatures(data);
-        },
-        (e, s) => delegate.featuresFetchFailed(
-          error: GBError(
-            error: e,
-            stackTrace: s.toString(),
-          ),
-          isRemote: true,
-        ),
-      );
-    } else {
-      String receivedDataJson = utf8Decoder.convert(receivedData);
-      final receiveFeatureJsonMap = json.decode(receivedDataJson);
+      await source.fetchFeatures((data) {
+        delegate.featuresFetchedSuccessfully(
+          gbFeatures: data.features!,
+          isRemote: false,
+        );
+        refreshExpiresAt();
+        cacheFeatures(data);
+      }, (e, s) {
+        if (receivedData != null) {
+          GBFeatures featureMap = fetchCachedFeatures(receivedData);
 
-      GBFeatures featureMap = {};
-      if (encryptionKey.isNotEmpty) {
-        receiveFeatureJsonMap.forEach((key, value) {
-          if (value is Map<String, dynamic>) {
-            featureMap[key] = GBFeature.fromJson(value);
-          }
-        });
-      } else {
-        featureMap =
-            FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
-      }
+          delegate.featuresFetchedSuccessfully(
+              gbFeatures: featureMap, isRemote: false);
+        } else {
+          delegate.featuresFetchFailed(
+            error: GBError(
+              error: e,
+              stackTrace: s.toString(),
+            ),
+            isRemote: true,
+          );
+        }
+      });
+    } else {
+      GBFeatures featureMap = fetchCachedFeatures(receivedData);
 
       delegate.featuresFetchedSuccessfully(
           gbFeatures: featureMap, isRemote: false);
@@ -107,6 +100,24 @@ class FeatureViewModel {
           });
       refreshExpiresAt();
     }
+  }
+
+  Map<String, GBFeature> fetchCachedFeatures(Uint8List receivedData) {
+    String receivedDataJson = utf8Decoder.convert(receivedData);
+    final receiveFeatureJsonMap = json.decode(receivedDataJson);
+
+    GBFeatures featureMap = {};
+    if (encryptionKey.isNotEmpty) {
+      receiveFeatureJsonMap.forEach((key, value) {
+        if (value is Map<String, dynamic>) {
+          featureMap[key] = GBFeature.fromJson(value);
+        }
+      });
+    } else {
+      featureMap =
+          FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+    }
+    return featureMap;
   }
 
   void prepareFeaturesData(FeaturedDataModel data) {
