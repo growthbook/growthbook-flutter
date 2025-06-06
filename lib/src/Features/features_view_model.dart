@@ -51,35 +51,40 @@ class FeatureViewModel {
     final receivedData =
         await manager.getContent(fileName: Constant.featureCache);
 
-    if (receivedData == null || isCacheExpired()) {
-      await source.fetchFeatures((data) {
-        delegate.featuresFetchedSuccessfully(
-          gbFeatures: data.features!,
-          isRemote: false,
-        );
-        refreshExpiresAt();
-        cacheFeatures(data);
-      }, (e, s) {
-        if (receivedData != null) {
-          GBFeatures featureMap = fetchCachedFeatures(receivedData);
+    if (receivedData != null) {
+      final featureMap = _fetchCachedFeatures(receivedData);
+      delegate.featuresFetchedSuccessfully(
+        gbFeatures: featureMap,
+        isRemote: false,
+      );
 
-          delegate.featuresFetchedSuccessfully(
-              gbFeatures: featureMap, isRemote: false);
-        } else {
-          delegate.featuresFetchFailed(
+      if (isCacheExpired()) {
+        source.fetchFeatures(
+          (data) {
+            _handleSuccess(data);
+          },
+          (e, s) => delegate.featuresFetchFailed(
             error: GBError(
               error: e,
               stackTrace: s.toString(),
             ),
             isRemote: true,
-          );
-        }
-      });
+          ),
+        );
+      }
     } else {
-      GBFeatures featureMap = fetchCachedFeatures(receivedData);
-
-      delegate.featuresFetchedSuccessfully(
-          gbFeatures: featureMap, isRemote: false);
+      await source.fetchFeatures(
+        (data) {
+          _handleSuccess(data);
+        },
+        (e, s) => delegate.featuresFetchFailed(
+          error: GBError(
+            error: e,
+            stackTrace: s.toString(),
+          ),
+          isRemote: true,
+        ),
+      );
     }
 
     if (apiUrl != null && remoteEval) {
@@ -98,11 +103,21 @@ class FeatureViewModel {
               isRemote: true,
             );
           });
-      refreshExpiresAt();
+      
     }
   }
 
-  Map<String, GBFeature> fetchCachedFeatures(Uint8List receivedData) {
+  void _handleSuccess(FeaturedDataModel data) {
+  delegate.featuresFetchedSuccessfully(
+    gbFeatures: data.features!,
+    isRemote: false,
+  );
+  cacheFeatures(data);
+  refreshExpiresAt();
+}
+
+
+  Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
     String receivedDataJson = utf8Decoder.convert(receivedData);
     final receiveFeatureJsonMap = json.decode(receivedDataJson);
 
