@@ -88,7 +88,6 @@ class GBSDKBuilderApp {
       onInitializationFailure: onInitializationFailure,
       cachingManager: cachingManager,
       refreshHandler: refreshHandler,
-      gbFeatures: gbFeatures,
     );
     cachingManager.setCacheKey(apiKey);
     await cachingManager.saveContent(
@@ -132,29 +131,37 @@ class GBSDKBuilderApp {
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
-  GrowthBookSDK._(
-      {OnInitializationFailure? onInitializationFailure,
-      required GBContext context,
-      EvaluationContext? evaluationContext,
-      BaseClient? client,
-      CacheRefreshHandler? refreshHandler,
-      GBFeatures? gbFeatures,
-      SavedGroupsValues? savedGroups,
-      required CachingLayer cachingManager})
-      : _context = context,
-        _evaluationContext = evaluationContext,
+  GrowthBookSDK._({
+    OnInitializationFailure? onInitializationFailure,
+    required GBContext context,
+    EvaluationContext? evaluationContext,
+    BaseClient? client,
+    CacheRefreshHandler? refreshHandler,
+    required CachingLayer cachingManager
+  })  : _context = context,
+        _evaluationContext =
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
-        _gbFeatures = gbFeatures,
         _cachingManager = cachingManager,
-        _savedGroups = savedGroups,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
-        _attributeOverrides = {};
+        _attributeOverrides = {} {
+    _featureViewModel = FeatureViewModel(
+      delegate: this,
+      source: FeatureDataSource(context: _context, client: _baseClient),
+      encryptionKey: _context.encryptionKey ?? "",
+      backgroundSync: _context.backgroundSync,
+      manager: cachingManager
+    );
+          autoRefresh();
+        }
 
   final GBContext _context;
 
-  final EvaluationContext? _evaluationContext;
+  final EvaluationContext _evaluationContext;
+
+  late FeatureViewModel _featureViewModel;
 
   final CachingLayer _cachingManager;
 
@@ -163,10 +170,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final OnInitializationFailure? _onInitializationFailure;
 
   final CacheRefreshHandler? _refreshHandler;
-
-  final GBFeatures? _gbFeatures;
-
-  final SavedGroupsValues? _savedGroups;
 
   List<dynamic> _forcedFeatures;
 
@@ -206,43 +209,17 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   Future<void> autoRefresh() async {
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      manager: _cachingManager,
-      encryptionKey: _context.encryptionKey ?? "",
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
     if (_context.backgroundSync) {
-      await featureViewModel.connectBackgroundSync();
+      await _featureViewModel.connectBackgroundSync();
     }
   }
 
   Future<void> refresh() async {
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      encryptionKey: _context.encryptionKey ?? "",
-      manager: _cachingManager,
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
-    if (_gbFeatures != null) {
-      _context.features = _gbFeatures!;
-    }
-    if (_savedGroups != null) {
-      _context.savedGroups = _savedGroups!;
-    }
     if (_context.remoteEval) {
       refreshForRemoteEval();
     } else {
       log(context.getFeaturesURL().toString());
-      await featureViewModel.fetchFeatures(context.getFeaturesURL());
+      await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
 
@@ -347,32 +324,21 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_evaluationContext!, data,
-          _evaluationContext!.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(_context, data,
+          _evaluationContext.userContext.attributes ?? {});
     }
   }
 
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      manager: _cachingManager,
-      encryptionKey: _context.encryptionKey ?? "",
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
-
     RemoteEvalModel payload = RemoteEvalModel(
-      attributes: _evaluationContext?.userContext.attributes ?? {},
+      attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
       forcedVariations:
-          _evaluationContext?.userContext.forcedVariationsMap ?? {},
+          _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
 
-    await featureViewModel.fetchFeatures(
+    await _featureViewModel.fetchFeatures(
       context.getRemoteEvalUrl(),
       remoteEval: context.remoteEval,
       payload: payload,
