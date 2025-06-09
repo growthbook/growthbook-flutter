@@ -108,7 +108,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
   })  : _context = context,
-        _evaluationContext = evaluationContext,
+        _evaluationContext =
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
@@ -124,7 +125,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final GBContext _context;
 
-  final EvaluationContext? _evaluationContext;
+  final EvaluationContext _evaluationContext;
 
   late FeatureViewModel _featureViewModel;
 
@@ -283,18 +284,18 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_evaluationContext!, data,
-          _evaluationContext!.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(_context, data,
+          _evaluationContext.userContext.attributes ?? {});
     }
   }
 
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
     RemoteEvalModel payload = RemoteEvalModel(
-      attributes: _evaluationContext?.userContext.attributes ?? {},
+      attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
       forcedVariations:
-          _evaluationContext?.userContext.forcedVariationsMap ?? {},
+          _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
 
     await _featureViewModel.fetchFeatures(
