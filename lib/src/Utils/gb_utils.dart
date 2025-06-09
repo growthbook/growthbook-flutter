@@ -20,17 +20,19 @@ class FNV {
 
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
-  int fnv1a32(String str) {
+  int fnv1a32(String data) {
     int hash = init32;
-    final int length = str.length;
-
-    for (int i = 0; i < length; i++) {
-      hash ^= str.codeUnitAt(i); // XOR with character value
-
-      // Perform multiplication by prime using bitwise shifts and ensure 32-bit unsigned
-      hash = ((hash * prime32) & 0xffffffff).toUnsigned(32);
+    for (int i = 0; i < data.length; i++) {
+      int b = data.codeUnitAt(i) & 0xff; // Get the ASCII value of the character
+      hash ^= b; // XOR the hash with the character's value
+      hash = ((hash << 24) +
+              (hash << 8) +
+              (hash << 7) +
+              (hash << 4) +
+              (hash << 1) +
+              hash) // same as (hash * 0x01000193). On web this is mod 2^32 automatically as web operates shift operators on 32 bits
+          .toUnsigned(32); // ensure mod 2^32 for mobile
     }
-
     return hash;
   }
 }
