@@ -71,7 +71,7 @@ class GBSDKBuilderApp {
       context: gbContext,
       client: client,
       onInitializationFailure: onInitializationFailure,
-      refreshHandler: refreshHandler
+      refreshHandler: refreshHandler,
     );
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
@@ -114,11 +114,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
-        _attributeOverrides = {};
+        _attributeOverrides = {} {
+    _featureViewModel = FeatureViewModel(
+      delegate: this,
+      source: FeatureDataSource(context: _context, client: _baseClient),
+      encryptionKey: _context.encryptionKey ?? "",
+      backgroundSync: _context.backgroundSync,
+    );
+  }
 
   final GBContext _context;
 
   final EvaluationContext _evaluationContext;
+
+  late FeatureViewModel _featureViewModel;
 
   final BaseClient _baseClient;
 
@@ -164,35 +173,17 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   Future<void> autoRefresh() async {
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      encryptionKey: _context.encryptionKey ?? "",
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
     if (_context.backgroundSync) {
-      await featureViewModel.connectBackgroundSync();
+      await _featureViewModel.connectBackgroundSync();
     }
   }
 
   Future<void> refresh() async {
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      encryptionKey: _context.encryptionKey ?? "",
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
     if (_context.remoteEval) {
       refreshForRemoteEval();
     } else {
       log(context.getFeaturesURL().toString());
-      await featureViewModel.fetchFeatures(context.getFeaturesURL());
+      await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
 
@@ -300,16 +291,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
-    final featureViewModel = FeatureViewModel(
-      backgroundSync: _context.backgroundSync,
-      encryptionKey: _context.encryptionKey ?? "",
-      delegate: this,
-      source: FeatureDataSource(
-        client: _baseClient,
-        context: _context,
-      ),
-    );
-
     RemoteEvalModel payload = RemoteEvalModel(
       attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
@@ -317,7 +298,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
           _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
 
-    await featureViewModel.fetchFeatures(
+    await _featureViewModel.fetchFeatures(
       context.getRemoteEvalUrl(),
       remoteEval: context.remoteEval,
       payload: payload,
