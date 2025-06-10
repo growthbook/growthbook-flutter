@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
@@ -9,28 +10,41 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_contex
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
+
 typedef VoidCallback = void Function();
 
 typedef OnInitializationFailure = void Function(GBError? error);
 
 class GBSDKBuilderApp {
-  GBSDKBuilderApp(
-      {required this.hostURL,
-      required this.apiKey,
-      this.encryptionKey,
-      required this.growthBookTrackingCallBack,
-      this.attributes = const <String, dynamic>{},
-      this.qaMode = false,
-      this.enable = true,
-      this.forcedVariations = const <String, int>{},
-      this.client,
-      this.gbFeatures = const {},
-      this.onInitializationFailure,
-      this.refreshHandler,
-      this.stickyBucketService,
-      this.backgroundSync = false,
-      this.remoteEval = false,
-      this.url});
+  GBSDKBuilderApp({
+    required this.hostURL,
+    required this.apiKey,
+    this.encryptionKey,
+    required this.growthBookTrackingCallBack,
+    this.attributes = const <String, dynamic>{},
+    this.qaMode = false,
+    this.enable = true,
+    this.forcedVariations = const <String, int>{},
+    this.client,
+    this.gbFeatures = const {},
+    this.onInitializationFailure,
+    this.refreshHandler,
+    this.stickyBucketService,
+    this.backgroundSync = false,
+    this.remoteEval = false,
+    this.url,
+    CacheDirectoryWrapper? cacheDirectory,
+    CachingLayer? cachingManager,
+  })  : cacheDirectory = cacheDirectory ??
+            DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
+        cachingManager = cachingManager ??
+            CachingManager(
+              apiKey: apiKey,
+            )
+          ..setCacheDirectory(cacheDirectory ??
+              DefaultCacheDirectoryWrapper(
+                  CacheDirectoryType.applicationSupport));
 
   final String apiKey;
   final String? encryptionKey;
@@ -45,11 +59,12 @@ class GBSDKBuilderApp {
   final OnInitializationFailure? onInitializationFailure;
   final bool backgroundSync;
   final bool remoteEval;
+  final CacheDirectoryWrapper cacheDirectory;
   final String? url;
-
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+  CachingLayer cachingManager;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -71,8 +86,13 @@ class GBSDKBuilderApp {
       context: gbContext,
       client: client,
       onInitializationFailure: onInitializationFailure,
+      cachingManager: cachingManager,
       refreshHandler: refreshHandler,
     );
+    cachingManager.setCacheKey(apiKey);
+    await cachingManager.saveContent(
+        fileName: Constant.featureCache,
+        content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -80,6 +100,16 @@ class GBSDKBuilderApp {
 
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
+    return this;
+  }
+
+  GBSDKBuilderApp setCachingManager(CachingLayer cachingManager) {
+    this.cachingManager = cachingManager;
+    return this;
+  }
+
+  GBSDKBuilderApp setCacheDirectory(CacheDirectoryWrapper systemDirectory) {
+    cachingManager.setCacheDirectory(systemDirectory);
     return this;
   }
 
@@ -107,11 +137,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
+    required CachingLayer cachingManager
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
+        _cachingManager = cachingManager,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
@@ -120,6 +152,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       source: FeatureDataSource(context: _context, client: _baseClient),
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
+      manager: cachingManager
     );
           autoRefresh();
         }
@@ -129,6 +162,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final EvaluationContext _evaluationContext;
 
   late FeatureViewModel _featureViewModel;
+
+  final CachingLayer _cachingManager;
 
   final BaseClient _baseClient;
 
@@ -202,6 +237,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         updateSubscriptions(key: key, experiment: experiment, result: result);
       }
     }
+  }
+
+  void clearCache() {
+    _cachingManager.clearCache();
   }
 
   void updateSubscriptions(
