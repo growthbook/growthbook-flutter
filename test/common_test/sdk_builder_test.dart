@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
@@ -21,6 +22,24 @@ void main() {
     CachingManager manager = CachingManager();
 
     var isRefreshed = false;
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getApplicationSupportDirectory') {
+          return '/tmp'; 
+        }
+        return null;
+      });
+    });
+
+    tearDownAll(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
 
     test("- default", () async {
       final sdk = await GBSDKBuilderApp(
