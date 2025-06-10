@@ -278,7 +278,7 @@ class FeatureViewModel {
   }
 
   void cacheFeatures(FeaturedDataModel data) {
-    final featureData = utf8Encoder.convert(jsonEncode(data.features));
+    final featureData = utf8Encoder.convert(jsonEncode(data));
     final featureDataOnUint8List = Uint8List.fromList(featureData);
     manager.putData(
       fileName: Constant.featureCache,

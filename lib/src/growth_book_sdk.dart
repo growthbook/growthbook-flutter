@@ -111,24 +111,25 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     CacheRefreshHandler? refreshHandler,
     required int TTLSeconds,
   })  : _context = context,
-        _evaluationContext = evaluationContext,
+        _evaluationContext =
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      TTLSeconds: TTLSeconds,
       delegate: this,
       source: FeatureDataSource(context: _context, client: _baseClient),
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
     );
-  }
+          autoRefresh();
+        }
 
   final GBContext _context;
 
-  final EvaluationContext? _evaluationContext;
+  final EvaluationContext _evaluationContext;
 
   late FeatureViewModel _featureViewModel;
 
@@ -228,6 +229,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   GBFeatureResult feature(String id) {
     _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
+        
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
@@ -289,15 +291,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_evaluationContext!, data,
-          _evaluationContext!.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(_context, data,
+          _evaluationContext.userContext.attributes ?? {});
     }
   }
 
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
     RemoteEvalModel payload = RemoteEvalModel(
-      attributes: _evaluationContext?.userContext.attributes ?? {},
+      attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
       forcedVariations:
           _evaluationContext.userContext.forcedVariationsMap ?? {},
@@ -312,7 +314,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-     _featureViewModel.fetchFeatures();
+     _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
