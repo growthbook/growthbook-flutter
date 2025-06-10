@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
+import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
@@ -681,13 +682,13 @@ class GBUtils {
     return map;
   }
 
-  static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+  static EvaluationContext initializeEvalContext(GBContext gbContext,
+      GBCacheRefreshHandler? refreshHandler, GBOptions gbOptions) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
       isCacheDisabled: false,
-      hostUrl: gbContext.hostURL,
+      hostUrl: gbOptions.apiHost,
       clientKey: gbContext.apiKey,
       decryptionKey: gbContext.encryptionKey,
       stickyBucketIdentifierAttributes:

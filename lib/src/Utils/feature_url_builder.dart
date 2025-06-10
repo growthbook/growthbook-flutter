@@ -1,16 +1,22 @@
+import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
+
 class FeatureURLBuilder {
   static const String featurePath = "api/features";
   static const String eventsPath = "sub";
   static const String remoteEvalPath = "api/eval";
+  static const String defaultStreamingHost = "https://cdn.growthbook.io";
 
-  static String buildUrl(
-      String? hostUrl,
-      String? apiKey, {
-        FeatureRefreshStrategy featureRefreshStrategy =
-            FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
-      }) {
+  GBOptions gbOptions;
+
+  FeatureURLBuilder({required this.gbOptions});
+
+  String buildUrl(
+    String? apiKey, {
+    FeatureRefreshStrategy featureRefreshStrategy =
+        FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
+  }) {
     String endpoint = '';
-    switch(featureRefreshStrategy) {
+    switch (featureRefreshStrategy) {
       case FeatureRefreshStrategy.STALE_WHILE_REVALIDATE:
         endpoint = featurePath;
         break;
@@ -21,8 +27,14 @@ class FeatureURLBuilder {
         endpoint = remoteEvalPath;
         break;
     }
-    String baseUrlWithFeaturePath = hostUrl!.endsWith('/')
-        ? '$hostUrl$endpoint' : '$hostUrl/$endpoint';
+    String baseUrl;
+    if (featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS) {
+      baseUrl = gbOptions.streamingHost ?? defaultStreamingHost;
+    } else {
+      baseUrl = gbOptions.apiHost;
+    }
+    String baseUrlWithFeaturePath =
+        baseUrl.endsWith('/') ? '$baseUrl$endpoint' : '$baseUrl/$endpoint';
 
     return '$baseUrlWithFeaturePath/$apiKey';
   }
@@ -30,5 +42,7 @@ class FeatureURLBuilder {
 
 enum FeatureRefreshStrategy {
   // ignore: constant_identifier_names
-  STALE_WHILE_REVALIDATE, SERVER_SENT_EVENTS, SERVER_SENT_REMOTE_FEATURE_EVAL
+  STALE_WHILE_REVALIDATE,
+  SERVER_SENT_EVENTS,
+  SERVER_SENT_REMOTE_FEATURE_EVAL
 }
