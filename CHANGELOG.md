@@ -1,4 +1,4 @@
-# 3.9.13
+# 3.9.11
 - Fixed subscription logic
 - Added getAllResults method
 - Updated subscribe method
