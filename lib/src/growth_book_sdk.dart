@@ -188,19 +188,27 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  Map<String, GBExperimentResult> getAllResults() {
+    final Map<String, GBExperimentResult> results = {};
+
+    for (var entry in assigned.entries) {
+      final experimentKey = entry.key;
+      final experimentResult = entry.value.experimentResult;
+      results[experimentKey] = experimentResult;
+    }
+
+    return results;
+  }
+
   void fireSubscriptions(GBExperiment experiment, GBExperimentResult result) {
     String key = experiment.key;
-
-    // If assigned variation has changed, fire subscriptions
-    if (assigned.containsKey(key)) {
-      var assignedExperiment = assigned[key];
-
-      if (assignedExperiment!.experimentResult.inExperiment !=
-              result.inExperiment ||
-          assignedExperiment.experimentResult.variationID !=
-              result.variationID) {
-        updateSubscriptions(key: key, experiment: experiment, result: result);
-      }
+    AssignedExperiment? prevAssignedExperiment = assigned[key];
+    if (prevAssignedExperiment == null ||
+        prevAssignedExperiment.experimentResult.inExperiment !=
+            result.inExperiment ||
+        prevAssignedExperiment.experimentResult.variationID !=
+            result.variationID) {
+      updateSubscriptions(key: key, experiment: experiment, result: result);
     }
   }
 
@@ -215,8 +223,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  void subscribe(ExperimentRunCallback callback) {
+  Function subscribe(ExperimentRunCallback callback) {
     subscriptions.add(callback);
+    return () {
+      subscriptions.remove(callback);
+    };
   }
 
   void clearSubscriptions() {
@@ -233,6 +244,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       GBUtils.initializeEvalContext(context, _refreshHandler),
       experiment,
     );
+    fireSubscriptions(experiment, result);
     return result;
   }
 
