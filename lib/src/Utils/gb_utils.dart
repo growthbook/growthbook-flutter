@@ -21,17 +21,19 @@ class FNV {
 
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
-  int fnv1a32(String str) {
+  int fnv1a32(String data) {
     int hash = init32;
-    final int length = str.length;
-
-    for (int i = 0; i < length; i++) {
-      hash ^= str.codeUnitAt(i); // XOR with character value
-
-      // Perform multiplication by prime using bitwise shifts and ensure 32-bit unsigned
-      hash = ((hash * prime32) & 0xffffffff).toUnsigned(32);
+    for (int i = 0; i < data.length; i++) {
+      int b = data.codeUnitAt(i) & 0xff; // Get the ASCII value of the character
+      hash ^= b; // XOR the hash with the character's value
+      hash = ((hash << 24) +
+              (hash << 8) +
+              (hash << 7) +
+              (hash << 4) +
+              (hash << 1) +
+              hash) // same as (hash * 0x01000193). On web this is mod 2^32 automatically as web operates shift operators on 32 bits
+          .toUnsigned(32); // ensure mod 2^32 for mobile
     }
-
     return hash;
   }
 }
@@ -281,17 +283,23 @@ class GBUtils {
     String? attr,
     String? fallback,
     required Map<String, dynamic> attributes,
+    Map<String, dynamic>? attributeOverrides,
   }) {
     String hashAttribute = attr ?? 'id';
     String hashValue = '';
 
-    if (attributes[hashAttribute] != null) {
+    if (attributeOverrides != null &&
+        attributeOverrides[hashAttribute] != null) {
+      hashValue = attributeOverrides[hashAttribute].toString();
+    } else if (attributes[hashAttribute] != null) {
       hashValue = attributes[hashAttribute].toString();
     }
 
     // If no match, try fallback
     if (hashValue.isEmpty && fallback != null) {
-      if (attributes[fallback] != null) {
+      if (attributeOverrides != null && attributeOverrides[fallback] != null) {
+        hashValue = attributeOverrides[fallback].toString();
+      } else if (attributes[fallback] != null) {
         hashValue = attributes[fallback].toString();
       }
 
@@ -430,42 +438,45 @@ class GBUtils {
   }
 
   static Future<void> refreshStickyBuckets(
-    EvaluationContext context,
+    GBContext context,
     FeaturedDataModel? data,
     Map<String, dynamic> attributes,
   ) async {
-    if (context.options.stickyBucketService == null) {
+    if (context.stickyBucketService == null) {
       return;
     }
+    if (context.stickyBucketService == null) return;
     var allAttributes = getStickyBucketAttributes(context, data, attributes);
-    context.userContext.stickyBucketAssignmentDocs = await context
-        .options.stickyBucketService
-        ?.getAllAssignments(allAttributes);
+    context.stickyBucketAssignmentDocs =
+        await context.stickyBucketService?.getAllAssignments(allAttributes);
   }
 
   static Map<String, String> getStickyBucketAttributes(
-    EvaluationContext context,
+    GBContext context,
     FeaturedDataModel? data,
-    Map<String, dynamic> attributes,
+    Map<String, dynamic> attributeOverrides,
   ) {
     var attributes = <String, String>{};
-    final stickyBucketIdentifierAttributes =
+    context.stickyBucketIdentifierAttributes = context
+            .stickyBucketIdentifierAttributes ??
         deriveStickyBucketIdentifierAttributes(context: context, data: data);
 
-    for (var attr in stickyBucketIdentifierAttributes) {
-      var hashValue =
-          GBUtils.getHashAttribute(attributes: attributes, attr: attr);
-      attributes[attr] = hashValue[1];
+    if (context.stickyBucketIdentifierAttributes != null) {
+      for (var attr in context.stickyBucketIdentifierAttributes!) {
+        var hashValue =
+            GBUtils.getHashAttribute(attributes: attributes, attr: attr, attributeOverrides: attributeOverrides);
+        attributes[attr] = hashValue[1];
+      }
     }
     return attributes;
   }
 
   static List<String> deriveStickyBucketIdentifierAttributes({
-    required EvaluationContext context,
+    required GBContext context,
     required FeaturedDataModel? data,
   }) {
     var attributes = <String>{};
-    var features = data?.features ?? context.globalContext.features;
+    var features = data?.features ?? context.features;
     for (var id in features!.keys) {
       var feature = features[id];
       var rules = feature?.rules;
