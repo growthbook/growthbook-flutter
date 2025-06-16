@@ -19,8 +19,10 @@ void main() {
       final passedScenarios = <String>[];
       for (final item in evaluateCondition) {
         final evaluator = GBConditionEvaluator();
-        final result = evaluator.isEvalCondition(item[2], item[1], item.length == 5 ? item[4] : {});
-        final status = "${item[0]}\nExpected Result - ${item[3]}\nActual result - $result\n\n";
+        final result = evaluator.isEvalCondition(
+            item[2], item[1], item.length == 5 ? item[4] : {});
+        final status =
+            "${item[0]}\nExpected Result - ${item[3]}\nActual result - $result\n\n";
         if (item[3].toString() == result.toString()) {
           passedScenarios.add(status);
         } else {
@@ -30,7 +32,8 @@ void main() {
         index++;
       }
       expect(failedScenarios.length, 0);
-      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      customLogger(
+          'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
     });
 
     test('Test valid condition obj', () {
@@ -42,17 +45,20 @@ void main() {
 
       expect(evaluator.getPath('test', 'key'), null);
 
-      expect(evaluator.isEvalConditionValue(<String, dynamic>{}, null, {}), false);
+      expect(
+          evaluator.isEvalConditionValue(<String, dynamic>{}, null, {}), false);
 
       expect(evaluator.evalOperatorCondition("\$lte", "abc", "abc", {}), true);
 
       expect(evaluator.evalOperatorCondition("\$gte", "abc", "abc", {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$vlt", "0.9.0", "0.10.0", {}), true);
+      expect(evaluator.evalOperatorCondition("\$vlt", "0.9.0", "0.10.0", {}),
+          true);
 
       expect(evaluator.evalOperatorCondition("\$in", "abc", ["abc"], {}), true);
 
-      expect(evaluator.evalOperatorCondition("\$nin", "abc", ["abc"], {}), false);
+      expect(
+          evaluator.evalOperatorCondition("\$nin", "abc", ["abc"], {}), false);
     });
   });
 

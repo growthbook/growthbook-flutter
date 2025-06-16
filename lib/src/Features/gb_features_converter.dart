@@ -1,7 +1,8 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-class GBFeaturesConverter extends JsonConverter<GBFeatures, Map<String, dynamic>> {
+class GBFeaturesConverter
+    extends JsonConverter<GBFeatures, Map<String, dynamic>> {
   const GBFeaturesConverter();
 
   @override

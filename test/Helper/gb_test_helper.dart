@@ -80,15 +80,14 @@ class GBFeaturesTest {
 }
 
 class GBFeatureResultTest {
-  GBFeatureResultTest({
-    this.value,
-    this.on = false,
-    this.off = true,
-    this.source,
-    this.experiment,
-    this.experimentResult,
-    this.ruleId = ""
-  });
+  GBFeatureResultTest(
+      {this.value,
+      this.on = false,
+      this.off = true,
+      this.source,
+      this.experiment,
+      this.experimentResult,
+      this.ruleId = ""});
 
   dynamic value;
   bool? on;

@@ -27,7 +27,9 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
@@ -66,7 +68,9 @@ void main() {
       manager.clearCache();
     });
 
-    test('- with initialization without throwing assertion error for wrong host url', () async {
+    test(
+        '- with initialization without throwing assertion error for wrong host url',
+        () async {
       final sdkInstance = GBSDKBuilderApp(
         apiKey: testApiKey,
         hostURL: testHostURL,
@@ -86,7 +90,9 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
       final featureValue = sdk.feature('fwrfewrfe');
       expect(featureValue.source, GBFeatureSource.unknownFeature);
       final result = sdk.run(GBExperiment(key: "fwrfewrfe"));
@@ -134,7 +140,8 @@ void main() {
       );
 
       final dataExpectedResult = utf8.encode(expectedResult);
-      final features = json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
+      final features =
+          json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
 
       expect(
         sdkInstance.features["testfeature1"]?.rules?[0].condition,
@@ -160,7 +167,9 @@ void main() {
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+        )
+            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+            .initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
@@ -180,7 +189,9 @@ void main() {
         },
         refreshHandler: null,
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       sdkInstance.context.features = {
         'feature 1': GBFeature(defaultValue: true),
@@ -195,7 +206,8 @@ void main() {
                 GBTrack(
                   featureResult: GBFeatureResult(
                       experiment: GBExperiment(key: 'testExperimentKey'),
-                      experimentResult: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true)),
+                      experimentResult: GBExperimentResult(
+                          key: 'testExperimentResultKey', inExperiment: true)),
                 ),
               ],
             ),

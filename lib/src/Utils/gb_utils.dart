@@ -462,8 +462,10 @@ class GBUtils {
 
     if (context.stickyBucketIdentifierAttributes != null) {
       for (var attr in context.stickyBucketIdentifierAttributes!) {
-        var hashValue =
-            GBUtils.getHashAttribute(attributes: attributes, attr: attr, attributeOverrides: attributeOverrides);
+        var hashValue = GBUtils.getHashAttribute(
+            attributes: attributes,
+            attr: attr,
+            attributeOverrides: attributeOverrides);
         attributes[attr] = hashValue[1];
       }
     }

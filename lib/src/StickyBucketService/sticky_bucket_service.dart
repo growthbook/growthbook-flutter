@@ -60,19 +60,18 @@ class LocalStorageStickyBucketService extends StickyBucketService {
   }
 
   @override
-Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
-    Map<String, String> attributes) async {
-  final docs = <StickyAttributeKey, StickyAssignmentsDocument>{};
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) async {
+    final docs = <StickyAttributeKey, StickyAssignmentsDocument>{};
 
-  for (final entry in attributes.entries) {
-    final doc = await getAssignments(entry.key, entry.value);
-    if (doc != null) {
-      final docKey = '${doc.attributeName}||${doc.attributeValue}';
-      docs[docKey] = doc;
+    for (final entry in attributes.entries) {
+      final doc = await getAssignments(entry.key, entry.value);
+      if (doc != null) {
+        final docKey = '${doc.attributeName}||${doc.attributeValue}';
+        docs[docKey] = doc;
+      }
     }
+
+    return docs;
   }
-
-  return docs;
-}
-
 }

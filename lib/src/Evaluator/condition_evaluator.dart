@@ -87,7 +87,8 @@ class GBConditionEvaluator {
   }
 
   /// Evaluate OR conditions against given attributes
-  bool isEvalOr(Map<String, dynamic> attributes, List conditionObj, SavedGroupsValues savedGroups) {
+  bool isEvalOr(Map<String, dynamic> attributes, List conditionObj,
+      SavedGroupsValues savedGroups) {
     // If conditionObj is empty, return true
     if (conditionObj.isEmpty) {
       return true;
@@ -106,7 +107,8 @@ class GBConditionEvaluator {
   }
 
   /// Evaluate AND conditions against given attributes
-  bool isEvalAnd(dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
+  bool isEvalAnd(
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
     // Loop through the conditionObjects
 
     // Loop through the conditionObjects
@@ -186,10 +188,12 @@ class GBConditionEvaluator {
   }
 
   ///Evaluates Condition Value against given condition & attributes
-  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue, SavedGroupsValues savedGroups) {
+  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue,
+      SavedGroupsValues savedGroups) {
     // If conditionValue is a string, number, boolean, return true if it's
     // "equal" to attributeValue and false if not.
-    if ((conditionValue as Object?).isPrimitive && (attributeValue as Object?).isPrimitive) {
+    if ((conditionValue as Object?).isPrimitive &&
+        (attributeValue as Object?).isPrimitive) {
       return conditionValue == attributeValue;
     }
 
@@ -218,7 +222,8 @@ class GBConditionEvaluator {
         for (var key in conditionValue.keys) {
           // If evalOperatorCondition(key, attributeValue, value)
           // is false, return false
-          if (!evalOperatorCondition(key, attributeValue, conditionValue[key], savedGroups)) {
+          if (!evalOperatorCondition(
+              key, attributeValue, conditionValue[key], savedGroups)) {
             return false;
           }
         }
@@ -238,7 +243,8 @@ class GBConditionEvaluator {
 
   /// This checks if attributeValue is an array, and if so at least one of the
   /// array items must match the condition
-  bool elemMatch(dynamic attributeValue, dynamic condition, SavedGroupsValues savedGroups) {
+  bool elemMatch(dynamic attributeValue, dynamic condition,
+      SavedGroupsValues savedGroups) {
     // Loop through items in attributeValue
     if (attributeValue is List) {
       for (final item in attributeValue) {
@@ -284,7 +290,8 @@ class GBConditionEvaluator {
     if (operator == "\$exists") {
       if (conditionValue.toString() == 'false' && attributeValue == null) {
         return true;
-      } else if (conditionValue.toString() == 'true' && attributeValue != null) {
+      } else if (conditionValue.toString() == 'true' &&
+          attributeValue != null) {
         return true;
       }
     }
@@ -342,15 +349,19 @@ class GBConditionEvaluator {
         /// Evaluate SIE operator - whether condition size is same as that
         /// of attribute
         case "\$size":
-          return isEvalConditionValue(conditionValue, attributeValue.length, savedGroups);
+          return isEvalConditionValue(
+              conditionValue, attributeValue.length, savedGroups);
 
         default:
       }
-    } else if ((attributeValue as Object?).isPrimitive && (conditionValue as Object?).isPrimitive) {
+    } else if ((attributeValue as Object?).isPrimitive &&
+        (conditionValue as Object?).isPrimitive) {
       final targetPrimitiveValue = double.tryParse(conditionValue.toString());
       final sourcePrimitiveValue = double.tryParse(attributeValue.toString());
-      final paddedVersionTarget = GBUtils.paddedVersionString(conditionValue.toString());
-      final paddedVersionSource = GBUtils.paddedVersionString(attributeValue?.toString() ?? '0.0');
+      final paddedVersionTarget =
+          GBUtils.paddedVersionString(conditionValue.toString());
+      final paddedVersionSource =
+          GBUtils.paddedVersionString(attributeValue?.toString() ?? '0.0');
 
       /// If condition is bool.
       bool evaluatedValue = false;
@@ -379,12 +390,14 @@ class GBConditionEvaluator {
           if (conditionValue is String && attributeValue is String) {
             return attributeValue.compareTo(conditionValue) < 0;
           }
-          evaluatedValue = (sourcePrimitiveValue ?? 0.0) < (targetPrimitiveValue ?? 0);
+          evaluatedValue =
+              (sourcePrimitiveValue ?? 0.0) < (targetPrimitiveValue ?? 0);
           break;
 
         /// Evaluate LTE operator - whether attribute less than or equal to condition
         case '\$lte':
-          evaluatedValue = (sourcePrimitiveValue ?? 0.0) <= (targetPrimitiveValue ?? 0);
+          evaluatedValue =
+              (sourcePrimitiveValue ?? 0.0) <= (targetPrimitiveValue ?? 0);
           break;
 
         /// Evaluate GT operator - whether attribute greater than to condition
@@ -392,11 +405,13 @@ class GBConditionEvaluator {
           if (conditionValue is String && attributeValue is String) {
             return attributeValue.compareTo(conditionValue) > 0;
           }
-          evaluatedValue = (sourcePrimitiveValue ?? 0.0) > (targetPrimitiveValue ?? 0);
+          evaluatedValue =
+              (sourcePrimitiveValue ?? 0.0) > (targetPrimitiveValue ?? 0);
           break;
 
         case '\$gte':
-          evaluatedValue = (sourcePrimitiveValue ?? 0.0) >= (targetPrimitiveValue ?? 0);
+          evaluatedValue =
+              (sourcePrimitiveValue ?? 0.0) >= (targetPrimitiveValue ?? 0);
           break;
 
         case '\$regex':

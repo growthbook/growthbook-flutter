@@ -121,8 +121,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
     );
-          autoRefresh();
-        }
+    autoRefresh();
+  }
 
   final GBContext _context;
 
@@ -285,8 +285,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_context, data,
-          _evaluationContext.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(
+          _context, data, _evaluationContext.userContext.attributes ?? {});
     }
   }
 

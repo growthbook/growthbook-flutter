@@ -103,7 +103,8 @@ class GBExperiment {
   /// Id of the current experiment phase
   String? phase;
 
-  factory GBExperiment.fromJson(Map<String, dynamic> value) => _$GBExperimentFromJson(value);
+  factory GBExperiment.fromJson(Map<String, dynamic> value) =>
+      _$GBExperimentFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBExperimentToJson(this);
 

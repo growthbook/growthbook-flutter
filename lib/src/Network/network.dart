@@ -52,7 +52,11 @@ class DioClient extends BaseClient {
       final statusCode = resp.statusCode;
 
       if (data is ResponseBody) {
-        data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
+        data.stream
+            .cast<List<int>>()
+            .transform(const Utf8Decoder())
+            .transform(const SseEventTransformer())
+            .listen(
           (sseModel) {
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";

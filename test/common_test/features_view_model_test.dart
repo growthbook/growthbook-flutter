@@ -75,11 +75,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures('',
+            remoteEval: true, payload: payload);
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -100,11 +103,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures('',
+            remoteEval: true, payload: payload);
 
         expect(dataSourceMock.isError, true);
       });
