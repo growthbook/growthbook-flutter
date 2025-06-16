@@ -116,6 +116,8 @@ await newSdkInstance.initialize();
 class GBContext {
   GBContext({
     this.apiKey,
+    this.streamingHost,
+    this.apiHost,
     this.enabled,
     this.attributes,
     this.forcedVariation,
@@ -126,6 +128,12 @@ class GBContext {
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
+
+  /// Host URL for GrowthBook
+  String? apiHost;
+
+  /// Streaming  URL for GrowthBook
+  String? streamingHost;
 
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
@@ -149,20 +157,6 @@ class GBContext {
   ///Disable background streaming connection
   bool? backgroundSync;
 }
-```
-
-
-```dart
-/// Defines the GrowthBook URL options, that helps to differentiate streaming host URL from API host
-class GBOptions {
-
-  /// Registered API host URL for GrowthBook SDK.
-  String apiHost;
-
-  /// Registered streaming host URL for GrowthBook SDK.
-  String? streamingHost;
-}
-
 ```
 
 
