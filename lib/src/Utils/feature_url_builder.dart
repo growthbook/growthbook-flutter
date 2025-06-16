@@ -1,14 +1,13 @@
-import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
-
 class FeatureURLBuilder {
   static const String featurePath = "api/features";
   static const String eventsPath = "sub";
   static const String remoteEvalPath = "api/eval";
-  static const String defaultStreamingHost = "https://cdn.growthbook.io";
+  static const String defaultHost = "https://cdn.growthbook.io";
 
-  GBOptions gbOptions;
+  final String? apiHost;
+  final String? streamingHost;
 
-  FeatureURLBuilder({required this.gbOptions});
+  FeatureURLBuilder({this.apiHost, this.streamingHost});
 
   String buildUrl(
     String? apiKey, {
@@ -29,9 +28,9 @@ class FeatureURLBuilder {
     }
     String baseUrl;
     if (featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS) {
-      baseUrl = gbOptions.streamingHost ?? defaultStreamingHost;
+      baseUrl = streamingHost ?? defaultHost;
     } else {
-      baseUrl = gbOptions.apiHost;
+      baseUrl = apiHost ?? defaultHost;
     }
     String baseUrlWithFeaturePath =
         baseUrl.endsWith('/') ? '$baseUrl$endpoint' : '$baseUrl/$endpoint';

@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 
 import '../mocks/network_mock.dart';
@@ -16,9 +15,6 @@ void main() {
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
-      GBOptions testGbOptions = GBOptions(
-        apiHost: testHostURL,
-      );
 
       setUp(
         () {
@@ -42,7 +38,6 @@ void main() {
             source: FeatureDataSource(
               client: const MockNetworkClient(),
               context: context,
-              gbOptions: testGbOptions,
             ),
           );
           await featureViewModel.fetchFeatures();
@@ -56,8 +51,7 @@ void main() {
           delegate: dataSourceMock,
           source: FeatureDataSource(
               client: const MockNetworkClient(),
-              context: context,
-              gbOptions: testGbOptions),
+              context: context),
         );
 
         await featureViewModel.fetchFeatures();
@@ -71,7 +65,6 @@ void main() {
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,
-            gbOptions: testGbOptions,
           ),
         );
 
@@ -96,7 +89,6 @@ void main() {
           encryptionKey: '',
           delegate: dataSourceMock,
           source: FeatureDataSource(
-            gbOptions: testGbOptions,
             client: const MockNetworkClient(
               error: true,
             ),
@@ -124,7 +116,6 @@ void main() {
         final viewModel = FeatureViewModel(
           delegate: dataSourceMock,
           source: FeatureDataSource(
-            gbOptions: testGbOptions,
             client: const MockNetworkClient(
               error: true,
             ),

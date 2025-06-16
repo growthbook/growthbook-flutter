@@ -1,5 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
@@ -22,10 +21,8 @@ class FeatureDataSource {
   FeatureDataSource({
     required this.context,
     required this.client,
-    required this.gbOptions,
   });
   final GBContext context;
-  final GBOptions gbOptions;
   final BaseClient client;
 
   Future<void> fetchFeatures(
@@ -69,7 +66,8 @@ class FeatureDataSource {
     await client.consumePostRequest(
       _getEndpoint(
         context: context,
-        featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL,
+        featureRefreshStrategy:
+            FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL,
       ),
       remoteEvalJson,
       (response) => onSuccess(
@@ -83,7 +81,9 @@ class FeatureDataSource {
       {required GBContext context,
       FeatureRefreshStrategy featureRefreshStrategy =
           FeatureRefreshStrategy.STALE_WHILE_REVALIDATE}) {
-    return FeatureURLBuilder(gbOptions: gbOptions).buildUrl(context.apiKey,
-        featureRefreshStrategy: featureRefreshStrategy);
+    return FeatureURLBuilder(
+            apiHost: context.apiHost, streamingHost: context.streamingHost)
+        .buildUrl(context.apiKey,
+            featureRefreshStrategy: featureRefreshStrategy);
   }
 }

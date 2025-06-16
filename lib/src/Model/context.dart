@@ -9,6 +9,8 @@ class GBContext {
     this.encryptionKey,
     this.enabled,
     this.attributes,
+    this.streamingHost,
+    this.apiHost,
     this.forcedVariation,
     this.stickyBucketAssignmentDocs,
     this.stickyBucketIdentifierAttributes,
@@ -29,6 +31,12 @@ class GBContext {
   /// Encryption key for encrypted features.
   String? encryptionKey;
 
+  /// Host URL for GrowthBook
+  String? apiHost;
+
+  /// Streaming  URL for GrowthBook
+  String? streamingHost;
+
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
 
@@ -38,7 +46,8 @@ class GBContext {
   /// Force specific experiments to always assign a specific variation (used for QA).
   Map<String, dynamic>? forcedVariation;
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument>? stickyBucketAssignmentDocs;
+  Map<StickyAttributeKey, StickyAssignmentsDocument>?
+      stickyBucketAssignmentDocs;
 
   List<String>? stickyBucketIdentifierAttributes;
 

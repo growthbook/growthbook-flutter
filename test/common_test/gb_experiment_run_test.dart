@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 
 import '../Helper/gb_test_helper.dart';
 
@@ -39,7 +38,7 @@ void main() {
               url: testContext.url);
 
           final evaluationContext = GBUtils.initializeEvalContext(
-              gbContext, null, GBOptions(apiHost: ''));
+              gbContext, null);
 
           final result = ExperimentEvaluator()
               .evaluateExperiment(evaluationContext, experiment);

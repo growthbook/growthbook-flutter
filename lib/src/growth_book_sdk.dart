@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Model/gb_option.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
@@ -68,14 +67,12 @@ class GBSDKBuilderApp {
         stickyBucketService: stickyBucketService,
         backgroundSync: backgroundSync,
         remoteEval: remoteEval,
-        url: url);
+        url: url,
+        apiHost: apiHost,
+        streamingHost: streamingHost);
     final gb = GrowthBookSDK._(
       context: gbContext,
       client: client,
-      gbOptions: GBOptions(
-        apiHost: apiHost,
-        streamingHost: streamingHost,
-      ),
       onInitializationFailure: onInitializationFailure,
       refreshHandler: refreshHandler,
     );
@@ -112,29 +109,26 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required GBContext context,
     EvaluationContext? evaluationContext,
     BaseClient? client,
-    required GBOptions gbOptions,
     CacheRefreshHandler? refreshHandler,
   })  : _context = context,
         _evaluationContext =
-            evaluationContext ?? GBUtils.initializeEvalContext(context, null, gbOptions),
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
-        _gbOptions = gbOptions,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
       delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient, gbOptions: gbOptions),
+      source: FeatureDataSource(
+          context: _context, client: _baseClient),
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
     );
-          autoRefresh();
-        }
+    autoRefresh();
+  }
 
   final GBContext _context;
-
-  final GBOptions _gbOptions;
 
   final EvaluationContext _evaluationContext;
 
@@ -234,12 +228,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   GBFeatureResult feature(String id) {
     return FeatureEvaluator().evaluateFeature(
-        GBUtils.initializeEvalContext(context, _refreshHandler, _gbOptions), id);
+        GBUtils.initializeEvalContext(context, _refreshHandler),
+        id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
     final result = ExperimentEvaluator().evaluateExperiment(
-      GBUtils.initializeEvalContext(context, _refreshHandler,_gbOptions),
+      GBUtils.initializeEvalContext(context, _refreshHandler),
       experiment,
     );
     return result;
@@ -294,8 +289,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_context, data,
-          _evaluationContext.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(
+          _context, data, _evaluationContext.userContext.attributes ?? {});
     }
   }
 
@@ -317,7 +312,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
     return FeatureEvaluator().evaluateFeature(
-        GBUtils.initializeEvalContext(context, _refreshHandler, _gbOptions), id);
+        GBUtils.initializeEvalContext(context, _refreshHandler),
+        id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
