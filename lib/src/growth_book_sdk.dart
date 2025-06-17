@@ -4,7 +4,6 @@ import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
-import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -30,7 +29,7 @@ class GBSDKBuilderApp {
       this.stickyBucketService,
       this.backgroundSync = false,
       this.remoteEval = false,
-      this.TTLSeconds = 60,
+      this.ttlSeconds = 60,
       this.url});
 
   final String apiKey;
@@ -47,7 +46,7 @@ class GBSDKBuilderApp {
   final bool backgroundSync;
   final bool remoteEval;
   final String? url;
-  final int TTLSeconds;
+  final int ttlSeconds;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
@@ -74,7 +73,7 @@ class GBSDKBuilderApp {
         client: client,
         onInitializationFailure: onInitializationFailure,
         refreshHandler: refreshHandler,
-        TTLSeconds: TTLSeconds);
+        ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -109,7 +108,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
-    required int TTLSeconds,
+    required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
