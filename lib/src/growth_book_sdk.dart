@@ -266,7 +266,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   void setAttributeOverrides(dynamic overrides) {
-    _attributeOverrides = json.decode(overrides);
+    _attributeOverrides = jsonDecode(overrides) as Map<String, dynamic>;
     if (context.stickyBucketService != null) {
       refreshStickyBucketService(null);
     }
