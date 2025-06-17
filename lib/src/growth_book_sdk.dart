@@ -30,6 +30,7 @@ class GBSDKBuilderApp {
       this.stickyBucketService,
       this.backgroundSync = false,
       this.remoteEval = false,
+      this.TTLSeconds = 60,
       this.url});
 
   final String apiKey;
@@ -46,6 +47,7 @@ class GBSDKBuilderApp {
   final bool backgroundSync;
   final bool remoteEval;
   final String? url;
+  final int TTLSeconds;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
@@ -68,11 +70,11 @@ class GBSDKBuilderApp {
         remoteEval: remoteEval,
         url: url);
     final gb = GrowthBookSDK._(
-      context: gbContext,
-      client: client,
-      onInitializationFailure: onInitializationFailure,
-      refreshHandler: refreshHandler,
-    );
+        context: gbContext,
+        client: client,
+        onInitializationFailure: onInitializationFailure,
+        refreshHandler: refreshHandler,
+        TTLSeconds: TTLSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -107,6 +109,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
+    required int TTLSeconds,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
@@ -235,11 +238,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
+        
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     final result = ExperimentEvaluator().evaluateExperiment(
       GBUtils.initializeEvalContext(context, _refreshHandler),
       experiment,
@@ -320,12 +326,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
+     _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
   bool isOn(String id) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return evalFeature(id).on;
   }
 
