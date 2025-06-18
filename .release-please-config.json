@@ -1,8 +1,7 @@
 {
   "packages": {
     ".": {
-      "release-type": "dart",
-      "package-name": "growthbook_sdk_flutter"
+      "release-type": "dart"
     }
   },
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
