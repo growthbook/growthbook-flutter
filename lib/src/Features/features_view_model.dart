@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
@@ -7,6 +8,8 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
+
+import 'gb_features_converter.dart';
 
 class FeatureViewModel {
   FeatureViewModel({
@@ -118,17 +121,16 @@ class FeatureViewModel {
 
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
-    String receivedDataJson = utf8Decoder.convert(receivedData);
-    final receiveFeatureJsonMap = json.decode(receivedDataJson);
+    final receivedDataJson = utf8Decoder.convert(receivedData);
+    final receiveFeatureJsonMap = jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
     GBFeatures featureMap = {};
     if (encryptionKey.isNotEmpty) {
-      receiveFeatureJsonMap.forEach((key, value) {
-        if (value is Map<String, dynamic>) {
-          featureMap[key] = GBFeature.fromJson(value);
-        }
-      });
+      // For encrypted features, parse directly as features map
+      const converter = GBFeaturesConverter();
+      featureMap = converter.fromJson(receiveFeatureJsonMap);
     } else {
+      // For non-encrypted, use the full data model
       featureMap =
           FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
     }
