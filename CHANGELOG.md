@@ -3,6 +3,9 @@
 - Added ability to provide a custom implementation of cache storage
 - Added support for setting a cache key for stored entries
 - Removed singleton pattern from `CachingManager`
+- Fixed subscription logic
+- Added getAllResults method
+- Updated subscribe method
 
 # 3.9.10
 - Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
