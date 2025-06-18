@@ -17,14 +17,14 @@ class FeatureViewModel {
     required this.source,
     required this.encryptionKey,
     this.backgroundSync,
-    this.TTLSeconds = 60,
+    this.ttlSeconds = 60,
   });
 
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
   final String encryptionKey;
   final bool? backgroundSync;
-  final int TTLSeconds;
+  final int ttlSeconds;
   int? _expiresAt;
 
   final CachingManager manager = CachingManager();
@@ -289,7 +289,7 @@ class FeatureViewModel {
   }
 
   void refreshExpiresAt() {
-    _expiresAt = DateTime.now().millisecondsSinceEpoch ~/ 1000 + TTLSeconds;
+    _expiresAt = (DateTime.now().millisecondsSinceEpoch ~/ 1000) + ttlSeconds;
   }
 
   bool isCacheExpired() {
