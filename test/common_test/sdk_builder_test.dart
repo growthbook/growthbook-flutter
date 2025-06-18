@@ -8,7 +8,6 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
-import '../mocks/cache_wrapper_mock.dart';
 import '../mocks/network_mock.dart';
 
 void main() {
@@ -19,7 +18,7 @@ void main() {
     const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
 
-    CachingManager manager = CachingManager();
+    CacheStorage manager = FileCacheStorage();
 
     var isRefreshed = false;
     const channel = MethodChannel('plugins.flutter.io/path_provider');
@@ -46,8 +45,6 @@ void main() {
         apiKey: testApiKey,
         hostURL: testHostURL,
         attributes: attr,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
@@ -82,8 +79,6 @@ void main() {
         client: client,
         forcedVariations: variations,
         hostURL: testHostURL,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         attributes: attr,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
@@ -113,8 +108,6 @@ void main() {
         apiKey: testApiKey,
         hostURL: testHostURL,
         attributes: attr,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
@@ -134,8 +127,6 @@ void main() {
         GrowthBookSDK sdk = await GBSDKBuilderApp(
           apiKey: testApiKey,
           hostURL: testHostURL,
-          cacheDirectory:
-              MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
           attributes: attr,
           client: const MockNetworkClient(error: true),
           growthBookTrackingCallBack: (trackData) {},
@@ -153,8 +144,6 @@ void main() {
     test('- testEncrypt', () async {
       final sdkInstance = await GBSDKBuilderApp(
         hostURL: testHostURL,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         apiKey: testApiKey,
         growthBookTrackingCallBack: (trackData) {},
         attributes: attr,
@@ -193,8 +182,6 @@ void main() {
         await GBSDKBuilderApp(
           apiKey: testApiKey,
           hostURL: testHostURL,
-          cacheDirectory:
-              MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
           attributes: attr,
           client: const MockNetworkClient(error: true),
           growthBookTrackingCallBack: (trackData) {},
@@ -217,8 +204,6 @@ void main() {
       final sdkInstance = await GBSDKBuilderApp(
         apiKey: testApiKey,
         hostURL: testHostURL,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         attributes: attr,
         growthBookTrackingCallBack: (trackData) {
           countTrackingCallback += 1;
@@ -257,11 +242,5 @@ void main() {
 
       expect(countTrackingCallback, equals(1));
     });
-  });
-  tearDownAll(() async {
-    final dir = Directory(
-        await MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport)
-            .path);
-    await dir.delete(recursive: true);
   });
 }

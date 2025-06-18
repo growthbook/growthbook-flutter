@@ -17,13 +17,13 @@ abstract class StickyBucketService {
 
 class LocalStorageStickyBucketService extends StickyBucketService {
   final String prefix;
-  CachingLayer? localStorage;
+  CacheStorage? localStorage;
 
   final utf8Encoder = const Utf8Encoder();
 
   LocalStorageStickyBucketService(
       {this.prefix = 'gbStickyBuckets__', this.localStorage}) {
-    localStorage ??= CachingManager();
+    localStorage ??= FileCacheStorage();
   }
 
   @override

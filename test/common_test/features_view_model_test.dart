@@ -5,7 +5,6 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 
-import '../mocks/cache_wrapper_mock.dart';
 import '../mocks/network_mock.dart';
 import '../mocks/network_view_model_mock.dart';
 
@@ -19,9 +18,7 @@ void main() {
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
-      CachingManager cachingManager = CachingManager();
-      cachingManager.setCacheDirectory(
-          MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
+      CacheStorage cachingManager = FileCacheStorage();
 
       setUp(
         () {
@@ -143,10 +140,4 @@ void main() {
       });
     },
   );
-  tearDownAll(() async {
-    final dir = Directory(
-        await MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport)
-            .path);
-    await dir.delete(recursive: true);
-  });
 }

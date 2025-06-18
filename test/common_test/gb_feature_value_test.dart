@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 import '../Helper/gb_test_helper.dart';
-import '../mocks/cache_wrapper_mock.dart';
 import '../mocks/network_mock.dart';
 
 void main() {
@@ -77,8 +76,6 @@ void main() {
         apiKey: testApiKey,
         hostURL: testHostURL,
         attributes: attr,
-        cacheDirectory:
-            MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport),
         client: const MockNetworkClient(),
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,

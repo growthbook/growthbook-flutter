@@ -1,10 +1,8 @@
 # 3.9.11
-- Added `CacheDirectoryType` enum and `CacheDirectoryWrapper`
-- Added cache key for storing cache entries
+- Added ability to set custom path for caching 
+- Added ability to provide a custom implementation of cache storage
+- Added support for setting a cache key for stored entries
 - Removed singleton pattern from `CachingManager`
-- Enabled setting of system and custom cache directories
-- Added mock cache directory for testing
-- Updated tests to use mock cache directory
 
 # 3.9.10
 - Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.

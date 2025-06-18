@@ -64,6 +64,7 @@ There are additional properties which can be setup at the time of initialization
     client: NetworkClient(), // Provide network dispatcher.
     growthBookTrackingCallBack: (gbExperiment, gbExperimentResult) {},
     hostURL: '<GrowthBook_URL>',
+    cacheDirectory: '/custom/path', //Optional, setting custom path for cache
     forcedVariations: {} // Optional provide force variation.
     qaMode: true, // Set qamode
 );
@@ -71,12 +72,6 @@ There are additional properties which can be setup at the time of initialization
 newSdkInstance.setRefreshHandler(CacheRefreshHandler refreshHandler); // Get Callbacks when SDK refreshed its cache
 newSdkInstance.setStickyBucketService(StickyBucketService? stickyBucketService); // This function creates a sticky bucket service.
 newSdkInstance.setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback);   // Setter for featureUsageCallback. A callback that will be invoked every time a feature is viewed.
-
-// This function configures the cache directory used by the application to the designated directory type. 
-// Subsequent cache-related operations will target this directory. 
-// Setting system cache directory: DefaultCacheDirectoryWrapper(CacheDirectoryType.caches)
-// Custom cache directory: DefaultCacheDirectoryWrapper(CacheDirectoryType.customPath, customCachePath: "/your custom path")
-newSdkInstance.setCacheDirectory(CacheDirectoryWrapper systemDirectory); 
 
 await newSdkInstance.initialize();
 

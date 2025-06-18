@@ -21,7 +21,7 @@ class FeatureViewModel {
   final String encryptionKey;
   final bool? backgroundSync;
 
-  final CachingLayer manager;
+  final CacheStorage manager;
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 

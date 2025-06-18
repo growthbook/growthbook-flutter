@@ -3,24 +3,33 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:pointycastle/digests/sha256.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class CachingManager extends CachingLayer {
-  final _key = 'GrowthBook-Cache';
+abstract class CacheStorage {
+  Future<void> saveContent({
+    required String fileName,
+    required Uint8List content,
+  });
+  Future<Uint8List?> getContent({required String fileName});
+  Future<void> clearCache();
+}
 
-  CacheDirectoryWrapper _cacheDirectory =
-      DefaultCacheDirectoryWrapper(CacheDirectoryType.applicationSupport);
+class FileCacheStorage extends CacheStorage {
+  final _key = 'GrowthBook-Cache';
+  final String _cacheDirectory;
+
   String _cacheKey = '';
 
-  CachingManager({String? apiKey}) {
+  FileCacheStorage({String? apiKey, String? cacheDirectory})
+      : _cacheDirectory = kIsWeb
+            ? '' 
+            : (cacheDirectory ?? Directory.systemTemp.path) {
     if (apiKey != null) {
       setCacheKey(apiKey);
     }
   }
 
-  @override
   void setCacheKey(String key) {
     _cacheKey = _sha256Hash(key);
   }
@@ -39,17 +48,12 @@ class CachingManager extends CachingLayer {
   }
 
   @deprecated
-    /// Deprecated. Use [saveContent] instead.
+  /// Deprecated. Use [saveContent] instead.
   void putData({
     required String fileName,
     required Uint8List content,
   }) {
     saveContent(fileName: fileName, content: content);
-  }
-
-  @override
-  void setCacheDirectory(CacheDirectoryWrapper directory) {
-    _cacheDirectory = directory;
   }
 
   @override
@@ -82,7 +86,7 @@ class CachingManager extends CachingLayer {
   }
 
   Future<String> getTargetFile(String fileName) async {
-    final cacheDirectoryPath = await _cacheDirectory.path;
+    final cacheDirectoryPath = _cacheDirectory;
     String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
     final fileManager = Directory(targetFolderPath);
     if (!fileManager.existsSync()) {
@@ -131,7 +135,7 @@ class CachingManager extends CachingLayer {
       return;
     }
 
-    final cacheDirectoryPath = await _cacheDirectory.path;
+    final cacheDirectoryPath = _cacheDirectory;
     String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
     final fileManager = Directory(targetFolderPath);
 
@@ -143,6 +147,7 @@ class CachingManager extends CachingLayer {
       }
     } else {
       log('Cache directory does not exist. Nothing to clear.');
+      print(targetFolderPath);
     }
   }
 }

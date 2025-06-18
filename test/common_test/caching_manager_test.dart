@@ -6,14 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
-import '../mocks/cache_wrapper_mock.dart';
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('Caching manager test', () {
-    final manager = CachingManager();
-    manager.setCacheDirectory(
-        MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport));
+    final manager = FileCacheStorage();
     test('Caching file name', () async {
       const String fileName = "gb-features.txt";
       final String filePath = await manager.getTargetFile(fileName);
@@ -60,12 +56,5 @@ void main() {
         fail('Failed to get raw data or parse JSON error: $error');
       }
     });
-  });
-
-  tearDownAll(() async {
-    final dir = Directory(
-        await MockCacheDirectoryWrapper(CacheDirectoryType.applicationSupport)
-            .path);
-    await dir.delete(recursive: true);
   });
 }
