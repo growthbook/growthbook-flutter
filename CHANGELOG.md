@@ -1,8 +1,3 @@
-# 3.9.11
-- Fixed subscription logic
-- Added getAllResults method
-- Updated subscribe method
-
 # 3.9.10
 -   Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
 - - Updated project functionality to align with version 0.7.1 change log:
@@ -109,16 +104,6 @@
 - v0.5.2: Add 3 new test cases for comparison operators to handle more edge cases
 - setEncryptedFeatures method
 - Integrated CI/CD functionality, enhancing security and automation in the development pipeline
-
-## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/growthbook_sdk_flutter-v3.9.10...growthbook_sdk_flutter-v3.9.11) (2025-06-18)
-
-
-### Bug Fixes
-
-* equal to condition for string evaluation ([f1ddec9](https://github.com/growthbook/growthbook-flutter/commit/f1ddec9560698df0cc27887ad7071c525cbf36bb))
-* evalConditionValue ([a9bd601](https://github.com/growthbook/growthbook-flutter/commit/a9bd6017dba0f464b948f56202145179c09d8e01))
-* string comparision ([cfcb68e](https://github.com/growthbook/growthbook-flutter/commit/cfcb68eb180729d5a439feebe829cbdd873cc000))
-* string evaluation ([aa027b1](https://github.com/growthbook/growthbook-flutter/commit/aa027b15af332acc6d7b236b1ddb1e4d4f979a4a))
 
 ## 3.0.0+0
 - Fixes [issue](https://github.com/alippo-com/GrowthBook-SDK-Flutter/issues/47)
