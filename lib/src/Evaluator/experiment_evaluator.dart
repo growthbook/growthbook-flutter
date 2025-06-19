@@ -1,10 +1,8 @@
-import 'dart:developer';
-
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
-import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
-import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
+
+import 'experiment_helper.dart';
+import '../MultiUserMode/Model/evaluation_context.dart';
+import '../Utils/gb_variation_meta.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 class ExperimentEvaluator {

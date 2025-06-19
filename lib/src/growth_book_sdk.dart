@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
-import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -32,6 +31,7 @@ class GBSDKBuilderApp {
       this.logLevel,
       this.backgroundSync = false,
       this.remoteEval = false,
+      this.ttlSeconds = 60,
       this.url}) {
     logFilter.level = logLevel;
   }
@@ -51,6 +51,7 @@ class GBSDKBuilderApp {
   final bool remoteEval;
   final String? url;
   final Level? logLevel;
+  final int ttlSeconds;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
@@ -73,11 +74,11 @@ class GBSDKBuilderApp {
         remoteEval: remoteEval,
         url: url);
     final gb = GrowthBookSDK._(
-      context: gbContext,
-      client: client,
-      onInitializationFailure: onInitializationFailure,
-      refreshHandler: refreshHandler,
-    );
+        context: gbContext,
+        client: client,
+        onInitializationFailure: onInitializationFailure,
+        refreshHandler: refreshHandler,
+        ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -117,6 +118,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
+    required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
@@ -198,19 +200,27 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  Map<String, GBExperimentResult> getAllResults() {
+    final Map<String, GBExperimentResult> results = {};
+
+    for (var entry in assigned.entries) {
+      final experimentKey = entry.key;
+      final experimentResult = entry.value.experimentResult;
+      results[experimentKey] = experimentResult;
+    }
+
+    return results;
+  }
+
   void fireSubscriptions(GBExperiment experiment, GBExperimentResult result) {
     String key = experiment.key;
-
-    // If assigned variation has changed, fire subscriptions
-    if (assigned.containsKey(key)) {
-      var assignedExperiment = assigned[key];
-
-      if (assignedExperiment!.experimentResult.inExperiment !=
-              result.inExperiment ||
-          assignedExperiment.experimentResult.variationID !=
-              result.variationID) {
-        updateSubscriptions(key: key, experiment: experiment, result: result);
-      }
+    AssignedExperiment? prevAssignedExperiment = assigned[key];
+    if (prevAssignedExperiment == null ||
+        prevAssignedExperiment.experimentResult.inExperiment !=
+            result.inExperiment ||
+        prevAssignedExperiment.experimentResult.variationID !=
+            result.variationID) {
+      updateSubscriptions(key: key, experiment: experiment, result: result);
     }
   }
 
@@ -225,8 +235,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  void subscribe(ExperimentRunCallback callback) {
+  Function subscribe(ExperimentRunCallback callback) {
     subscriptions.add(callback);
+    return () {
+      subscriptions.remove(callback);
+    };
   }
 
   void clearSubscriptions() {
@@ -234,15 +247,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
+        
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     final result = ExperimentEvaluator().evaluateExperiment(
       GBUtils.initializeEvalContext(context, _refreshHandler),
       experiment,
     );
+    fireSubscriptions(experiment, result);
     return result;
   }
 
@@ -257,8 +274,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshStickyBucketService(null);
   }
 
+  /// Gets the current attribute overrides
+  Map<String, dynamic> get attributeOverrides => _attributeOverrides;
+
   void setAttributeOverrides(dynamic overrides) {
-    _attributeOverrides = json.decode(overrides);
+    _attributeOverrides = jsonDecode(overrides) as Map<String, dynamic>;
     if (context.stickyBucketService != null) {
       refreshStickyBucketService(null);
     }
@@ -318,12 +338,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
+     _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(
         GBUtils.initializeEvalContext(context, _refreshHandler), id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
   bool isOn(String id) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return evalFeature(id).on;
   }
 

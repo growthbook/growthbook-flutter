@@ -477,7 +477,7 @@ class GBUtils {
   }) {
     var attributes = <String>{};
     var features = data?.features ?? context.features;
-    for (var id in features!.keys) {
+    for (var id in features.keys) {
       var feature = features[id];
       var rules = feature?.rules;
       rules?.forEach((rule) {
@@ -647,7 +647,7 @@ class GBUtils {
 
       return variationValue;
     } catch (e) {
-      print("Error parsing integer: $e");
+      //print("Error parsing integer: $e");
       return null;
     }
   }
@@ -676,7 +676,7 @@ class GBUtils {
             : "";
         map[name] = value;
       } catch (e) {
-        print("Error decoding query parameter: $e");
+        //print("Error decoding query parameter: $e");
       }
     }
     return map;
