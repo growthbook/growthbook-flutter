@@ -188,37 +188,39 @@ void main() {
       expect(endValue, expectedValue);
     });
 
-    test('TestDecrypt', () {
+    test('TestDecrypt', () async {
       try {
         var testCases = GBTestHelper.getDecryptData();
         if (testCases == null) return;
 
         for (var jsonElement in testCases) {
-          var test = jsonElement.arrayObject;
-          var payload = test[1] as String?;
-          var key = test[2] as String?;
-          if (payload == null || key == null) {
-            continue;
-          }
-          var expectedElem = test[3];
-
-          try {
-            if (expectedElem is String) {
-              var actual = DecryptionUtils.decrypt(payload, key).trim();
-              expect(actual, expectedElem);
+          var test = jsonElement;
+          if (test != null) {
+            var payload = test[1] as String?;
+            var key = test[2] as String?;
+            if (payload == null || key == null) {
+              continue;
             }
-          } on DecryptionException catch (error) {
-            customLogger("message ${error.errorMessage}");
+            var expectedElem = test[3];
 
-            if (expectedElem == null) {
-              expect(true, isTrue);
+            try {
+              if (expectedElem is String) {
+                final decrypted =await DecryptionUtils.decrypt(payload, key);
+                final actual =
+                    decrypted is String ? decrypted.trim() : decrypted;
+                expect(actual, expectedElem);
+              } else if (expectedElem == null) {
+                expect(true, isTrue);
+              }
+            } on DecryptionException catch (error) {
+              fail("message ${error.errorMessage}");
+            } catch (error) {
+              fail("An unexpected error occurred: $error");
             }
-          } catch (error) {
-            fail("An unexpected error occurred: $error");
           }
         }
       } catch (error) {
-        customLogger("An unexpected error occurred: $error");
+        fail("An unexpected error occurred: $error");
       }
     });
   });

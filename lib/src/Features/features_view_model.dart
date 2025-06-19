@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
@@ -8,17 +9,23 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
+import 'gb_features_converter.dart';
+
 class FeatureViewModel {
   FeatureViewModel({
     required this.delegate,
     required this.source,
     required this.encryptionKey,
     this.backgroundSync,
+    this.ttlSeconds = 60,
   });
+
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
   final String encryptionKey;
   final bool? backgroundSync;
+  final int ttlSeconds;
+  int? _expiresAt;
 
   final CachingManager manager = CachingManager();
   final utf8Encoder = const Utf8Encoder();
@@ -47,14 +54,31 @@ class FeatureViewModel {
     final receivedData =
         await manager.getContent(fileName: Constant.featureCache);
 
-    if (receivedData == null) {
+    if (receivedData != null) {
+      final featureMap = _fetchCachedFeatures(receivedData);
+      delegate.featuresFetchedSuccessfully(
+        gbFeatures: featureMap,
+        isRemote: false,
+      );
+
+      if (isCacheExpired()) {
+        source.fetchFeatures(
+          (data) {
+            _handleSuccess(data);
+          },
+          (e, s) => delegate.featuresFetchFailed(
+            error: GBError(
+              error: e,
+              stackTrace: s.toString(),
+            ),
+            isRemote: true,
+          ),
+        );
+      }
+    } else {
       await source.fetchFeatures(
         (data) {
-          delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features!,
-            isRemote: false,
-          );
-          cacheFeatures(data);
+          _handleSuccess(data);
         },
         (e, s) => delegate.featuresFetchFailed(
           error: GBError(
@@ -64,24 +88,6 @@ class FeatureViewModel {
           isRemote: true,
         ),
       );
-    } else {
-      String receivedDataJson = utf8Decoder.convert(receivedData);
-      final receiveFeatureJsonMap = json.decode(receivedDataJson);
-
-      GBFeatures featureMap = {};
-      if (encryptionKey.isNotEmpty) {
-        receiveFeatureJsonMap.forEach((key, value) {
-          if (value is Map<String, dynamic>) {
-            featureMap[key] = GBFeature.fromJson(value);
-          }
-        });
-      } else {
-        featureMap =
-            FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
-      }
-
-      delegate.featuresFetchedSuccessfully(
-          gbFeatures: featureMap, isRemote: false);
     }
 
     if (remoteEval) {
@@ -99,20 +105,35 @@ class FeatureViewModel {
               isRemote: true,
             );
           });
-    } else {
-      await source.fetchFeatures(
-        (data) {
-          prepareFeaturesData(data);
-        },
-        (e, s) => delegate.featuresFetchFailed(
-          error: GBError(
-            error: e,
-            stackTrace: s.toString(),
-          ),
-          isRemote: true,
-        ),
-      );
+      
     }
+  }
+
+  void _handleSuccess(FeaturedDataModel data) {
+  delegate.featuresFetchedSuccessfully(
+    gbFeatures: data.features!,
+    isRemote: false,
+  );
+  cacheFeatures(data);
+  refreshExpiresAt();
+}
+
+
+  Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
+    final receivedDataJson = utf8Decoder.convert(receivedData);
+    final receiveFeatureJsonMap = jsonDecode(receivedDataJson) as Map<String, dynamic>;
+
+    GBFeatures featureMap = {};
+    if (encryptionKey.isNotEmpty) {
+      // For encrypted features, parse directly as features map
+      const converter = GBFeaturesConverter();
+      featureMap = converter.fromJson(receiveFeatureJsonMap);
+    } else {
+      // For non-encrypted, use the full data model
+      featureMap =
+          FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+    }
+    return featureMap;
   }
 
   void prepareFeaturesData(FeaturedDataModel data) {
@@ -258,11 +279,24 @@ class FeatureViewModel {
   }
 
   void cacheFeatures(FeaturedDataModel data) {
-    final featureData = utf8Encoder.convert(jsonEncode(data.features));
+    final featureData = utf8Encoder.convert(jsonEncode(data));
     final featureDataOnUint8List = Uint8List.fromList(featureData);
     manager.putData(
       fileName: Constant.featureCache,
       content: featureDataOnUint8List,
     );
+  }
+
+  void refreshExpiresAt() {
+    _expiresAt = (DateTime.now().millisecondsSinceEpoch ~/ 1000) + ttlSeconds;
+  }
+
+  bool isCacheExpired() {
+    if (_expiresAt == null) {
+      return true;
+    } else {
+      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return now >= _expiresAt!;
+    }
   }
 }

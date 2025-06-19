@@ -1,0 +1,78 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  validate-and-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.2'
+          channel: 'stable'
+          
+      - name: Install dependencies
+        run: flutter pub get
+        
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+        
+      - name: Analyze code
+        run: dart analyze --fatal-infos
+        
+      - name: Run tests
+        run: flutter test
+        
+      - name: Check publish warnings
+        run: dart pub publish --dry-run
+        
+      - name: Release Please
+        id: release
+        uses: google-github-actions/release-please-action@v4
+        with:
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish-to-pub-dev:
+    needs: validate-and-release
+    runs-on: ubuntu-latest
+    if: ${{ needs.validate-and-release.outputs.release_created }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout at release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-and-release.outputs.tag_name }}
+        
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        
+      - name: Install dependencies
+        run: dart pub get
+        
+      - name: Generate required files
+        run: dart run build_runner build --delete-conflicting-outputs
+        
+      - name: Publish to pub.dev
+        run: dart pub publish --force 
