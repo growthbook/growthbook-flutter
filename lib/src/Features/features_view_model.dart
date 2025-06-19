@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -8,6 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 import 'gb_features_converter.dart';
 
@@ -140,7 +140,7 @@ class FeatureViewModel {
   void prepareFeaturesData(FeaturedDataModel data) {
     try {
       if (data.features == null && data.encryptedFeatures == null) {
-        log("JSON is null.");
+        logger.w("JSON is null.");
       } else {
         handleValidFeatures(data);
       }
@@ -276,7 +276,7 @@ class FeatureViewModel {
   }
 
   void logError(String message) {
-    log("Failed to parse data. $message");
+    logger.e("Failed to parse data. $message");
   }
 
   void cacheFeatures(FeaturedDataModel data) {
