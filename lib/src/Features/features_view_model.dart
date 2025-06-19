@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
@@ -8,6 +9,8 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
+import 'gb_features_converter.dart';
+
 class FeatureViewModel {
   FeatureViewModel({
     required this.delegate,
@@ -15,14 +18,14 @@ class FeatureViewModel {
     required this.encryptionKey,
     required this.manager,
     this.backgroundSync,
-    this.TTLSeconds = 60,
+    this.ttlSeconds = 60,
   });
 
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
   final String encryptionKey;
   final bool? backgroundSync;
-  final int TTLSeconds;
+  final int ttlSeconds;
   int? _expiresAt;
 
   final CacheStorage manager;
@@ -119,17 +122,16 @@ class FeatureViewModel {
 
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
-    String receivedDataJson = utf8Decoder.convert(receivedData);
-    final receiveFeatureJsonMap = json.decode(receivedDataJson);
+    final receivedDataJson = utf8Decoder.convert(receivedData);
+    final receiveFeatureJsonMap = jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
     GBFeatures featureMap = {};
     if (encryptionKey.isNotEmpty) {
-      receiveFeatureJsonMap.forEach((key, value) {
-        if (value is Map<String, dynamic>) {
-          featureMap[key] = GBFeature.fromJson(value);
-        }
-      });
+      // For encrypted features, parse directly as features map
+      const converter = GBFeaturesConverter();
+      featureMap = converter.fromJson(receiveFeatureJsonMap);
     } else {
+      // For non-encrypted, use the full data model
       featureMap =
           FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
     }
@@ -288,7 +290,7 @@ class FeatureViewModel {
   }
 
   void refreshExpiresAt() {
-    _expiresAt = DateTime.now().millisecondsSinceEpoch ~/ 1000 + TTLSeconds;
+    _expiresAt = (DateTime.now().millisecondsSinceEpoch ~/ 1000) + ttlSeconds;
   }
 
   bool isCacheExpired() {

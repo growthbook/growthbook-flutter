@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
-import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -33,7 +32,7 @@ class GBSDKBuilderApp {
       this.stickyBucketService,
       this.backgroundSync = false,
       this.remoteEval = false,
-      this.TTLSeconds = 60,
+      this.ttlSeconds = 60,
       this.url,
       String? cacheDirectory,
       CacheStorage? cacheStorage})
@@ -54,7 +53,7 @@ class GBSDKBuilderApp {
   final bool backgroundSync;
   final bool remoteEval;
   final String? url;
-  final int TTLSeconds;
+  final int ttlSeconds;
 
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
@@ -83,7 +82,7 @@ class GBSDKBuilderApp {
         onInitializationFailure: onInitializationFailure,
       cachingManager: cachingManager,
         refreshHandler: refreshHandler,
-        TTLSeconds: TTLSeconds);
+        ttlSeconds: ttlSeconds);
     await cachingManager.saveContent(
         fileName: Constant.featureCache,
         content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
@@ -126,7 +125,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       EvaluationContext? evaluationContext,
       BaseClient? client,
       CacheRefreshHandler? refreshHandler,
-    required int TTLSeconds,
+    required int ttlSeconds,
       required CacheStorage cachingManager})
       : _context = context,
         _evaluationContext =
@@ -290,8 +289,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshStickyBucketService(null);
   }
 
+  /// Gets the current attribute overrides
+  Map<String, dynamic> get attributeOverrides => _attributeOverrides;
+
   void setAttributeOverrides(dynamic overrides) {
-    _attributeOverrides = json.decode(overrides);
+    _attributeOverrides = jsonDecode(overrides) as Map<String, dynamic>;
     if (context.stickyBucketService != null) {
       refreshStickyBucketService(null);
     }

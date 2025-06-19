@@ -6,17 +6,17 @@ class GBFeaturesConverter extends JsonConverter<GBFeatures, Map<String, dynamic>
 
   @override
   GBFeatures fromJson(Map<String, dynamic> json) {
-    return json.map((key, value) {
-      return MapEntry(key, GBFeature.fromJson(value));
+    final result = <String, GBFeature>{};
+    json.forEach((key, value) {
+      if (value != null && value is Map<String, dynamic>) {
+        result[key] = GBFeature.fromJson(value);
+      }
     });
+    return result;
   }
 
   @override
   Map<String, dynamic> toJson(GBFeatures object) {
-    Map<String, dynamic> featureMap = {};
-    object.forEach((key, value) {
-      featureMap[key] = value.toJson();
-    });
-    return featureMap;
+    return object.map((key, value) => MapEntry(key, value.toJson()));
   }
 }

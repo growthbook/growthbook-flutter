@@ -35,9 +35,9 @@ class LocalStorageStickyBucketService extends StickyBucketService {
       if (localStorage != null) {
         final data = await localStorage!.getContent(fileName: '$prefix$key');
         if (data != null) {
-          String jsonString = utf8.decode(data);
-          Map<String, dynamic> jsonMap = json.decode(jsonString);
-
+          // Use generated method directly with proper error handling
+          final jsonString = utf8.decode(data);
+          final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
           doc = StickyAssignmentsDocument.fromJson(jsonMap);
         }
       }
@@ -52,7 +52,7 @@ class LocalStorageStickyBucketService extends StickyBucketService {
     final key = '${doc.attributeName}||${doc.attributeValue}';
     try {
       if (localStorage != null) {
-        final content = utf8Encoder.convert(json.encode(doc.toJson()));
+        final content = utf8Encoder.convert(jsonEncode(doc.toJson()));
         localStorage!.saveContent(fileName: '$prefix$key', content: content);
       }
     } catch (e) {
