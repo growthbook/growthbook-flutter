@@ -47,8 +47,7 @@ class FileCacheStorage extends CacheStorage {
     return getContent(fileName: fileName);
   }
 
-  @deprecated
-  /// Deprecated. Use [saveContent] instead.
+  @Deprecated('Use saveContent instead')
   void putData({
     required String fileName,
     required Uint8List content,
@@ -147,7 +146,6 @@ class FileCacheStorage extends CacheStorage {
       }
     } else {
       log('Cache directory does not exist. Nothing to clear.');
-      print(targetFolderPath);
     }
   }
 }
