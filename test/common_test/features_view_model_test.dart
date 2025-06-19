@@ -14,7 +14,6 @@ void main() {
       late GBContext context;
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
-      const testHostURL = '<HOST URL>';
 
       setUp(
         () {

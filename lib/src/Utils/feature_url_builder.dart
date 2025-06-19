@@ -42,6 +42,8 @@ class FeatureURLBuilder {
 enum FeatureRefreshStrategy {
   // ignore: constant_identifier_names
   STALE_WHILE_REVALIDATE,
+  // ignore: constant_identifier_names
   SERVER_SENT_EVENTS,
+  // ignore: constant_identifier_names
   SERVER_SENT_REMOTE_FEATURE_EVAL
 }
