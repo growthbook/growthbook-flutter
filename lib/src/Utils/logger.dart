@@ -15,7 +15,6 @@ class DynamicLogFilter extends LogFilter {
 
   @override
   bool shouldLog(LogEvent event) {
-    // якщо рівень не заданий — логувати все
     if (_level == null) return true;
     return event.level.index >= _level!.index;
   }
