@@ -74,5 +74,13 @@ jobs:
       - name: Generate required files
         run: dart run build_runner build --delete-conflicting-outputs
         
+      - name: Verify generated files exist
+        run: |
+          if [ ! -f "lib/src/Model/features_model.g.dart" ]; then
+            echo "Error: features_model.g.dart not generated"
+            exit 1
+          fi
+          echo "Generated files verified successfully"
+        
       - name: Publish to pub.dev
         run: dart pub publish --force 
