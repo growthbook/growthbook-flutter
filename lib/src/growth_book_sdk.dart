@@ -239,14 +239,18 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    // Sync features to evaluation context
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    // Sync features to evaluation context
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = ExperimentEvaluator().evaluateExperiment(
       _evaluationContext,
       experiment,
@@ -336,8 +340,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    // Sync features to evaluation context
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
