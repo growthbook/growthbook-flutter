@@ -108,6 +108,17 @@
 - setEncryptedFeatures method
 - Integrated CI/CD functionality, enhancing security and automation in the development pipeline
 
+## [3.9.13](https://github.com/growthbook/growthbook-flutter/compare/v3.9.12...v3.9.13) (2025-07-21)
+
+
+### Bug Fixes
+
+* equal to condition for string evaluation ([f1ddec9](https://github.com/growthbook/growthbook-flutter/commit/f1ddec9560698df0cc27887ad7071c525cbf36bb))
+* evalConditionValue ([a9bd601](https://github.com/growthbook/growthbook-flutter/commit/a9bd6017dba0f464b948f56202145179c09d8e01))
+* string comparision ([cfcb68e](https://github.com/growthbook/growthbook-flutter/commit/cfcb68eb180729d5a439feebe829cbdd873cc000))
+* string evaluation ([aa027b1](https://github.com/growthbook/growthbook-flutter/commit/aa027b15af332acc6d7b236b1ddb1e4d4f979a4a))
+* type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))
+
 ## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
 
 
