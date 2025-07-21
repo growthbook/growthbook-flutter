@@ -158,6 +158,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required bool isRemote,
   }) {
     _context.features = gbFeatures;
+    // Sync features to evaluation context after refresh
+    _evaluationContext.globalContext.features = gbFeatures;
     if (isRemote) {
       if (_refreshHandler != null) {
         _refreshHandler!(true);
@@ -237,16 +239,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    return FeatureEvaluator().evaluateFeature(
-        
-        GBUtils.initializeEvalContext(context, _refreshHandler), id);
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
+    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = ExperimentEvaluator().evaluateExperiment(
-      GBUtils.initializeEvalContext(context, _refreshHandler),
+      _evaluationContext,
       experiment,
     );
     fireSubscriptions(experiment, result);
@@ -261,6 +267,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Replaces the Map of user attributes that are used to assign variations
   void setAttributes(Map<String, dynamic> attributes) {
     _context.attributes = attributes;
+    _evaluationContext.userContext.attributes = attributes;
     refreshStickyBucketService(null);
   }
 
@@ -290,6 +297,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
     if (features != null) {
       _context.features = features;
+      // Sync features to evaluation context
+      _evaluationContext.globalContext.features = features;
     }
   }
 
@@ -307,6 +316,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (context.stickyBucketService != null) {
       await GBUtils.refreshStickyBuckets(_context, data,
           _evaluationContext.userContext.attributes ?? {});
+      // Sync the loaded assignments to userContext
+      _evaluationContext.userContext.stickyBucketAssignmentDocs = 
+          _context.stickyBucketAssignmentDocs;
     }
   }
 
@@ -328,14 +340,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-     _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    return FeatureEvaluator().evaluateFeature(
-        GBUtils.initializeEvalContext(context, _refreshHandler), id);
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    _evaluationContext.globalContext.features = _context.features;
+    // Clear stack context to avoid false cyclic prerequisite detection
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
+    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
   bool isOn(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return evalFeature(id).on;
   }
 
