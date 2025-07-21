@@ -87,3 +87,4 @@ jobs:
         
       - name: Publish to pub.dev
         run: flutter pub publish --force
+        
