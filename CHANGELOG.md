@@ -1,17 +1,27 @@
+# 3.9.13
+- Fix analysis issues.
+- Update dependencies.
+
 # 3.9.12
--   update version of Growthbook Flutter SDK
- -  All methods now use a single _evaluationContext that includes sticky bucket data.
- -  refresh() now also synchronizes this context.
- -  Sticky bucketing now works correctly at all times.
+- Update version of Growthbook Flutter SDK.
+- All methods now use a single _evaluationContext that includes sticky bucket data.
+- Refresh() now also synchronizes this context.
+- Sticky bucketing now works correctly at all times.
+
+# [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
+
+## Bug Fixes
+
+- type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))  
 
 # 3.9.10
--   Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
-- - Updated project functionality to align with version 0.7.1 change log:
-- - Added feature rule ID to the FeatureResult object and updated all related test cases.
-- - Added new tests for pre-requisite edge cases.
-- - Ensured only known properties are copied from feature rules to experiments.
-- - Expanded evalCondition tests to cover null/false edge cases.
-- - Added test cases for URL redirects.
+- Moved TrackData to constant.dart to ensure it is publicly accessible and can be imported correctly without relying on internal paths.
+- Updated project functionality to align with version 0.7.1 change log:
+- Added feature rule ID to the FeatureResult object and updated all related test cases.
+- Added new tests for pre-requisite edge cases.
+- Ensured only known properties are copied from feature rules to experiments.
+- Expanded evalCondition tests to cover null/false edge cases.
+- Added test cases for URL redirects.
 
 # 3.9.9
 - Enable Multi Context Support
@@ -110,13 +120,6 @@
 - v0.5.2: Add 3 new test cases for comparison operators to handle more edge cases
 - setEncryptedFeatures method
 - Integrated CI/CD functionality, enhancing security and automation in the development pipeline
-
-## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
-
-
-### Bug Fixes
-
-* type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))
 
 ## 3.0.0+0
 - Fixes [issue](https://github.com/alippo-com/GrowthBook-SDK-Flutter/issues/47)
