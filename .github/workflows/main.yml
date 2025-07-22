@@ -22,10 +22,10 @@ jobs:
       - name: Pub upgrade
         run: flutter pub upgrade --major-versions
       - name: Build runner
-        run: dart run build_runner build --delete-conflicting-outputs
+        run: flutter dart run build_runner build --delete-conflicting-outputs
       - name: Analyze code
-        run: dart analyze --fatal-infos
+        run: flutter dart analyze --fatal-infos
       - name: Run tests
         run: flutter test
       - name: Format code
-        run: dart format --fix .
+        run: flutter dart format --fix .
