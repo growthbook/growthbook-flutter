@@ -25,8 +25,8 @@ jobs:
       - name: Build runner
         run: flutter pub run build_runner build --delete-conflicting-outputs
       - name: Analyze code
-        run: flutter dart analyze --fatal-infos
+        run: flutter analyze --fatal-infos
       - name: Run tests
         run: flutter test
       - name: Format code
-        run: flutter dart format --fix .
+        run: flutter format --fix .
