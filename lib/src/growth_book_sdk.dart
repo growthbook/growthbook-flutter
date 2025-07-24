@@ -158,7 +158,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// 
   /// This approach maintains a single source of truth for the evaluation context
   /// instead of creating new contexts on every evaluation, which is more efficient
-  /// and prevents bugs caused by stale evaluation contexts.
+  /// and prevents bugs caused by stale evaluation contexts. 
   void _updateEvaluationContext() {
     _evaluationContext = GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
