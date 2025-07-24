@@ -915,6 +915,69 @@ const String gbTestCases = r'''
       false
     ],
     [
+      "ISO date $gte/$lte - previously broken operators fix",
+      {
+        "subscriptionDate": {
+          "$gte": "2025-04-28T12:00",
+          "$lte": "2025-12-31T23:59"
+        }
+      },
+      {
+        "subscriptionDate": "2025-06-15T14:30"
+      },
+      true
+    ],
+    [
+      "ISO date $gt/$lt - ensure existing operators still work",
+      {
+        "lastLogin": {
+          "$gt": "2025-01-01T00:00",
+          "$lt": "2025-12-31T23:59"
+        }
+      },
+      {
+        "lastLogin": "2025-06-15T12:30"
+      },
+      true
+    ],
+    [
+      "ISO date with timezone - edge case handling",
+      {
+        "scheduledAt": {
+          "$lte": "2025-08-20T15:00:00+05:30"
+        }
+      },
+      {
+        "scheduledAt": "2025-08-20T14:30:00+05:30"
+      },
+      true
+    ],
+    [
+      "ISO date with milliseconds - precision handling",
+      {
+        "timestamp": {
+          "$gte": "2025-01-15T10:30:45.123Z"
+        }
+      },
+      {
+        "timestamp": "2025-01-15T10:30:45.456Z"
+      },
+      true
+    ],
+    [
+      "ISO date boundary test - $gt passes but $lt fails",
+      {
+        "lastLogin": {
+          "$gt": "2025-01-01T00:00",
+          "$lt": "2025-06-01T00:00"
+        }
+      },
+      {
+        "lastLogin": "2025-12-31T23:59"
+      },
+      false
+    ],
+    [
       "nested value is null",
       {
         "address.state": "CA"
