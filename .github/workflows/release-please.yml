@@ -47,7 +47,7 @@ jobs:
         
       - name: Release Please
         id: release
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
@@ -65,7 +65,11 @@ jobs:
         with:
           ref: ${{ needs.validate-and-release.outputs.tag_name }}
         
-      - name: Setup Flutter
+      # Use Dart setup first for OIDC support
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+        
+      - name: Setup Flutter  
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.2'
@@ -75,7 +79,7 @@ jobs:
         run: flutter pub get
         
       - name: Generate required files
-        run: flutter pub run build_runner build --delete-conflicting-outputs
+        run: dart run build_runner build --delete-conflicting-outputs
         
       - name: Verify generated files exist
         run: |
@@ -86,4 +90,4 @@ jobs:
           echo "Generated files verified successfully"
         
       - name: Publish to pub.dev
-        run: flutter pub publish --force
+        run: dart pub publish --force
