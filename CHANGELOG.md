@@ -111,14 +111,6 @@
 - setEncryptedFeatures method
 - Integrated CI/CD functionality, enhancing security and automation in the development pipeline
 
-## [3.9.13](https://github.com/growthbook/growthbook-flutter/compare/v3.9.12...v3.9.13) (2025-07-24)
-
-
-### Bug Fixes
-
-* bug fixes ([b0fe046](https://github.com/growthbook/growthbook-flutter/commit/b0fe046aa6ccb9eebc84988335839c28c02c2ef8))
-* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
-
 ## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
 
 
