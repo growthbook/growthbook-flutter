@@ -1,10 +1,12 @@
 # GrowthBook Flutter SDK
 
+<!-- Trigger release for pub.dev publishing workflow test -->
+
 <div align="center">
 
 ![GrowthBook Flutter SDK](https://docs.growthbook.io/images/hero-flutter-sdk.png)
 
-[![pub.dev](https://img.shields.io/pub/v/growthbook_sdk_flutter)](https://pub.dev/packages/growthbook_sdk_flutter)
+[![pub package](https://img.shields.io/pub/v/growthbook_sdk_flutter.svg)](https://pub.dev/packages/growthbook_sdk_flutter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/badge/platform-flutter-blue)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=flat&logo=dart&logoColor=white)
