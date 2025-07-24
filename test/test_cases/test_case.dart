@@ -1,6 +1,6 @@
 const String gbTestCases = r'''
 {
-  "specVersion": "0.7.1",
+  "specVersion": "0.7.2",
   "evalCondition": [
     [
       "$not - pass",
