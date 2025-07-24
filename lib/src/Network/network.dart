@@ -43,6 +43,7 @@ class DioClient extends BaseClient {
     required OnError onError,
   }) async {
     try {
+      log('Establishing SSE connection to: $url');
       final resp = await _dio.get(
         url,
         options: Options(responseType: ResponseType.stream),
@@ -54,6 +55,7 @@ class DioClient extends BaseClient {
       if (data is ResponseBody) {
         data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
           (sseModel) {
+            log('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features") {
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
@@ -61,10 +63,12 @@ class DioClient extends BaseClient {
             }
           },
           onError: (dynamic e, dynamic s) async {
-            onError;
+            onError(e, s);
           },
           onDone: () async {
+            log('SSE connection closed with status: $statusCode');
             if (statusCode != null && shouldReconnect(statusCode)) {
+              log('Attempting to reconnect SSE...');
               await listenAndRetry(
                 url: url,
                 onError: onError,
@@ -75,7 +79,8 @@ class DioClient extends BaseClient {
         );
       }
     } catch (error) {
-      onError;
+      log('SSE connection error: $error');
+      onError(error, StackTrace.current);
     }
   }
 
