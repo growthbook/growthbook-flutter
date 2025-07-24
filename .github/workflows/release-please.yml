@@ -4,17 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      skip_release:
-        description: 'Skip release creation and only publish existing tag'
-        required: false
-        type: boolean
-        default: false
-      tag_name:
-        description: 'Tag to publish (only used if skip_release is true)'
-        required: false
-        type: string
 
 permissions:
   contents: write
@@ -25,7 +14,6 @@ permissions:
 jobs:
   validate-and-release:
     runs-on: ubuntu-latest
-    if: ${{ !inputs.skip_release }}
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -65,9 +53,9 @@ jobs:
           manifest-file: .release-please-manifest.json
 
   publish-to-pub-dev:
-    needs: [validate-and-release]
+    needs: validate-and-release
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.validate-and-release.outputs.release_created == 'true' || inputs.skip_release == true) }}
+    if: ${{ needs.validate-and-release.outputs.release_created }}
     permissions:
       contents: read
       id-token: write
@@ -75,7 +63,7 @@ jobs:
       - name: Checkout at release tag
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.skip_release && inputs.tag_name || needs.validate-and-release.outputs.tag_name }}
+          ref: ${{ needs.validate-and-release.outputs.tag_name }}
         
       # Use Dart setup first for OIDC support
       - name: Setup Dart
