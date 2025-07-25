@@ -1,6 +1,21 @@
-# 3.9.13
+# 3.9.15
 - Fix analysis issues.
 - Update dependencies.
+
+## [3.9.14](https://github.com/growthbook/growthbook-flutter/compare/v3.9.13...v3.9.14) (2025-07-24)
+
+### Bug Fixes
+
+* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
+* release template  ([33af84a](https://github.com/growthbook/growthbook-flutter/commit/33af84a6f35a98a9fb85a96ce10b9c2e085b8147))
+
+## [3.9.13](https://github.com/growthbook/growthbook-flutter/compare/v3.9.12...v3.9.13) (2025-07-24)
+
+### Bug Fixes
+
+* bug fixes ([b0fe046](https://github.com/growthbook/growthbook-flutter/commit/b0fe046aa6ccb9eebc84988335839c28c02c2ef8))
+* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
+* release template  ([33af84a](https://github.com/growthbook/growthbook-flutter/commit/33af84a6f35a98a9fb85a96ce10b9c2e085b8147))
 
 # 3.9.12
 - Update version of Growthbook Flutter SDK.
@@ -10,7 +25,7 @@
 
 # [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
 
-## Bug Fixes
+### Bug Fixes
 
 - type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))  
 
