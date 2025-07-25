@@ -9,7 +9,6 @@ jobs:
   setup-and-publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed to push generated files
       id-token: write  # Required for authentication using OIDC
     steps:
       - name: Checkout
@@ -34,18 +33,6 @@ jobs:
             exit 1
           fi
           echo "Generated files verified successfully"
-          
-      - name: Commit generated files
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          if ! git diff --staged --quiet; then
-            git commit -m "Generate files for publish [skip ci]"
-            git push
-          else
-            echo "No changes to commit"
-          fi
           
       - name: Setup Dart with OIDC
         uses: dart-lang/setup-dart@v1
