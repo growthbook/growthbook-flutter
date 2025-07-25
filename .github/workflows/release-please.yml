@@ -27,7 +27,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.2'
+          flutter-version: '3.27.0'
           channel: 'stable'
           
       - name: Install dependencies
@@ -51,5 +51,4 @@ jobs:
         with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
-
-
+        
