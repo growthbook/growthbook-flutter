@@ -384,6 +384,9 @@ class GBConditionEvaluator {
 
         /// Evaluate LTE operator - whether attribute less than or equal to condition
         case '\$lte':
+          if (conditionValue is String && attributeValue is String) {
+            return attributeValue.compareTo(conditionValue) <= 0;
+          }
           evaluatedValue = (sourcePrimitiveValue ?? 0.0) <= (targetPrimitiveValue ?? 0);
           break;
 
@@ -396,6 +399,9 @@ class GBConditionEvaluator {
           break;
 
         case '\$gte':
+          if (conditionValue is String && attributeValue is String) {
+            return attributeValue.compareTo(conditionValue) >= 0;
+          }
           evaluatedValue = (sourcePrimitiveValue ?? 0.0) >= (targetPrimitiveValue ?? 0);
           break;
 
