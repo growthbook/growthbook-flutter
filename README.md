@@ -1,6 +1,6 @@
 # GrowthBook Flutter SDK
 
-<!-- Trigger release for pub.dev publishing workflow test -->
+<!-- Test reusable workflow v2 -->
 
 <div align="center">
 
