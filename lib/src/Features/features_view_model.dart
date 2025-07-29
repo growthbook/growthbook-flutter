@@ -37,7 +37,7 @@ class FeatureViewModel {
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
       (data) {
         delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features!, isRemote: false);
+            gbFeatures: data.features!, isRemote: true);
         prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
@@ -45,7 +45,7 @@ class FeatureViewModel {
           error: e,
           stackTrace: s.toString(),
         ),
-        isRemote: false,
+        isRemote: true,
       ),
     );
   }
@@ -114,7 +114,7 @@ class FeatureViewModel {
   void _handleSuccess(FeaturedDataModel data) {
   delegate.featuresFetchedSuccessfully(
     gbFeatures: data.features!,
-    isRemote: false,
+    isRemote: true,  // This is a network fetch, so it should be remote
   );
   cacheFeatures(data);
   refreshExpiresAt();

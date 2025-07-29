@@ -1,4 +1,10 @@
-# 3.9.11
+# 3.9.12
+-   update version of Growthbook Flutter SDK
+ -  All methods now use a single _evaluationContext that includes sticky bucket data.
+ -  refresh() now also synchronizes this context.
+ -  Sticky bucketing now works correctly at all times.
+ 
+ # 3.9.11
 - Added ability to set custom path for caching 
 - Added ability to provide a custom implementation of cache storage
 - Added support for setting a cache key for stored entries
@@ -113,6 +119,30 @@
 - v0.5.2: Add 3 new test cases for comparison operators to handle more edge cases
 - setEncryptedFeatures method
 - Integrated CI/CD functionality, enhancing security and automation in the development pipeline
+
+## [3.9.14](https://github.com/growthbook/growthbook-flutter/compare/v3.9.13...v3.9.14) (2025-07-24)
+
+
+### Bug Fixes
+
+* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
+* release template  ([33af84a](https://github.com/growthbook/growthbook-flutter/commit/33af84a6f35a98a9fb85a96ce10b9c2e085b8147))
+
+## [3.9.13](https://github.com/growthbook/growthbook-flutter/compare/v3.9.12...v3.9.13) (2025-07-24)
+
+
+### Bug Fixes
+
+* bug fixes ([b0fe046](https://github.com/growthbook/growthbook-flutter/commit/b0fe046aa6ccb9eebc84988335839c28c02c2ef8))
+* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
+* release template  ([33af84a](https://github.com/growthbook/growthbook-flutter/commit/33af84a6f35a98a9fb85a96ce10b9c2e085b8147))
+
+## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
+
+
+### Bug Fixes
+
+* type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))
 
 ## 3.0.0+0
 - Fixes [issue](https://github.com/alippo-com/GrowthBook-SDK-Flutter/issues/47)
