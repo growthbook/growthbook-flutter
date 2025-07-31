@@ -681,13 +681,13 @@ class GBUtils {
     return map;
   }
 
-  static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+  static EvaluationContext initializeEvalContext(GBContext gbContext,
+      GBCacheRefreshHandler? refreshHandler) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
       isCacheDisabled: false,
-      hostUrl: gbContext.hostURL,
+      hostUrl: gbContext.apiHost,
       clientKey: gbContext.apiKey,
       decryptionKey: gbContext.encryptionKey,
       stickyBucketIdentifierAttributes:
