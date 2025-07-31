@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/condition_evaluator.dart';
 
 import '../Helper/gb_test_helper.dart';
@@ -30,7 +30,7 @@ void main() {
         index++;
       }
       expect(failedScenarios.length, 0);
-      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      logger.i('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
     });
 
     test('Test valid condition obj', () {
