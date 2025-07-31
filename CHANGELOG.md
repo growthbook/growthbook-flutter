@@ -1,3 +1,22 @@
+## [4.0.0](https://github.com/growthbook/growthbook-flutter/compare/v3.9.14...v4.0.0) (2025-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* include .g.dart files in published packages
+
+### Bug Fixes
+
+* add setup, build_runner to publish workflow ([963503c](https://github.com/growthbook/growthbook-flutter/commit/963503c4a93c7f5d752a469891f67ba950c84fcf))
+* analyzer issues ([226ee7f](https://github.com/growthbook/growthbook-flutter/commit/226ee7f55b9fde8a8a24927e7f3b944197a96710))
+* detached HEAD ([f8264d9](https://github.com/growthbook/growthbook-flutter/commit/f8264d97ef771d15777f94beb8828484b820e9ff))
+* include .g.dart files in published packages ([f2f64fe](https://github.com/growthbook/growthbook-flutter/commit/f2f64fea1c22c427639bb94580c5f72702a1ace3))
+* include .g.dart files in published packages ([f2f64fe](https://github.com/growthbook/growthbook-flutter/commit/f2f64fea1c22c427639bb94580c5f72702a1ace3))
+* include .g.dart files in published packages ([ef12356](https://github.com/growthbook/growthbook-flutter/commit/ef12356baf41a8da3f9f59abafe02ca4ea67ca7c))
+* update dart SDK constraint to &gt;=3.3.0 ([00973d7](https://github.com/growthbook/growthbook-flutter/commit/00973d7d473a1a675e2adc4362ff3b6e71b3ea59))
+* update Flutter version to 3.24.0 ([c34afb5](https://github.com/growthbook/growthbook-flutter/commit/c34afb5698b3c651ff84b32a4426393a4e60f8bf))
+* update Flutter version to 3.27.0 and upgrade build_runner to ^2.4.14 ([cfcc146](https://github.com/growthbook/growthbook-flutter/commit/cfcc146d616359a0bcb67ec393d9b188c8ffdbed))
+
 # 3.9.15
 - Fix analysis issues.
 - Update dependencies.

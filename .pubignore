@@ -44,3 +44,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Generated files
+# NOTE: .g.dart files are needed in published packages for users
+# They are excluded from git via .gitignore but MUST be included in pub.dev
