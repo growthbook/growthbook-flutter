@@ -83,8 +83,7 @@ class GBUtils {
 
   /// This checks if a userId is within an experiment namespace or not.
   static bool inNamespace(String userId, GBNameSpace namespace) {
-    final hashValue =
-        hash(value: "${userId}__", seed: namespace.item1, version: 1);
+    final hashValue = hash(value: "${userId}__", seed: namespace.item1, version: 1);
     if (hashValue == null) return false;
     return hashValue >= namespace.item2 && hashValue < namespace.item3;
   }
@@ -103,8 +102,7 @@ class GBUtils {
 
   ///This converts and experiment's coverage and variation weights into an array
   /// of bucket ranges.
-  static List<GBBucketRange> getBucketRanges(
-      int numVariations, double coverage, List<double>? weights) {
+  static List<GBBucketRange> getBucketRanges(int numVariations, double coverage, List<double>? weights) {
     List<List<double>> bucketRanges = [];
     var targetCoverage = coverage;
 
@@ -124,8 +122,7 @@ class GBUtils {
     }
 
     // Calculate the sum of target weights
-    double weightsSum =
-        targetWeights.fold<double>(0, (prev, element) => prev + element);
+    double weightsSum = targetWeights.fold<double>(0, (prev, element) => prev + element);
     // targetWeights.reduce(0.0, (sum, weight) => sum + weight);
 
     // If the sum of weights is not close to 1, default to equal weights
@@ -172,8 +169,7 @@ class GBUtils {
       final end = namespace[2];
 
       if (start != null && end != null) {
-        return GBNameSpace(title, double.parse(start.toString()),
-            double.parse(end.toString()));
+        return GBNameSpace(title, double.parse(start.toString()), double.parse(end.toString()));
       }
     }
 
@@ -213,24 +209,15 @@ class GBUtils {
     });
   }
 
-  static bool isIncludedInRollout(
-      Map<String, dynamic> attributes,
-      String? seed,
-      String? hashAttribute,
-      String? fallbackAttribute,
-      GBBucketRange? range,
-      double? coverage,
-      int? hashVersion) {
+  static bool isIncludedInRollout(Map<String, dynamic> attributes, String? seed, String? hashAttribute,
+      String? fallbackAttribute, GBBucketRange? range, double? coverage, int? hashVersion) {
     // If both range and coverage are null, return true
     if (range == null && coverage == null) return true;
 
     if (range == null && coverage == 0) return false;
 
     // Get the hash attribute and its value
-    var hashAttrResult = getHashAttribute(
-        attr: hashAttribute,
-        fallback: fallbackAttribute,
-        attributes: attributes);
+    var hashAttrResult = getHashAttribute(attr: hashAttribute, fallback: fallbackAttribute, attributes: attributes);
     String? hashValue = hashAttrResult[1];
 
     // Calculate the hash
@@ -255,8 +242,7 @@ class GBUtils {
 
   static String paddedVersionString(String input) {
     // "v1.2.3-rc.1+build123" -> ["1","2","3","rc","1"]
-    List<String> parts =
-        input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
+    List<String> parts = input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
 
     // ["1","0","0"] -> ["1","0","0","~"]
     // "~" is the largest ASCII character, so this will make "1.0.0" greater than "1.0.0-beta" for example
@@ -287,8 +273,7 @@ class GBUtils {
     String hashAttribute = attr ?? 'id';
     String hashValue = '';
 
-    if (attributeOverrides != null &&
-        attributeOverrides[hashAttribute] != null) {
+    if (attributeOverrides != null && attributeOverrides[hashAttribute] != null) {
       hashValue = attributeOverrides[hashAttribute].toString();
     } else if (attributes[hashAttribute] != null) {
       hashValue = attributes[hashAttribute].toString();
@@ -369,16 +354,14 @@ class GBUtils {
   }) {
     final assignments = <String, String>{};
 
-    Map<StickyAttributeKey, StickyAssignmentsDocument>?
-        stickyBucketAssignmentDocs =
+    Map<StickyAttributeKey, StickyAssignmentsDocument>? stickyBucketAssignmentDocs =
         <StickyAttributeKey, StickyAssignmentsDocument>{};
 
     // Check if stickyBucketAssignmentDocs is null
     if (context.userContext.stickyBucketAssignmentDocs == null) {
       return assignments;
     } else {
-      stickyBucketAssignmentDocs =
-          context.userContext.stickyBucketAssignmentDocs;
+      stickyBucketAssignmentDocs = context.userContext.stickyBucketAssignmentDocs;
     }
 
     // Retrieve hashAttributeAndValue and hashKey
@@ -407,8 +390,7 @@ class GBUtils {
 
     String? leftOperand = context
         .userContext
-        .stickyBucketAssignmentDocs?[
-            "$expFallBackAttribute||${context.userContext.attributes![expFallBackAttribute]}"]
+        .stickyBucketAssignmentDocs?["$expFallBackAttribute||${context.userContext.attributes![expFallBackAttribute]}"]
         ?.attributeValue;
 
     if (leftOperand != context.userContext.attributes?[expFallBackAttribute]) {
@@ -421,16 +403,13 @@ class GBUtils {
     });
 
     // Add assignments from fallbackKey if not null
-    if (fallbackKey != null &&
-        stickyBucketAssignmentDocs?[fallbackKey] != null) {
-      assignments
-          .addAll(stickyBucketAssignmentDocs?[fallbackKey]?.assignments ?? {});
+    if (fallbackKey != null && stickyBucketAssignmentDocs?[fallbackKey] != null) {
+      assignments.addAll(stickyBucketAssignmentDocs?[fallbackKey]?.assignments ?? {});
     }
 
     // Add assignments from hashKey if not null
     if (stickyBucketAssignmentDocs?[hashKey] != null) {
-      assignments
-          .addAll(stickyBucketAssignmentDocs![hashKey]?.assignments ?? {});
+      assignments.addAll(stickyBucketAssignmentDocs![hashKey]?.assignments ?? {});
     }
 
     return assignments;
@@ -446,8 +425,12 @@ class GBUtils {
     }
     if (context.stickyBucketService == null) return;
     var allAttributes = getStickyBucketAttributes(context, data, attributes);
-    context.stickyBucketAssignmentDocs =
-        await context.stickyBucketService?.getAllAssignments(allAttributes);
+    context.stickyBucketAssignmentDocs = await context.stickyBucketService?.getAllAssignments(
+      attributes: allAttributes,
+      allAssignmentsCallback: (assignments) {
+        context.stickyBucketAssignmentDocs = assignments;
+      },
+    );
   }
 
   static Map<String, String> getStickyBucketAttributes(
@@ -456,8 +439,7 @@ class GBUtils {
     Map<String, dynamic> attributeOverrides,
   ) {
     var attributes = <String, String>{};
-    context.stickyBucketIdentifierAttributes = context
-            .stickyBucketIdentifierAttributes ??
+    context.stickyBucketIdentifierAttributes = context.stickyBucketIdentifierAttributes ??
         deriveStickyBucketIdentifierAttributes(context: context, data: data);
 
     if (context.stickyBucketIdentifierAttributes != null) {
@@ -502,8 +484,7 @@ class GBUtils {
     required String? expFallBackAttribute,
   }) {
     // Get the assignment key for the given experiment key and version.
-    final assignmentKey =
-        getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
+    final assignmentKey = getStickyBucketExperimentKey(experimentKey, experimentBucketVersion);
     // Fetch all sticky bucket assignments from the context.
     final assignments = getStickyBucketAssignments(
       context: context,
@@ -539,8 +520,7 @@ class GBUtils {
     return StickyBucketResult(variation: variation);
   }
 
-  static String getStickyBucketExperimentKey(
-      String experimentKey, int experimentBucketVersion) {
+  static String getStickyBucketExperimentKey(String experimentKey, int experimentBucketVersion) {
     return '${experimentKey}__$experimentBucketVersion';
   }
 
@@ -554,15 +534,13 @@ class GBUtils {
     final key = '$attributeName||$attributeValue';
 
     // Get the existing assignments from the context.
-    final existingAssignments =
-        context.userContext.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
+    final existingAssignments = context.userContext.stickyBucketAssignmentDocs?[key]?.assignments ?? {};
 
     // Merge existing assignments with the new assignments.
     final mergedAssignments = {...existingAssignments, ...newAssignments};
 
     // Check if the merged assignments are different from the existing assignments.
-    final hasChanged =
-        mergedAssignments.toString() != existingAssignments.toString();
+    final hasChanged = mergedAssignments.toString() != existingAssignments.toString();
 
     // Create a new document with the merged assignments.
     final doc = StickyAssignmentsDocument(
@@ -594,8 +572,7 @@ class GBUtils {
   /// - [numberOfVariations] The number of variations.
   ///
   /// Returns an `int` or `null`.
-  static int? getQueryStringOverride(
-      String id, String? urlString, int variations) {
+  static int? getQueryStringOverride(String id, String? urlString, int variations) {
     if (urlString == null || urlString.isEmpty) {
       return null;
     }
@@ -628,8 +605,7 @@ class GBUtils {
   /// - [numberOfVariations] The number of variations.
   ///
   /// Returns an `int` or `null`.
-  static int? getQueryStringOverrideFromUrl(
-      String id, Uri url, int numberOfVariations) {
+  static int? getQueryStringOverrideFromUrl(String id, Uri url, int numberOfVariations) {
     var queryString = url.query;
     var queryMap = parseQuery(queryString);
 
@@ -670,9 +646,7 @@ class GBUtils {
         if (name.isEmpty) {
           continue;
         }
-        String value = (keyValuePair.length > 1)
-            ? Uri.decodeComponent(keyValuePair[1])
-            : "";
+        String value = (keyValuePair.length > 1) ? Uri.decodeComponent(keyValuePair[1]) : "";
         map[name] = value;
       } catch (e) {
         //print("Error decoding query parameter: $e");
@@ -681,8 +655,7 @@ class GBUtils {
     return map;
   }
 
-  static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+  static EvaluationContext initializeEvalContext(GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -690,8 +663,7 @@ class GBUtils {
       hostUrl: gbContext.hostURL,
       clientKey: gbContext.apiKey,
       decryptionKey: gbContext.encryptionKey,
-      stickyBucketIdentifierAttributes:
-          gbContext.stickyBucketIdentifierAttributes,
+      stickyBucketIdentifierAttributes: gbContext.stickyBucketIdentifierAttributes,
       stickyBucketService: gbContext.stickyBucketService,
       trackingCallBackWithUser: gbContext.trackingCallBack!,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
@@ -723,8 +695,7 @@ class GBUtils {
 
 extension RoundToExtension on num {
   num roundTo({int numFractionDigits = 0}) {
-    final fractionDigits =
-        numFractionDigits.clamp(0, 20); // Ensure fractionDigits is within range
+    final fractionDigits = numFractionDigits.clamp(0, 20); // Ensure fractionDigits is within range
     final stringValue = toStringAsFixed(fractionDigits);
     return num.parse(stringValue); // Convert back to num
   }
