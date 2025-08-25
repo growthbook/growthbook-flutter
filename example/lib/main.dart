@@ -46,6 +46,8 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final userAttr = {"id": (!kIsWeb && Platform.isIOS) ? "foo" : "foo_bar"};
   GrowthBookSDK? gb;
+  bool _showIndicator = false;
+
   @override
   void initState() {
     super.initState();
@@ -64,27 +66,23 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
         'some-feature': GBFeature(defaultValue: true),
       },
     ).initialize();
+    final result = await gb?.feature('some-feature');
+    _showIndicator = result?.on ?? false;
     setState(() {});
   }
 
   Widget _getRightWidget() {
-    if (gb?.feature('some-feature').on ?? false) {
-      return TabBar(
-        isScrollable: true,
-        tabs: tabs,
-        controller: _tabController,
-        indicator: CircleTabIndicator(
-          color: Theme.of(context).colorScheme.primary,
-          radius: 4,
-        ),
-      );
-    } else {
-      return TabBar(
-        isScrollable: true,
-        tabs: tabs,
-        controller: _tabController,
-      );
-    }
+    return TabBar(
+      isScrollable: true,
+      tabs: tabs,
+      controller: _tabController,
+      indicator: _showIndicator
+          ? CircleTabIndicator(
+              color: Theme.of(context).colorScheme.primary,
+              radius: 4,
+            )
+          : null,
+    );
   }
 
   @override
@@ -122,8 +120,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
 class CircleTabIndicator extends Decoration {
   final BoxPainter _painter;
 
-  CircleTabIndicator({required Color color, required double radius})
-      : _painter = _CirclePainter(color, radius);
+  CircleTabIndicator({required Color color, required double radius}) : _painter = _CirclePainter(color, radius);
 
   @override
   BoxPainter createBoxPainter([VoidCallback? onChanged]) => _painter;
@@ -139,8 +136,7 @@ class _CirclePainter extends BoxPainter {
           ..isAntiAlias = false;
   @override
   void paint(Canvas canvas, Offset offset, ImageConfiguration cfg) {
-    final Offset circleOffset =
-        offset + Offset(cfg.size!.width / 2, cfg.size!.height - radius);
+    final Offset circleOffset = offset + Offset(cfg.size!.width / 2, cfg.size!.height - radius);
     canvas.drawCircle(circleOffset, radius, _paint);
   }
 }
