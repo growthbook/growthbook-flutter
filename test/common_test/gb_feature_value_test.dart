@@ -85,7 +85,7 @@ void main() {
 
       for (final item in evaluateCondition) {
         if (item is List<dynamic>) {
-          sdk.feature(item[2]);
+          await sdk.feature(item[2]);
           break;
         }
       }
