@@ -361,7 +361,7 @@ final sdk = await GBSDKBuilderApp(
 
 ### Remote Evaluation
 
-> 📖 **[Learn about remote evaluation →](https://docs.growthbook.io/lib/remote-evaluation)**
+> 📖 **[Learn about remote evaluation →](https://docs.growthbook.io/lib/js#remote-evaluation)**
 
 For enhanced security and server-side evaluation:
 
@@ -378,7 +378,7 @@ final sdk = await GBSDKBuilderApp(
 
 ### Real-time Updates
 
-> 📖 **[Learn about streaming updates →](https://docs.growthbook.io/lib/streaming)**
+> 📖 **[Learn about streaming updates →](https://docs.growthbook.io/lib/js#streaming-updates)**
 
 ```dart
 final sdk = await GBSDKBuilderApp(
