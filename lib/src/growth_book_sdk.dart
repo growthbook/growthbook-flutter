@@ -241,8 +241,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     subscriptions.clear();
   }
 
-  Future<GBFeatureResult> feature(String id) async {
-    await _featureViewModel.fetchFeatures(context.getFeaturesURL());
+  GBFeatureResult feature(String id) {
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
