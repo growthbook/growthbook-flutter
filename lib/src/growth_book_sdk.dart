@@ -123,8 +123,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
     );
-          autoRefresh();
-        }
+    autoRefresh();
+  }
 
   final GBContext _context;
 
@@ -155,12 +155,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Updates the evaluation context to reflect current context state.
   /// This method should be called whenever the underlying GBContext changes
   /// to ensure that the evaluation context remains synchronized.
-  /// 
+  ///
   /// This approach maintains a single source of truth for the evaluation context
   /// instead of creating new contexts on every evaluation, which is more efficient
-  /// and prevents bugs caused by stale evaluation contexts. 
+  /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext = GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext =
+        GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
 
   @override
@@ -250,8 +251,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    return evalFeature(id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
@@ -324,8 +324,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_context, data,
-          _evaluationContext.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(
+          _context, data, _evaluationContext.userContext.attributes ?? {});
       _updateEvaluationContext();
     }
   }
@@ -348,7 +348,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
