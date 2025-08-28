@@ -1,3 +1,6 @@
+# 4.0.1
+- Fixed TTL handling, as `ttlSeconds` wasn’t correctly passed through initializers and some methods didn’t work as expected with the stale-while-revalidate approach.
+
 # 3.9.12
 -   update version of Growthbook Flutter SDK
  -  All methods now use a single _evaluationContext that includes sticky bucket data.
