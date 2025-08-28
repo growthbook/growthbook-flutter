@@ -1,3 +1,6 @@
+# 4.0.1
+- Fixed `feature` method for consistency and correct behavior, as it updated values after the first call.
+
 # 3.9.12
 -   update version of Growthbook Flutter SDK
  -  All methods now use a single _evaluationContext that includes sticky bucket data.
