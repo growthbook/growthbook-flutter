@@ -361,9 +361,11 @@ final sdk = await GBSDKBuilderApp(
 
 ### Remote Evaluation
 
-> 📖 **[Learn about remote evaluation →](https://docs.growthbook.io/lib/js#remote-evaluation)**
+The Flutter SDK may be run in Remote Evaluation mode. This mode brings the security benefits of a backend SDK to the front end by evaluating feature flags exclusively on a private server. Using Remote Evaluation ensures that any sensitive information within targeting rules or unused feature variations are never seen by the client.
 
-For enhanced security and server-side evaluation:
+You must enable Remote Evaluation in your SDK Connection settings. Cloud customers are also required to self-host a GrowthBook Proxy Server or a custom remote evaluation backend.
+
+To use Remote Evaluation, add the remoteEval: true property to your SDK instance.
 
 ```dart
 final sdk = await GBSDKBuilderApp(
@@ -378,7 +380,7 @@ final sdk = await GBSDKBuilderApp(
 
 ### Real-time Updates
 
-> 📖 **[Learn about streaming updates →](https://docs.growthbook.io/lib/js#streaming-updates)**
+The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.
 
 ```dart
 final sdk = await GBSDKBuilderApp(
