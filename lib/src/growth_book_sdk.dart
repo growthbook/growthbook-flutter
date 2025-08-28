@@ -118,13 +118,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
-      encryptionKey: _context.encryptionKey ?? "",
-      backgroundSync: _context.backgroundSync,
-    );
-          autoRefresh();
-        }
+        delegate: this,
+        source: FeatureDataSource(context: _context, client: _baseClient),
+        encryptionKey: _context.encryptionKey ?? "",
+        backgroundSync: _context.backgroundSync,
+        ttlSeconds: ttlSeconds);
+    autoRefresh();
+  }
 
   final GBContext _context;
 
@@ -155,12 +155,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Updates the evaluation context to reflect current context state.
   /// This method should be called whenever the underlying GBContext changes
   /// to ensure that the evaluation context remains synchronized.
-  /// 
+  ///
   /// This approach maintains a single source of truth for the evaluation context
   /// instead of creating new contexts on every evaluation, which is more efficient
-  /// and prevents bugs caused by stale evaluation contexts. 
+  /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext = GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext =
+        GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
 
   @override
@@ -250,14 +251,18 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
+    // Fetch features from CDN to ensure the most up-to-date flags,
+    // while following the "stale-while-revalidate" approach:
+    // return cached values immediately, then refresh them in background.
     _featureViewModel.fetchFeatures(context.getFeaturesURL());
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
-    _evaluationContext.globalContext.features = _context.features;
-    // Clear stack context to avoid false cyclic prerequisite detection
+    // Fetch features from CDN to ensure the most up-to-date flags,
+    // while following the "stale-while-revalidate" approach:
+    // return cached values immediately, then refresh them in background.
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = ExperimentEvaluator().evaluateExperiment(
       _evaluationContext,
@@ -324,8 +329,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_context, data,
-          _evaluationContext.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(
+          _context, data, _evaluationContext.userContext.attributes ?? {});
       _updateEvaluationContext();
     }
   }
@@ -348,9 +353,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
-    _evaluationContext.globalContext.features = _context.features;
-    // Clear stack context to avoid false cyclic prerequisite detection
+    // Fetch features from CDN to ensure the most up-to-date flags,
+    // while following the "stale-while-revalidate" approach:
+    // return cached values immediately, then refresh them in background.
+    _featureViewModel.fetchFeatures(context.getFeaturesURL());
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
