@@ -49,7 +49,7 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl,
+  Future<void> fetchFeatures(
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
     final receivedData =
         await manager.getContent(fileName: Constant.featureCache);
@@ -90,9 +90,8 @@ class FeatureViewModel {
       );
     }
 
-    if (apiUrl != null && remoteEval) {
+    if (remoteEval) {
       await source.fetchRemoteEval(
-          apiUrl: apiUrl,
           params: payload,
           onSuccess: (data) {
             prepareFeaturesData(data);

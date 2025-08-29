@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
@@ -14,7 +13,8 @@ typedef OnInitializationFailure = void Function(GBError? error);
 
 class GBSDKBuilderApp {
   GBSDKBuilderApp(
-      {required this.hostURL,
+      {this.streamingHost,
+      required this.apiHost,
       required this.apiKey,
       this.encryptionKey,
       required this.growthBookTrackingCallBack,
@@ -34,7 +34,8 @@ class GBSDKBuilderApp {
 
   final String apiKey;
   final String? encryptionKey;
-  final String hostURL;
+  final String apiHost;
+  final String? streamingHost;
   final bool enable;
   final bool qaMode;
   final Map<String, dynamic>? attributes;
@@ -56,7 +57,6 @@ class GBSDKBuilderApp {
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
-        hostURL: hostURL,
         enabled: enable,
         qaMode: qaMode,
         attributes: attributes,
@@ -67,7 +67,9 @@ class GBSDKBuilderApp {
         stickyBucketService: stickyBucketService,
         backgroundSync: backgroundSync,
         remoteEval: remoteEval,
-        url: url);
+        url: url,
+        apiHost: apiHost,
+        streamingHost: streamingHost);
     final gb = GrowthBookSDK._(
         context: gbContext,
         client: client,
@@ -116,7 +118,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
       delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
+      source: FeatureDataSource(
+          context: _context, client: _baseClient),
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
     );
@@ -168,7 +171,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.features = gbFeatures;
     _updateEvaluationContext();
     if (isRemote) {
-      log('Features updated from remote source, triggering refresh handler');
+      // log('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
         _refreshHandler(true);
       }
@@ -195,8 +198,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       await refreshForRemoteEval();
     } else {
-      log(context.getFeaturesURL().toString());
-      await _featureViewModel.fetchFeatures(context.getFeaturesURL());
+      await _featureViewModel.fetchFeatures();
     }
   }
 
@@ -242,11 +244,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _featureViewModel.fetchFeatures();
+    return FeatureEvaluator().evaluateFeature(
+        GBUtils.initializeEvalContext(context, _refreshHandler),
+        id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {
+    _featureViewModel.fetchFeatures();
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
@@ -328,7 +333,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     );
 
     await _featureViewModel.fetchFeatures(
-      context.getRemoteEvalUrl(),
       remoteEval: context.remoteEval,
       payload: payload,
     );
@@ -336,15 +340,17 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    return FeatureEvaluator().evaluateFeature(
+        GBUtils.initializeEvalContext(context, _refreshHandler),
+        id);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
   bool isOn(String id) {
+    _featureViewModel.fetchFeatures();
     return evalFeature(id).on;
   }
 
