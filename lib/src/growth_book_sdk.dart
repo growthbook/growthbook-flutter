@@ -353,6 +353,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
+    // Sync features to evaluation context
+    _evaluationContext.globalContext.features = _context.features;
     // Fetch features from CDN to ensure the most up-to-date flags,
     // while following the "stale-while-revalidate" approach:
     // return cached values immediately, then refresh them in background.
