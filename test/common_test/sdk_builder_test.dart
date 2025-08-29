@@ -87,9 +87,9 @@ void main() {
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
       ).setRefreshHandler((refreshHandler, error) => refreshHandler = isRefreshed).initialize();
-      final featureValue = sdk.feature('fwrfewrfe');
+      final featureValue = sdk.feature('some-feature');
       expect(featureValue.source, GBFeatureSource.unknownFeature);
-      final result = sdk.run(GBExperiment(key: "fwrfewrfe"));
+      final result = sdk.run(GBExperiment(key: "some-feature"));
       expect(result.variationID, 0);
       manager.clearCache();
     });
