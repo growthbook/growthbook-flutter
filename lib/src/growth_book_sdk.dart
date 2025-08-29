@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -27,10 +27,13 @@ class GBSDKBuilderApp {
       this.onInitializationFailure,
       this.refreshHandler,
       this.stickyBucketService,
+      this.logLevel,
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url}) {
+    logFilter.level = logLevel;
+  }
 
   final String apiKey;
   final String? encryptionKey;
@@ -46,6 +49,7 @@ class GBSDKBuilderApp {
   final bool backgroundSync;
   final bool remoteEval;
   final String? url;
+  final Level? logLevel;
   final int ttlSeconds;
 
   CacheRefreshHandler? refreshHandler;
@@ -77,6 +81,11 @@ class GBSDKBuilderApp {
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
+  }
+
+  GBSDKBuilderApp setLogLevel(Level logLevel) {
+    logFilter.level = logLevel;
+    return this;
   }
 
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
@@ -195,7 +204,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       await refreshForRemoteEval();
     } else {
-      log(context.getFeaturesURL().toString());
+      logger.i("Features URL: ${context.getFeaturesURL()}");
       await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
