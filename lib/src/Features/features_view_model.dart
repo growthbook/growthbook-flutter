@@ -16,6 +16,7 @@ class FeatureViewModel {
     required this.delegate,
     required this.source,
     required this.encryptionKey,
+    required this.manager,
     this.backgroundSync,
     this.ttlSeconds = 60,
   });
@@ -27,7 +28,7 @@ class FeatureViewModel {
   final int ttlSeconds;
   int? _expiresAt;
 
-  final CachingManager manager = CachingManager();
+  final CacheStorage manager;
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
@@ -156,7 +157,7 @@ class FeatureViewModel {
           gbFeatures: data.features!, isRemote: true);
       final featureData = utf8Encoder.convert(jsonEncode(data));
       final featureDataOnUint8List = Uint8List.fromList(featureData);
-      manager.putData(
+      manager.saveContent(
         fileName: Constant.featureCache,
         content: featureDataOnUint8List,
       );
@@ -167,7 +168,7 @@ class FeatureViewModel {
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(data.savedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: savedGroupsDataOnUint8List,
         );
@@ -205,7 +206,7 @@ class FeatureViewModel {
             gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
         final featureDataOnUint8List = Uint8List.fromList(featureData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.featureCache,
           content: featureDataOnUint8List,
         );
@@ -247,7 +248,7 @@ class FeatureViewModel {
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(extractedSavedGroups));
         final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: savedGroupsDataOnUint8List,
         );
@@ -282,7 +283,7 @@ class FeatureViewModel {
   void cacheFeatures(FeaturedDataModel data) {
     final featureData = utf8Encoder.convert(jsonEncode(data));
     final featureDataOnUint8List = Uint8List.fromList(featureData);
-    manager.putData(
+    manager.saveContent(
       fileName: Constant.featureCache,
       content: featureDataOnUint8List,
     );
