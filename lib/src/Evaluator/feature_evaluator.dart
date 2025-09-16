@@ -237,8 +237,6 @@ class FeatureEvaluator {
     String? ruleId = ""
   }) {
     var isFalse = value == null ||
-        value.toString() == 'false' ||
-        value.toString() == '0' ||
         (value.toString().isEmpty && value is! Map && value is! List);
     return GBFeatureResult(
       value: value,
