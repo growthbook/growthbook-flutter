@@ -170,7 +170,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
-        _refreshHandler!(true);
+        _refreshHandler(true);
       }
     }
   }
@@ -180,7 +180,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _onInitializationFailure?.call(error);
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler!(false);
+        _refreshHandler(false);
       }
     }
   }
@@ -353,7 +353,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _onInitializationFailure?.call(error);
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler!(false);
+        _refreshHandler(false);
       }
     }
   }
@@ -364,7 +364,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _updateEvaluationContext();
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler!(true);
+        _refreshHandler(true);
       }
     }
   }
