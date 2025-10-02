@@ -1,6 +1,14 @@
 # 4.0.1
 * updated README and corrected CHANGELOG 
 
+## [4.1.0](https://github.com/growthbook/growthbook-flutter/compare/v4.0.0...v4.1.0) (2025-10-02)
+
+
+### Features
+
+* adjust dependencies for alpha release compatible with Flutter 3… ([1b084c9](https://github.com/growthbook/growthbook-flutter/commit/1b084c9c0c11d5ab2176433b7fa8c29a94dde6b9))
+* adjust dependencies for alpha release compatible with Flutter 3.22.3 ([d97777d](https://github.com/growthbook/growthbook-flutter/commit/d97777dd5fc23154749ca4ef08ba0fd1f47737ac))
+
 ## [4.0.0](https://github.com/growthbook/growthbook-flutter/compare/v3.9.14...v4.0.0) (2025-07-30)
 
 
