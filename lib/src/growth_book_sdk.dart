@@ -157,7 +157,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// instead of creating new contexts on every evaluation, which is more efficient
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext = GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext =
+        GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
 
   @override
@@ -242,8 +243,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    return evalFeature(id);
   }
 
   GBExperimentResult run(GBExperiment experiment) {

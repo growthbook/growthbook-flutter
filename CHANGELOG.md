@@ -1,5 +1,6 @@
 # 4.0.1
 * updated README and corrected CHANGELOG 
+* fixed `feature` method for consistency and correct behavior, as it updated values after the first call.
 
 ## [4.0.0](https://github.com/growthbook/growthbook-flutter/compare/v3.9.14...v4.0.0) (2025-07-30)
 
