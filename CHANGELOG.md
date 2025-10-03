@@ -1,5 +1,6 @@
 # 4.0.1
 * updated README and corrected CHANGELOG 
+* Fixed TTL handling, as `ttlSeconds` wasn’t correctly passed through initializers and some methods didn’t work as expected with the stale-while-revalidate approach.
 
 ## [4.0.0](https://github.com/growthbook/growthbook-flutter/compare/v3.9.14...v4.0.0) (2025-07-30)
 
