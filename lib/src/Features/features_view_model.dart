@@ -31,6 +31,8 @@ class FeatureViewModel {
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
+  bool _isFetching = false;
+
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
@@ -62,6 +64,12 @@ class FeatureViewModel {
       );
 
       if (isCacheExpired()) {
+        if (_isFetching) {
+          log('Fetch already in progress, skipping network request.');
+          return; // Return: fetch is running - avoid race
+        }
+        _isFetching = true;
+
         source.fetchFeatures(
           (data) {
             _handleSuccess(data);
@@ -76,6 +84,10 @@ class FeatureViewModel {
         );
       }
     } else {
+      if (_isFetching)
+        return; // avoid dupplicate fetch
+      _isFetching = true;
+
       await source.fetchFeatures(
         (data) {
           _handleSuccess(data);
@@ -106,23 +118,23 @@ class FeatureViewModel {
               isRemote: true,
             );
           });
-      
     }
   }
 
   void _handleSuccess(FeaturedDataModel data) {
-  delegate.featuresFetchedSuccessfully(
-    gbFeatures: data.features!,
-    isRemote: true,  // This is a network fetch, so it should be remote
-  );
-  cacheFeatures(data);
-  refreshExpiresAt();
-}
-
+    delegate.featuresFetchedSuccessfully(
+      gbFeatures: data.features!,
+      isRemote: true, // This is a network fetch, so it should be remote
+    );
+    cacheFeatures(data);
+    refreshExpiresAt();
+    _isFetching = false;
+  }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
     final receivedDataJson = utf8Decoder.convert(receivedData);
-    final receiveFeatureJsonMap = jsonDecode(receivedDataJson) as Map<String, dynamic>;
+    final receiveFeatureJsonMap =
+        jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
     GBFeatures featureMap = {};
     if (encryptionKey.isNotEmpty) {
@@ -273,6 +285,7 @@ class FeatureViewModel {
       ),
       isRemote: false,
     );
+    _isFetching = false;
   }
 
   void logError(String message) {
