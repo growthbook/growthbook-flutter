@@ -37,8 +37,6 @@ class FeatureViewModel {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
       (data) {
-        delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features!, isRemote: true);
         prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
