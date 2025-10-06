@@ -36,6 +36,7 @@ class DioClient extends BaseClient {
   final Dio _dio;
 
   Dio get client => _dio;
+  String? lastKnownId;
 
   Future<void> listenAndRetry({
     required String url,
@@ -56,7 +57,8 @@ class DioClient extends BaseClient {
         data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
           (sseModel) {
             log('SSE event received: ${sseModel.name}');
-            if (sseModel.name == "features") {
+            if (sseModel.name == "features" && lastKnownId != sseModel.id) {
+              lastKnownId = sseModel.id;
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
               onSuccess(jsonMap);
