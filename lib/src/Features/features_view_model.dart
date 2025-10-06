@@ -84,8 +84,9 @@ class FeatureViewModel {
         );
       }
     } else {
-      if (_isFetching)
+      if (_isFetching) {
         return; // avoid dupplicate fetch
+      }
       _isFetching = true;
 
       await source.fetchFeatures(
