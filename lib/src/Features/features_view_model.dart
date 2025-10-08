@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
@@ -31,7 +32,8 @@ class FeatureViewModel {
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
-  bool _isFetching = false;
+  // Request coalescing - reuse ongoing fetch instead of creating new ones
+  Future<FeaturedDataModel>? _ongoingFetch;
 
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
@@ -55,79 +57,100 @@ class FeatureViewModel {
         await manager.getContent(fileName: Constant.featureCache);
 
     if (receivedData != null) {
+      // Return cached data immediately
       final featureMap = _fetchCachedFeatures(receivedData);
       delegate.featuresFetchedSuccessfully(
         gbFeatures: featureMap,
         isRemote: false,
       );
 
+      // If cache is expired, fetch fresh data
       if (isCacheExpired()) {
-        if (_isFetching) {
-          log('Fetch already in progress, skipping network request.');
-          return; // Return: fetch is running - avoid race
-        }
-        _isFetching = true;
+        await _fetchFreshData();
+      }
+    } else {
+      // No cache, must fetch
+      await _fetchFreshData();
+    }
 
-        source.fetchFeatures(
-          (data) {
-            _handleSuccess(data);
-          },
-          (e, s) => delegate.featuresFetchFailed(
+    // Handle remote eval if needed
+    if (apiUrl != null && remoteEval) {
+      await source.fetchRemoteEval(
+        apiUrl: apiUrl,
+        params: payload,
+        onSuccess: (data) {
+          prepareFeaturesData(data);
+        },
+        onError: (e, s) {
+          delegate.featuresFetchFailed(
             error: GBError(
               error: e,
               stackTrace: s.toString(),
             ),
             isRemote: true,
-          ),
-        );
-      }
-    } else {
-      if (_isFetching) {
-        return; // avoid dupplicate fetch
-      }
-      _isFetching = true;
-
-      await source.fetchFeatures(
-        (data) {
-          _handleSuccess(data);
+          );
         },
-        (e, s) => delegate.featuresFetchFailed(
-          error: GBError(
-            error: e,
-            stackTrace: s.toString(),
-          ),
-          isRemote: true,
-        ),
       );
     }
+  }
 
-    if (apiUrl != null && remoteEval) {
-      await source.fetchRemoteEval(
-          apiUrl: apiUrl,
-          params: payload,
-          onSuccess: (data) {
-            prepareFeaturesData(data);
-          },
-          onError: (e, s) {
-            delegate.featuresFetchFailed(
-              error: GBError(
-                error: e,
-                stackTrace: s.toString(),
-              ),
-              isRemote: true,
-            );
-          });
+  Future<void> _fetchFreshData() async {
+    // If there's already an ongoing fetch, wait for it
+    if (_ongoingFetch != null) {
+      log('Fetch already in progress, waiting for it to complete.');
+      try {
+        await _ongoingFetch!;
+      } catch (e) {
+        // Error already handled in the original fetch
+        log('Ongoing fetch failed: $e');
+      }
+      return;
     }
+
+    // Start new fetch
+    _ongoingFetch = _performFetch();
+    try {
+      final data = await _ongoingFetch!;
+      _handleSuccess(data);
+    } catch (e, s) {
+      delegate.featuresFetchFailed(
+        error: GBError(
+          error: e,
+          stackTrace: s.toString(),
+        ),
+        isRemote: true,
+      );
+    } finally {
+      _ongoingFetch = null;
+    }
+  }
+
+  Future<FeaturedDataModel> _performFetch() async {
+    final completer = Completer<FeaturedDataModel>();
+
+    await source.fetchFeatures(
+      (data) {
+        if (!completer.isCompleted) {
+          completer.complete(data);
+        }
+      },
+      (e, s) {
+        if (!completer.isCompleted) {
+          completer.completeError(e, s);
+        }
+      },
+    );
+
+    return completer.future;
   }
 
   void _handleSuccess(FeaturedDataModel data) {
     delegate.featuresFetchedSuccessfully(
       gbFeatures: data.features!,
-      isRemote: true, // This is a network fetch, so it should be remote
+      isRemote: true,
     );
     cacheFeatures(data);
     refreshExpiresAt();
-    _isFetching = false;
   }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
@@ -284,7 +307,6 @@ class FeatureViewModel {
       ),
       isRemote: false,
     );
-    _isFetching = false;
   }
 
   void logError(String message) {

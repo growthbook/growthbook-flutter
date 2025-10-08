@@ -251,11 +251,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    if (!_context.backgroundSync) {
-      _featureViewModel.fetchFeatures(context.getFeaturesURL());
-    }
+    _triggerBackgroundRefreshIfNeeded();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
+
+  void _triggerBackgroundRefreshIfNeeded() {
+  if (!_context.backgroundSync && 
+      _featureViewModel.isCacheExpired()) {
+    // Fire and forget - don't block feature evaluation
+    _featureViewModel.fetchFeatures(context.getFeaturesURL()).catchError((e) {
+      log('Background refresh failed: $e');
+    });
+  }
+}
 
   GBExperimentResult run(GBExperiment experiment) {
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
