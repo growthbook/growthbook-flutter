@@ -75,11 +75,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures('',
+            remoteEval: true, payload: payload);
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -100,11 +103,14 @@ void main() {
         final attributes = <String, dynamic>{};
         final payload = RemoteEvalModel(
           attributes: attributes,
-          forcedFeatures: forcedFeature.entries.map((entry) => [entry.key, entry.value]).toList(),
+          forcedFeatures: forcedFeature.entries
+              .map((entry) => [entry.key, entry.value])
+              .toList(),
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('', remoteEval: true, payload: payload);
+        await featureViewModel.fetchFeatures('',
+            remoteEval: true, payload: payload);
 
         expect(dataSourceMock.isError, true);
       });
@@ -122,6 +128,31 @@ void main() {
 
         await viewModel.fetchFeatures('');
         expect(dataSourceMock.isError, true);
+      });
+
+      test(
+          'concurrent fetchFeatures calls should only trigger one network call',
+          () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: testApiKey,
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          ttlSeconds: 1,
+        );
+
+        final futures = [
+          featureViewModel.fetchFeatures(context.getFeaturesURL()),
+          featureViewModel.fetchFeatures(context.getFeaturesURL()),
+          featureViewModel.fetchFeatures(context.getFeaturesURL()),
+        ];
+
+        await Future.wait(futures);
+
+        expect(dataSourceMock.isSuccess, true);
+        expect(dataSourceMock.counterNetworkCall, 1);
       });
     },
   );
