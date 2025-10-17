@@ -1,6 +1,13 @@
 # 4.0.1
 * updated README and corrected CHANGELOG 
 
+## [4.1.1](https://github.com/growthbook/growthbook-flutter/compare/v4.1.0...v4.1.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
+
 ## [4.1.0](https://github.com/growthbook/growthbook-flutter/compare/v4.0.0...v4.1.0) (2025-10-02)
 
 
