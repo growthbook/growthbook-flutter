@@ -255,13 +255,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
 
-  void _triggerBackgroundRefreshIfNeeded() {
+ void _triggerBackgroundRefreshIfNeeded() {
   if (!_context.backgroundSync && 
       _featureViewModel.isCacheExpired()) {
     // Fire and forget - don't block feature evaluation
-    _featureViewModel.fetchFeatures(context.getFeaturesURL()).catchError((e) {
-      log('Background refresh failed: $e');
-    });
+    
+    if (_context.remoteEval) {
+      refreshForRemoteEval().catchError((e) {
+        log('Background refresh failed: $e');
+      });
+    } else {
+      _featureViewModel.fetchFeatures(context.getFeaturesURL()).catchError((e) {
+        log('Background refresh failed: $e');
+      });
+    }
   }
 }
 
