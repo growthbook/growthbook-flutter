@@ -263,7 +263,7 @@ class FeatureViewModel {
 
       if (extractedSavedGroups != null) {
         delegate.savedGroupsFetchedSuccessfully(
-            savedGroups: extractedSavedGroups, isRemote: false);
+            savedGroups: extractedSavedGroups, isRemote: true);
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(extractedSavedGroups));
         manager.putData(
