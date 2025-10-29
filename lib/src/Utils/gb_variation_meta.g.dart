@@ -24,12 +24,12 @@ GBTrack _$GBTrackFromJson(Map<String, dynamic> json) => GBTrack(
       experiment: json['experiment'] == null
           ? null
           : GBExperiment.fromJson(json['experiment'] as Map<String, dynamic>),
-      featureResult: json['result'] == null
+      result: json['result'] == null
           ? null
-          : GBFeatureResult.fromJson(json['result'] as Map<String, dynamic>),
+          : GBExperimentResult.fromJson(json['result'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$GBTrackToJson(GBTrack instance) => <String, dynamic>{
       'experiment': instance.experiment,
-      'result': instance.featureResult,
+      'result': instance.result,
     };

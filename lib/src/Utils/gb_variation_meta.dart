@@ -36,13 +36,12 @@ class GBVariationMeta {
 class GBTrack {
   GBTrack({
     this.experiment,
-    this.featureResult,
+    this.result,
   });
 
   final GBExperiment? experiment;
   
-  @JsonKey(name: 'result')
-  final GBFeatureResult? featureResult;
+  final GBExperimentResult? result;
 
   factory GBTrack.fromJson(Map<String, dynamic> value) =>
       _$GBTrackFromJson(value);
@@ -52,6 +51,6 @@ class GBTrack {
   @override
   String toString() {
     return "experiment: $experiment \n"
-        "featureResult: $featureResult \n";
+        "result: $result \n";
   }
 }
