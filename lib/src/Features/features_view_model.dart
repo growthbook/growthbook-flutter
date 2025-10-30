@@ -49,7 +49,6 @@ class FeatureViewModel {
 
   Future<void> fetchFeatures(String? apiUrl,
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
-        
     // If there's already an ongoing request — wait for it to complete
     if (_ongoingFetch != null) {
       log('Fetch already in progress, waiting for completion.');
@@ -60,27 +59,40 @@ class FeatureViewModel {
     _ongoingFetch = completer;
 
     try {
-      final receivedData =
-          await manager.getContent(fileName: Constant.featureCache);
+      if (remoteEval && apiUrl != null) {
 
-      if (receivedData != null) {
-        final featureMap = _fetchCachedFeatures(receivedData);
-        delegate.featuresFetchedSuccessfully(
-          gbFeatures: featureMap,
-          isRemote: false,
-        );
+        final receivedData =
+            await manager.getContent(fileName: Constant.featureCache);
 
-        // If cache is expired, fetch fresh data from network
-        if (isCacheExpired()) {
+        if (receivedData != null) {
+          final featureMap = _fetchCachedFeatures(receivedData);
+          delegate.featuresFetchedSuccessfully(
+            gbFeatures: featureMap,
+            isRemote: false,
+          );
+        }
+
+        await _fetchRemoteEval(apiUrl, payload);
+      } else {
+
+        final receivedData =
+            await manager.getContent(fileName: Constant.featureCache);
+
+        if (receivedData != null) {
+          final featureMap = _fetchCachedFeatures(receivedData);
+          delegate.featuresFetchedSuccessfully(
+            gbFeatures: featureMap,
+            isRemote: false,
+          );
+
+          // If cache is expired, fetch fresh data from network
+          if (isCacheExpired()) {
+            await _fetchFromNetwork();
+          }
+        } else {
+          // No cache available, fetch from network
           await _fetchFromNetwork();
         }
-      } else {
-        // No cache available, fetch from network
-        await _fetchFromNetwork();
-      }
-
-      if (apiUrl != null && remoteEval) {
-        await _fetchRemoteEval(apiUrl, payload);
       }
 
       completer.complete();
@@ -109,16 +121,18 @@ class FeatureViewModel {
     await source.fetchRemoteEval(
       apiUrl: apiUrl,
       params: payload,
-      onSuccess: (data) => prepareFeaturesData(data),
-      onError: (e, s) => delegate.featuresFetchFailed(
-        error: GBError(error: e, stackTrace: s.toString()),
-        isRemote: true,
-      ),
+      onSuccess: (data) => {prepareFeaturesData(data), refreshExpiresAt()},
+      onError: (e, s) => {
+        log('Remote Eval Error: $e'),
+        delegate.featuresFetchFailed(
+          error: GBError(error: e, stackTrace: s.toString()),
+          isRemote: true,
+        )
+      },
     );
   }
 
   void _handleSuccess(FeaturedDataModel data) {
-
     delegate.featuresFetchedSuccessfully(
       gbFeatures: data.features!,
       isRemote: true,
@@ -128,13 +142,11 @@ class FeatureViewModel {
   }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
-
     final receivedDataJson = utf8Decoder.convert(receivedData);
     final receiveFeatureJsonMap =
         jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
     if (encryptionKey.isNotEmpty) {
-
       const converter = GBFeaturesConverter();
       return converter.fromJson(receiveFeatureJsonMap);
     } else {
@@ -144,7 +156,6 @@ class FeatureViewModel {
 
   void prepareFeaturesData(FeaturedDataModel data) {
     try {
-
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
@@ -158,7 +169,6 @@ class FeatureViewModel {
 
   void handleValidFeatures(FeaturedDataModel data) {
     if (data.features != null && data.encryptedFeatures == null) {
-
       // Handle non-encrypted features
       delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(
@@ -172,7 +182,6 @@ class FeatureViewModel {
       );
 
       if (data.savedGroups != null) {
-
         // Handle saved groups
         delegate.savedGroupsFetchedSuccessfully(
           savedGroups: data.savedGroups!,
@@ -186,7 +195,6 @@ class FeatureViewModel {
         );
       }
     } else {
-
       // Handle encrypted features/savedGroups if available
       if (data.encryptedFeatures != null) {
         handleEncryptedFeatures(data.encryptedFeatures!);
@@ -255,7 +263,7 @@ class FeatureViewModel {
 
       if (extractedSavedGroups != null) {
         delegate.savedGroupsFetchedSuccessfully(
-            savedGroups: extractedSavedGroups, isRemote: false);
+            savedGroups: extractedSavedGroups, isRemote: true);
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(extractedSavedGroups));
         manager.putData(

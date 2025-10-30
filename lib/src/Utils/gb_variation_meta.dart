@@ -18,7 +18,8 @@ class GBVariationMeta {
 
   final bool? passthrough;
 
-  factory GBVariationMeta.fromJson(Map<String, dynamic> value) => _$GBVariationMetaFromJson(value);
+  factory GBVariationMeta.fromJson(Map<String, dynamic> value) =>
+      _$GBVariationMetaFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBVariationMetaToJson(this);
 
@@ -35,20 +36,21 @@ class GBVariationMeta {
 class GBTrack {
   GBTrack({
     this.experiment,
-    this.featureResult,
+    this.result,
   });
 
   final GBExperiment? experiment;
+  
+  final GBExperimentResult? result;
 
-  final GBFeatureResult? featureResult;
-
-  factory GBTrack.fromJson(Map<String, dynamic> value) => _$GBTrackFromJson(value);
+  factory GBTrack.fromJson(Map<String, dynamic> value) =>
+      _$GBTrackFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBTrackToJson(this);
 
   @override
   String toString() {
     return "experiment: $experiment \n"
-        "featureResult: $featureResult \n";
+        "result: $result \n";
   }
 }
