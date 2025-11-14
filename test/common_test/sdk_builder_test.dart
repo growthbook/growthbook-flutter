@@ -193,9 +193,8 @@ void main() {
               force: 'force',
               tracks: [
                 GBTrack(
-                  featureResult: GBFeatureResult(
-                      experiment: GBExperiment(key: 'testExperimentKey'),
-                      experimentResult: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true)),
+                  experiment: GBExperiment(key: 'testExperimentKey'),
+                  result: GBExperimentResult(key: 'testExperimentResultKey', inExperiment: true),
                 ),
               ],
             ),
