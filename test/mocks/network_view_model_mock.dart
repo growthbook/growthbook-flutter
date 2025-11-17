@@ -4,13 +4,18 @@ class DataSourceMock extends FeaturesFlowDelegate {
   /// For data response.
   bool _isSuccess = false;
   bool get isSuccess => _isSuccess;
+  int counterNetworkCall = 0;
 
   /// For mocking error.
   bool _isError = false;
   bool get isError => _isError;
 
   @override
-  void featuresFetchedSuccessfully({required GBFeatures gbFeatures, required bool isRemote}) {
+  void featuresFetchedSuccessfully(
+      {required GBFeatures gbFeatures, required bool isRemote}) {
+    if (isRemote) {
+      counterNetworkCall++;
+    }
     _isSuccess = true;
     _isError = false;
   }
@@ -25,13 +30,15 @@ class DataSourceMock extends FeaturesFlowDelegate {
   }
 
   @override
-  void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
+  void savedGroupsFetchFailed(
+      {required GBError? error, required bool isRemote}) {
     _isError = true;
     _isSuccess = false;
   }
 
   @override
-  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
+  void savedGroupsFetchedSuccessfully(
+      {required SavedGroupsValues savedGroups, required bool isRemote}) {
     _isSuccess = true;
     _isError = false;
   }
