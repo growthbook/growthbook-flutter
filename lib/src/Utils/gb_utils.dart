@@ -20,20 +20,18 @@ class FNV {
 
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
-  int fnv1a32(String data) {
-    int hash = init32;
-    for (int i = 0; i < data.length; i++) {
-      int b = data.codeUnitAt(i) & 0xff; // Get the ASCII value of the character
-      hash ^= b; // XOR the hash with the character's value
-      hash = ((hash << 24) +
-              (hash << 8) +
-              (hash << 7) +
-              (hash << 4) +
-              (hash << 1) +
-              hash) // same as (hash * 0x01000193). On web this is mod 2^32 automatically as web operates shift operators on 32 bits
-          .toUnsigned(32); // ensure mod 2^32 for mobile
+  int fnv1a32(String str) {
+    int hval = 0x811c9dc5;
+    for (int i = 0; i < str.length; i++) {
+      hval ^= str.codeUnitAt(i);
+
+      hval +=
+          (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24);
+
+      hval &= 0xFFFFFFFF;
+      hval = hval.toSigned(32);
     }
-    return hash;
+    return hval.toUnsigned(32);
   }
 }
 
@@ -462,8 +460,10 @@ class GBUtils {
 
     if (context.stickyBucketIdentifierAttributes != null) {
       for (var attr in context.stickyBucketIdentifierAttributes!) {
-        var hashValue =
-            GBUtils.getHashAttribute(attributes: attributes, attr: attr, attributeOverrides: attributeOverrides);
+        var hashValue = GBUtils.getHashAttribute(
+            attributes: attributes,
+            attr: attr,
+            attributeOverrides: attributeOverrides);
         attributes[attr] = hashValue[1];
       }
     }
