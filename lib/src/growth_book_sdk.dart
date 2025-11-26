@@ -118,11 +118,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
-      encryptionKey: _context.encryptionKey ?? "",
-      backgroundSync: _context.backgroundSync,
-    );
+        delegate: this,
+        source: FeatureDataSource(context: _context, client: _baseClient),
+        encryptionKey: _context.encryptionKey ?? "",
+        backgroundSync: _context.backgroundSync,
+        ttlSeconds: ttlSeconds);
     autoRefresh();
   }
 
@@ -275,7 +275,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
@@ -368,9 +368,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+    // Sync features to evaluation context
     _evaluationContext.globalContext.features = _context.features;
-    // Clear stack context to avoid false cyclic prerequisite detection
+    _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
   }
