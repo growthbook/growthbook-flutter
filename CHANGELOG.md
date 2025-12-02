@@ -1,6 +1,3 @@
-# 4.0.1
-* updated README and corrected CHANGELOG 
-
 ## [4.1.1](https://github.com/growthbook/growthbook-flutter/compare/v4.1.0...v4.1.1) (2025-11-21)
 
 
