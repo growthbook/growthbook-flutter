@@ -462,8 +462,10 @@ class GBUtils {
 
     if (context.stickyBucketIdentifierAttributes != null) {
       for (var attr in context.stickyBucketIdentifierAttributes!) {
-        var hashValue =
-            GBUtils.getHashAttribute(attributes: attributes, attr: attr, attributeOverrides: attributeOverrides);
+        var hashValue = GBUtils.getHashAttribute(
+            attributes: attributes,
+            attr: attr,
+            attributeOverrides: attributeOverrides);
         attributes[attr] = hashValue[1];
       }
     }
@@ -513,7 +515,7 @@ class GBUtils {
 
     // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
     if (minExperimentBucketVersion > 0) {
-      for (int version = 0; version <= minExperimentBucketVersion; version++) {
+      for (int version = 0; version < minExperimentBucketVersion; version++) {
         final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
         if (assignments.containsKey(blockedKey)) {
           // A blocked version was found.
