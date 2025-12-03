@@ -276,7 +276,7 @@ class ExperimentEvaluator {
       if (stickyBucketDoc.hasChanged) {
         context.userContext.stickyBucketAssignmentDocs ??= {};
         context.userContext.stickyBucketAssignmentDocs![stickyBucketDoc.key] = stickyBucketDoc.doc;
-        context.options.stickyBucketService?.saveAssignments(stickyBucketDoc.doc);
+        context.options.stickyBucketService?.saveAssignments(doc: stickyBucketDoc.doc);
       }
     }
 
