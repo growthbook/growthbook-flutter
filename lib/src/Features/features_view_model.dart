@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:typed_data';
@@ -31,19 +32,16 @@ class FeatureViewModel {
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
+  Completer<void>? _ongoingFetch;
+
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
       (data) {
-        delegate.featuresFetchedSuccessfully(
-            gbFeatures: data.features!, isRemote: true);
         prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
-        error: GBError(
-          error: e,
-          stackTrace: s.toString(),
-        ),
+        error: GBError(error: e, stackTrace: s.toString()),
         isRemote: true,
       ),
     );
@@ -51,94 +49,114 @@ class FeatureViewModel {
 
   Future<void> fetchFeatures(String? apiUrl,
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
-    final receivedData =
-        await manager.getContent(fileName: Constant.featureCache);
-
-    if (receivedData != null) {
-      final featureMap = _fetchCachedFeatures(receivedData);
-      delegate.featuresFetchedSuccessfully(
-        gbFeatures: featureMap,
-        isRemote: false,
-      );
-
-      if (isCacheExpired()) {
-        source.fetchFeatures(
-          (data) {
-            _handleSuccess(data);
-          },
-          (e, s) => delegate.featuresFetchFailed(
-            error: GBError(
-              error: e,
-              stackTrace: s.toString(),
-            ),
-            isRemote: true,
-          ),
-        );
-      }
-    } else {
-      await source.fetchFeatures(
-        (data) {
-          _handleSuccess(data);
-        },
-        (e, s) => delegate.featuresFetchFailed(
-          error: GBError(
-            error: e,
-            stackTrace: s.toString(),
-          ),
-          isRemote: true,
-        ),
-      );
+    // If there's already an ongoing request — wait for it to complete
+    if (_ongoingFetch != null) {
+      log('Fetch already in progress, waiting for completion.');
+      return _ongoingFetch!.future;
     }
 
-    if (apiUrl != null && remoteEval) {
-      await source.fetchRemoteEval(
-          apiUrl: apiUrl,
-          params: payload,
-          onSuccess: (data) {
-            prepareFeaturesData(data);
-          },
-          onError: (e, s) {
-            delegate.featuresFetchFailed(
-              error: GBError(
-                error: e,
-                stackTrace: s.toString(),
-              ),
-              isRemote: true,
-            );
-          });
-      
+    final completer = Completer<void>();
+    _ongoingFetch = completer;
+
+    try {
+      if (remoteEval && apiUrl != null) {
+
+        final receivedData =
+            await manager.getContent(fileName: Constant.featureCache);
+
+        if (receivedData != null) {
+          final featureMap = _fetchCachedFeatures(receivedData);
+          delegate.featuresFetchedSuccessfully(
+            gbFeatures: featureMap,
+            isRemote: false,
+          );
+        }
+
+        await _fetchRemoteEval(apiUrl, payload);
+      } else {
+
+        final receivedData =
+            await manager.getContent(fileName: Constant.featureCache);
+
+        if (receivedData != null) {
+          final featureMap = _fetchCachedFeatures(receivedData);
+          delegate.featuresFetchedSuccessfully(
+            gbFeatures: featureMap,
+            isRemote: false,
+          );
+
+          // If cache is expired, fetch fresh data from network
+          if (isCacheExpired()) {
+            await _fetchFromNetwork();
+          }
+        } else {
+          // No cache available, fetch from network
+          await _fetchFromNetwork();
+        }
+      }
+
+      completer.complete();
+    } catch (e, s) {
+      completer.completeError(e, s);
+      delegate.featuresFetchFailed(
+        error: GBError(error: e, stackTrace: s.toString()),
+        isRemote: true,
+      );
+    } finally {
+      _ongoingFetch = null;
     }
   }
 
-  void _handleSuccess(FeaturedDataModel data) {
-  delegate.featuresFetchedSuccessfully(
-    gbFeatures: data.features!,
-    isRemote: true,  // This is a network fetch, so it should be remote
-  );
-  cacheFeatures(data);
-  refreshExpiresAt();
-}
+  Future<void> _fetchFromNetwork() async {
+    await source.fetchFeatures(
+      (data) => _handleSuccess(data),
+      (e, s) => delegate.featuresFetchFailed(
+        error: GBError(error: e, stackTrace: s.toString()),
+        isRemote: true,
+      ),
+    );
+  }
 
+  Future<void> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
+    await source.fetchRemoteEval(
+      apiUrl: apiUrl,
+      params: payload,
+      onSuccess: (data) => {prepareFeaturesData(data), refreshExpiresAt()},
+      onError: (e, s) => {
+        log('Remote Eval Error: $e'),
+        delegate.featuresFetchFailed(
+          error: GBError(error: e, stackTrace: s.toString()),
+          isRemote: true,
+        )
+      },
+    );
+  }
+
+  void _handleSuccess(FeaturedDataModel data) {
+    delegate.featuresFetchedSuccessfully(
+      gbFeatures: data.features!,
+      isRemote: true,
+    );
+    cacheFeatures(data);
+    refreshExpiresAt();
+  }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
     final receivedDataJson = utf8Decoder.convert(receivedData);
-    final receiveFeatureJsonMap = jsonDecode(receivedDataJson) as Map<String, dynamic>;
+    final receiveFeatureJsonMap =
+        jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
-    GBFeatures featureMap = {};
     if (encryptionKey.isNotEmpty) {
-      // For encrypted features, parse directly as features map
       const converter = GBFeaturesConverter();
-      featureMap = converter.fromJson(receiveFeatureJsonMap);
+      return converter.fromJson(receiveFeatureJsonMap);
     } else {
-      // For non-encrypted, use the full data model
-      featureMap =
-          FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+      return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
     }
-    return featureMap;
   }
 
   void prepareFeaturesData(FeaturedDataModel data) {
     try {
+      // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
       } else {
@@ -151,31 +169,37 @@ class FeatureViewModel {
 
   void handleValidFeatures(FeaturedDataModel data) {
     if (data.features != null && data.encryptedFeatures == null) {
+      // Handle non-encrypted features
       delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(
-          gbFeatures: data.features!, isRemote: true);
+        gbFeatures: data.features!,
+        isRemote: true,
+      );
       final featureData = utf8Encoder.convert(jsonEncode(data));
-      final featureDataOnUint8List = Uint8List.fromList(featureData);
       manager.putData(
         fileName: Constant.featureCache,
-        content: featureDataOnUint8List,
+        content: Uint8List.fromList(featureData),
       );
 
       if (data.savedGroups != null) {
+        // Handle saved groups
         delegate.savedGroupsFetchedSuccessfully(
-            savedGroups: data.savedGroups!, isRemote: true);
+          savedGroups: data.savedGroups!,
+          isRemote: true,
+        );
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(data.savedGroups));
-        final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
         manager.putData(
           fileName: Constant.savedGroupsCache,
-          content: savedGroupsDataOnUint8List,
+          content: Uint8List.fromList(savedGroupsData),
         );
       }
     } else {
+      // Handle encrypted features/savedGroups if available
       if (data.encryptedFeatures != null) {
         handleEncryptedFeatures(data.encryptedFeatures!);
       }
+
       if (data.encryptedSavedGroups != null) {
         handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
@@ -204,20 +228,16 @@ class FeatureViewModel {
         delegate.featuresFetchedSuccessfully(
             gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
-        final featureDataOnUint8List = Uint8List.fromList(featureData);
         manager.putData(
           fileName: Constant.featureCache,
-          content: featureDataOnUint8List,
+          content: Uint8List.fromList(featureData),
         );
       } else {
         logError("Failed to extract features from encrypted string.");
       }
     } catch (e, s) {
       delegate.featuresFetchFailed(
-        error: GBError(
-          error: e,
-          stackTrace: s.toString(),
-        ),
+        error: GBError(error: e, stackTrace: s.toString()),
         isRemote: true,
       );
     }
@@ -243,23 +263,19 @@ class FeatureViewModel {
 
       if (extractedSavedGroups != null) {
         delegate.savedGroupsFetchedSuccessfully(
-            savedGroups: extractedSavedGroups, isRemote: false);
+            savedGroups: extractedSavedGroups, isRemote: true);
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(extractedSavedGroups));
-        final savedGroupsDataOnUint8List = Uint8List.fromList(savedGroupsData);
         manager.putData(
           fileName: Constant.savedGroupsCache,
-          content: savedGroupsDataOnUint8List,
+          content: Uint8List.fromList(savedGroupsData),
         );
       } else {
         logError("Failed to extract savedGroups from encrypted string.");
       }
     } catch (e, s) {
       delegate.savedGroupsFetchFailed(
-        error: GBError(
-          error: e,
-          stackTrace: s.toString(),
-        ),
+        error: GBError(error: e, stackTrace: s.toString()),
         isRemote: false,
       );
     }
@@ -267,10 +283,7 @@ class FeatureViewModel {
 
   void handleException(dynamic e, dynamic s) {
     delegate.featuresFetchFailed(
-      error: GBError(
-        error: e,
-        stackTrace: s.toString(),
-      ),
+      error: GBError(error: e, stackTrace: s.toString()),
       isRemote: false,
     );
   }
@@ -281,10 +294,9 @@ class FeatureViewModel {
 
   void cacheFeatures(FeaturedDataModel data) {
     final featureData = utf8Encoder.convert(jsonEncode(data));
-    final featureDataOnUint8List = Uint8List.fromList(featureData);
     manager.putData(
       fileName: Constant.featureCache,
-      content: featureDataOnUint8List,
+      content: Uint8List.fromList(featureData),
     );
   }
 
@@ -293,11 +305,8 @@ class FeatureViewModel {
   }
 
   bool isCacheExpired() {
-    if (_expiresAt == null) {
-      return true;
-    } else {
-      final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-      return now >= _expiresAt!;
-    }
+    if (_expiresAt == null) return true;
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return now >= _expiresAt!;
   }
 }

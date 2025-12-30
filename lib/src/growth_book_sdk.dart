@@ -84,13 +84,15 @@ class GBSDKBuilderApp {
     return this;
   }
 
-  GBSDKBuilderApp setStickyBucketService(StickyBucketService? stickyBucketService) {
+  GBSDKBuilderApp setStickyBucketService(
+      StickyBucketService? stickyBucketService) {
     this.stickyBucketService = stickyBucketService;
     return this;
   }
 
   /// Setter for featureUsageCallback. A callback that will be invoked every time a feature is viewed.
-  GBSDKBuilderApp setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback) {
+  GBSDKBuilderApp setFeatureUsageCallback(
+      GBFeatureUsageCallback featureUsageCallback) {
     this.featureUsageCallback = featureUsageCallback;
     return this;
   }
@@ -108,7 +110,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     CacheRefreshHandler? refreshHandler,
     required int ttlSeconds,
   })  : _context = context,
-        _evaluationContext = evaluationContext ?? GBUtils.initializeEvalContext(context, null),
+        _evaluationContext =
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
@@ -157,7 +160,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// instead of creating new contexts on every evaluation, which is more efficient
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext = GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext =
+        GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
 
   @override
@@ -170,7 +174,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
-        _refreshHandler(true, null);
+        _refreshHandler!(true, null);
       }
     }
   }
@@ -180,7 +184,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _onInitializationFailure?.call(error);
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler(false, error);
+        _refreshHandler!(false, error);
       }
     }
   }
@@ -216,15 +220,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     String key = experiment.key;
     AssignedExperiment? prevAssignedExperiment = assigned[key];
     if (prevAssignedExperiment == null ||
-        prevAssignedExperiment.experimentResult.inExperiment != result.inExperiment ||
-        prevAssignedExperiment.experimentResult.variationID != result.variationID) {
+        prevAssignedExperiment.experimentResult.inExperiment !=
+            result.inExperiment ||
+        prevAssignedExperiment.experimentResult.variationID !=
+            result.variationID) {
       updateSubscriptions(key: key, experiment: experiment, result: result);
     }
   }
 
   void updateSubscriptions(
-      {required String key, required GBExperiment experiment, required GBExperimentResult result}) {
-    assigned[key] = AssignedExperiment(experiment: experiment, experimentResult: result);
+      {required String key,
+      required GBExperiment experiment,
+      required GBExperimentResult result}) {
+    assigned[key] =
+        AssignedExperiment(experiment: experiment, experimentResult: result);
     for (var subscription in subscriptions) {
       subscription(experiment, result);
     }
@@ -242,8 +251,27 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBFeatureResult feature(String id) {
-    _featureViewModel.fetchFeatures(context.getFeaturesURL());
+    _triggerBackgroundRefreshIfNeeded();
+    _evaluationContext.stackContext.evaluatedFeatures.clear();
     return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+  }
+
+  void _triggerBackgroundRefreshIfNeeded() {
+    if (!_context.backgroundSync && _featureViewModel.isCacheExpired()) {
+      // Fire and forget - don't block feature evaluation
+
+      if (_context.remoteEval) {
+        refreshForRemoteEval().catchError((e) {
+          log('Background refresh failed: $e');
+        });
+      } else {
+        _featureViewModel
+            .fetchFeatures(context.getFeaturesURL())
+            .catchError((e) {
+          log('Background refresh failed: $e');
+        });
+      }
+    }
   }
 
   GBExperimentResult run(GBExperiment experiment) {
@@ -259,7 +287,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     return result;
   }
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument> getStickyBucketAssignmentDocs() {
+  Map<StickyAttributeKey, StickyAssignmentsDocument>
+      getStickyBucketAssignmentDocs() {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
@@ -288,7 +317,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _updateEvaluationContext();
   }
 
-  void setEncryptedFeatures(String encryptedString, String encryptionKey, [CryptoProtocol? subtle]) {
+  void setEncryptedFeatures(String encryptedString, String encryptionKey,
+      [CryptoProtocol? subtle]) {
     CryptoProtocol crypto = subtle ?? Crypto();
     var features = crypto.getFeaturesFromEncryptedFeatures(
       encryptedString,
@@ -314,7 +344,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
-      await GBUtils.refreshStickyBuckets(_context, data, _evaluationContext.userContext.attributes ?? {});
+      await GBUtils.refreshStickyBuckets(
+          _context, data, _evaluationContext.userContext.attributes ?? {});
       _updateEvaluationContext();
     }
   }
@@ -324,7 +355,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     RemoteEvalModel payload = RemoteEvalModel(
       attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
-      forcedVariations: _evaluationContext.userContext.forcedVariationsMap ?? {},
+      forcedVariations:
+          _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
 
     await _featureViewModel.fetchFeatures(
@@ -349,22 +381,24 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   @override
-  void savedGroupsFetchFailed({required GBError? error, required bool isRemote}) {
+  void savedGroupsFetchFailed(
+      {required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler(false, error);
+        _refreshHandler!(false, error);
       }
     }
   }
 
   @override
-  void savedGroupsFetchedSuccessfully({required SavedGroupsValues savedGroups, required bool isRemote}) {
+  void savedGroupsFetchedSuccessfully(
+      {required SavedGroupsValues savedGroups, required bool isRemote}) {
     _context.savedGroups = savedGroups;
     _updateEvaluationContext();
     if (isRemote) {
       if (_refreshHandler != null) {
-        _refreshHandler(true, null);
+        _refreshHandler!(true, null);
       }
     }
   }
