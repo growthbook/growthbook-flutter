@@ -126,6 +126,31 @@ void main() {
         await viewModel.fetchFeatures();
         expect(dataSourceMock.isError, true);
       });
+
+      test(
+          'concurrent fetchFeatures calls should only trigger one network call',
+          () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: testApiKey,
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          ttlSeconds: 1,
+        );
+
+        final futures = [
+          featureViewModel.fetchFeatures(),
+          featureViewModel.fetchFeatures(),
+          featureViewModel.fetchFeatures(),
+        ];
+
+        await Future.wait(futures);
+
+        expect(dataSourceMock.isSuccess, true);
+        expect(dataSourceMock.counterNetworkCall, 1);
+      });
     },
   );
 }
