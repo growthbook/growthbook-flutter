@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:collection';
 
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
