@@ -39,7 +39,7 @@ void main() {
             url: testContext.url
           );
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null, null);
 
           final result = ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
           final status =

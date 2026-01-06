@@ -19,7 +19,14 @@ class Constant {
   static String eventsPath = "sub";
 }
 
-typedef CacheRefreshHandler = void Function(bool, GBError?);
+/// Handler for Refresh Cache Request
+/// It updates back whether cache was refreshed or not
+@Deprecated('Use CacheRefreshHandlerV2 instead')
+typedef CacheRefreshHandler = void Function(bool);
+
+/// New Handler for Refresh Cache Request with eror
+/// It updates back whether cache was refreshed or not
+typedef CacheRefreshHandlerV2 = void Function(bool, [GBError? error]);
 
 /// Triple Tuple for GrowthBook Namespaces
 /// It has ID, StartRange & EndRange
@@ -34,10 +41,6 @@ typedef GBFeatures = Map<String, GBFeature>;
 
 /// Type Alias for Condition Element in GrowthBook Rules
 typedef GBCondition = Map<String, dynamic>;
-
-/// Handler for Refresh Cache Request
-/// It updates back whether cache was refreshed or not
-typedef GBCacheRefreshHandler = void Function(bool, GBError?);
 
 typedef GBStickyBucketingService = LocalStorageStickyBucketService;
 

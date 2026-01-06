@@ -4,4 +4,4 @@ typedef TrackingCallBackWithUser = void Function(GBTrackData)?;
 
 typedef FeatureUsageCallbackWithUser = void Function(String, GBFeatureResult);
 
-typedef FeatureRefreshCallback = void Function(bool, GBError?);
+typedef FeatureRefreshCallback = void Function(bool, [GBError? error]);

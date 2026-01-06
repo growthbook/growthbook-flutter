@@ -35,7 +35,7 @@ void main() {
           gbContext.features = testData.features!;
         }
 
-        final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+        final evaluationContext = GBUtils.initializeEvalContext(gbContext, null, null);
 
         final result = FeatureEvaluator().evaluateFeature(evaluationContext, item[2]);
         final expectedResult = GBFeatureResultTest.fromMap(item[3]);
@@ -123,7 +123,7 @@ void main() {
             gbContext.forcedVariation = testData.forcedVariations!;
           }
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null, null);
 
           final evaluator = FeatureEvaluator();
           evaluator.evaluateFeature(evaluationContext, item[2]);

@@ -682,7 +682,7 @@ class GBUtils {
   }
 
   static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+      GBContext gbContext, CacheRefreshHandler? refreshHandler, CacheRefreshHandlerV2? refreshHandlerV2) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -695,7 +695,7 @@ class GBUtils {
       stickyBucketService: gbContext.stickyBucketService,
       trackingCallBackWithUser: gbContext.trackingCallBack!,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
-      featureRefreshCallback: refreshHandler,
+      featureRefreshCallback: refreshHandlerV2,
       url: gbContext.url,
     );
 

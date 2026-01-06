@@ -27,7 +27,7 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler, error) => refreshHandler = isRefreshed).initialize();
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
@@ -59,7 +59,7 @@ void main() {
         attributes: attr,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler, error) {}).initialize();
+      ).setRefreshHandler((refreshHandler) {}).initialize();
       expect(sdk.context.enabled, true);
       expect(sdk.context.qaMode, true);
 
@@ -86,7 +86,7 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler, error) => refreshHandler = isRefreshed).initialize();
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
       final featureValue = sdk.feature('some-feature');
       expect(featureValue.source, GBFeatureSource.unknownFeature);
       final result = sdk.run(GBExperiment(key: "some-feature"));
@@ -105,7 +105,7 @@ void main() {
           growthBookTrackingCallBack: (trackData) {},
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           backgroundSync: false,
-        ).setRefreshHandler((refreshHandler, error) {}).initialize();
+        ).setRefreshHandler((refreshHandler) {}).initialize();
         final featureValue = sdk.feature('some-feature');
         expect(featureValue.value ?? true, true);
         final result = sdk.run(GBExperiment(key: "some-feature"));
@@ -121,7 +121,7 @@ void main() {
         growthBookTrackingCallBack: (trackData) {},
         attributes: attr,
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler, error) {}).initialize();
+      ).setRefreshHandler((refreshHandler) {}).initialize();
 
       const encryptedFeatures =
           "vMSg2Bj/IurObDsWVmvkUg==.L6qtQkIzKDoE2Dix6IAKDcVel8PHUnzJ7JjmLjFZFQDqidRIoCxKmvxvUj2kTuHFTQ3/NJ3D6XhxhXXv2+dsXpw5woQf0eAgqrcxHrbtFORs18tRXRZza7zqgzwvcznx";
@@ -160,7 +160,7 @@ void main() {
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        ).setRefreshHandler((refreshHandler, error) => refreshHandler = isRefreshed).initialize();
+        ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
@@ -180,7 +180,7 @@ void main() {
         },
         refreshHandler: null,
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler, error) => refreshHandler = isRefreshed).initialize();
+      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
 
       sdkInstance.context.features = {
         'feature 1': GBFeature(defaultValue: true),
