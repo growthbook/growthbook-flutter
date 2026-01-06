@@ -27,7 +27,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.2'
+          flutter-version: '3.27.0'
           channel: 'stable'
           
       - name: Install dependencies
@@ -47,32 +47,9 @@ jobs:
         
       - name: Release Please
         id: release
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  publish-to-pub-dev:
-    needs: validate-and-release
-    runs-on: ubuntu-latest
-    if: ${{ needs.validate-and-release.outputs.release_created }}
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Checkout at release tag
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.validate-and-release.outputs.tag_name }}
-        
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
-        
-      - name: Install dependencies
-        run: dart pub get
-        
-      - name: Generate required files
-        run: dart run build_runner build --delete-conflicting-outputs
-        
-      - name: Publish to pub.dev
-        run: dart pub publish --force 
+

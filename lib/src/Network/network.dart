@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
 
 import '../Utils/logger.dart';
@@ -37,6 +38,11 @@ class DioClient extends BaseClient {
   final Dio _dio;
 
   Dio get client => _dio;
+  String? lastKnownId;
+
+  final LruEtagCache _etagCache = LruEtagCache(maxSize: 100);
+
+  final _featuresRegex = RegExp(r'.*/api/features/[^/]+');
 
   Future<void> listenAndRetry({
     required String url,
@@ -44,6 +50,7 @@ class DioClient extends BaseClient {
     required OnError onError,
   }) async {
     try {
+      logger.i('Establishing SSE connection to: $url');
       final resp = await _dio.get(
         url,
         options: Options(responseType: ResponseType.stream),
@@ -53,19 +60,27 @@ class DioClient extends BaseClient {
       final statusCode = resp.statusCode;
 
       if (data is ResponseBody) {
-        data.stream.cast<List<int>>().transform(const Utf8Decoder()).transform(const SseEventTransformer()).listen(
+        data.stream
+            .cast<List<int>>()
+            .transform(const Utf8Decoder())
+            .transform(const SseEventTransformer())
+            .listen(
           (sseModel) {
-            if (sseModel.name == "features") {
+            logger.i('SSE event received: ${sseModel.name}');
+            if (sseModel.name == "features" && lastKnownId != sseModel.id) {
+              lastKnownId = sseModel.id;
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
               onSuccess(jsonMap);
             }
           },
           onError: (dynamic e, dynamic s) async {
-            onError;
+            onError(e, s);
           },
           onDone: () async {
+            logger.i('SSE connection closed with status: $statusCode');
             if (statusCode != null && shouldReconnect(statusCode)) {
+              logger.i('Attempting to reconnect SSE...');
               await listenAndRetry(
                 url: url,
                 onError: onError,
@@ -76,7 +91,8 @@ class DioClient extends BaseClient {
         );
       }
     } catch (error) {
-      onError;
+      logger.e('SSE connection error: $error');
+      onError(error, StackTrace.current);
     }
   }
 
@@ -91,7 +107,26 @@ class DioClient extends BaseClient {
     OnError onError,
   ) async {
     try {
-      final response = await _dio.get(url);
+      final headers = <String, String>{};
+
+      if (_featuresRegex.hasMatch(url)) {
+        final etag = _etagCache.get(url);
+        if (etag != null) {
+          headers["If-None-Match"] = etag;
+        }
+        headers["Cache-Control"] = "max-age=3600";
+        headers["Accept-Encoding"] = "gzip, deflate, br";
+      }
+
+      final response = await _dio.get(
+        url,
+        options: Options(headers: headers),
+      );
+
+      final newEtag = response.headers.value("etag");
+      if (newEtag != null && _featuresRegex.hasMatch(url)) {
+        _etagCache.put(url, newEtag);
+      }
 
       if (response.data is Map<String, dynamic>) {
         onSuccess(response.data);
@@ -105,6 +140,11 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
+      if (e.response?.statusCode == 304) {
+        logger.e('DioException: $e');
+        onError(e, s);
+        return;
+      }
       logger.e('DioException: $e');
       onError(e, s);
     } catch (e, s) {

@@ -138,15 +138,14 @@ class FeatureEvaluator {
           // Handle tracks if present
           if (rule.tracks != null) {
             for (var track in rule.tracks!) {
-              if (track.featureResult?.experiment != null && track.featureResult?.experimentResult != null) {
-                if (track.featureResult != null) {
-                  var experiment = track.featureResult!.experiment!;
-                  var result = track.featureResult!.experimentResult!;
+              if (track.experiment != null && track.result != null) {
+                  var experiment = track.experiment!;
+                  var result = track.result!;
                   if (!ExperimentHelper.shared.isTracked(experiment, result)) {
                     context.options
                         .trackingCallBackWithUser!(GBTrackData(experiment: experiment, experimentResult: result));
                   }
-                }
+                
               }
             }
           }

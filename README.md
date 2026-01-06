@@ -1,10 +1,12 @@
 # GrowthBook Flutter SDK
 
+<!-- Test reusable workflow v2 -->
+
 <div align="center">
 
 ![GrowthBook Flutter SDK](https://docs.growthbook.io/images/hero-flutter-sdk.png)
 
-[![pub.dev](https://img.shields.io/pub/v/growthbook_sdk_flutter)](https://pub.dev/packages/growthbook_sdk_flutter)
+[![pub package](https://img.shields.io/pub/v/growthbook_sdk_flutter.svg)](https://pub.dev/packages/growthbook_sdk_flutter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform](https://img.shields.io/badge/platform-flutter-blue)
 ![Dart](https://img.shields.io/badge/dart-%230175C2.svg?style=flat&logo=dart&logoColor=white)
@@ -359,9 +361,11 @@ final sdk = await GBSDKBuilderApp(
 
 ### Remote Evaluation
 
-> 📖 **[Learn about remote evaluation →](https://docs.growthbook.io/lib/remote-evaluation)**
+The Flutter SDK may be run in Remote Evaluation mode. This mode brings the security benefits of a backend SDK to the front end by evaluating feature flags exclusively on a private server. Using Remote Evaluation ensures that any sensitive information within targeting rules or unused feature variations are never seen by the client.
 
-For enhanced security and server-side evaluation:
+You must enable Remote Evaluation in your SDK Connection settings. Cloud customers are also required to self-host a GrowthBook Proxy Server or a custom remote evaluation backend.
+
+To use Remote Evaluation, add the remoteEval: true property to your SDK instance.
 
 ```dart
 final sdk = await GBSDKBuilderApp(
@@ -376,7 +380,7 @@ final sdk = await GBSDKBuilderApp(
 
 ### Real-time Updates
 
-> 📖 **[Learn about streaming updates →](https://docs.growthbook.io/lib/streaming)**
+The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.
 
 ```dart
 final sdk = await GBSDKBuilderApp(
