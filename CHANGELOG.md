@@ -6,6 +6,13 @@
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
 
+## [4.2.0](https://github.com/growthbook/growthbook-flutter/compare/v4.1.1...v4.2.0) (2026-01-06)
+
+
+### Features
+
+* Implement ETag caching ([#132](https://github.com/growthbook/growthbook-flutter/issues/132)) ([0c86fb5](https://github.com/growthbook/growthbook-flutter/commit/0c86fb5ed93d14a638ae5c997c931e3dcdae5881))
+
 ## [4.1.0](https://github.com/growthbook/growthbook-flutter/compare/v4.0.0...v4.1.0) (2025-10-02)
 
 
