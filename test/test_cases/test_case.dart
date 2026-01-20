@@ -6644,8 +6644,8 @@ const String gbTestCases = r'''
       {
         "deviceId||d123": {
           "assignments": {
-            "feature-exp__3": "1",
-            "feature-exp__4": "2"
+            "feature-exp__4": "2",
+            "feature-exp__3": "1"
           },
           "attributeName": "deviceId",
           "attributeValue": "d123"
