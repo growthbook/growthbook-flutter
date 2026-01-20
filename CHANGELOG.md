@@ -6,6 +6,13 @@
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
 
+## [4.2.1](https://github.com/growthbook/growthbook-flutter/compare/v4.2.0...v4.2.1) (2026-01-20)
+
+
+### Bug Fixes
+
+* Fixed Bucketing Regression - Merge pull request [#134](https://github.com/growthbook/growthbook-flutter/issues/134) from growthbook/fix/forced-v1-check ([dc7bf03](https://github.com/growthbook/growthbook-flutter/commit/dc7bf03a27e665fd74af9cb1a7d9557906bee479))
+
 ## [4.2.0](https://github.com/growthbook/growthbook-flutter/compare/v4.1.1...v4.2.0) (2026-01-06)
 
 
