@@ -35,9 +35,11 @@ void main() {
           gbContext.features = testData.features!;
         }
 
-        final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+        final evaluationContext =
+            GBUtils.initializeEvalContext(gbContext, null);
 
-        final result = FeatureEvaluator().evaluateFeature(evaluationContext, item[2]);
+        final result =
+            FeatureEvaluator().evaluateFeature(evaluationContext, item[2]);
         final expectedResult = GBFeatureResultTest.fromMap(item[3]);
 
         final status =
@@ -47,7 +49,8 @@ void main() {
             result.off.toString() == expectedResult.off.toString() &&
             result.source?.name.toString() == expectedResult.source &&
             result.experiment?.key == expectedResult.experiment?.key &&
-            result.experimentResult?.variationID == expectedResult.experimentResult?.variationId &&
+            result.experimentResult?.variationID ==
+                expectedResult.experimentResult?.variationId &&
             result.ruleId == expectedResult.ruleId) {
           passedScenarios.add(status);
         } else {
@@ -56,7 +59,8 @@ void main() {
         }
         index++;
       }
-      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      customLogger(
+          'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
       expect(failedScenarios.length, 0);
     });
 
@@ -70,7 +74,7 @@ void main() {
 
       final gbBuilder = GBSDKBuilderApp(
         apiKey: testApiKey,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         attributes: attr,
         client: const MockNetworkClient(),
         growthBookTrackingCallBack: (trackData) {},
@@ -90,7 +94,8 @@ void main() {
         }
       }
 
-      expect(expectedNumberOfOnFeatureUsageCalls, actualNumberOfOnFeatureUsageCalls);
+      expect(expectedNumberOfOnFeatureUsageCalls,
+          actualNumberOfOnFeatureUsageCalls);
     });
 
     test('Whether featureUsageCallback is called on context level', () {
@@ -100,11 +105,11 @@ void main() {
       for (final item in evaluateCondition) {
         if (item is List<dynamic>) {
           final testData = GBFeaturesTest.fromMap(item[1]);
-          final attributes = Map<String, dynamic>.from(testData.attributes ?? {});
+          final attributes =
+              Map<String, dynamic>.from(testData.attributes ?? {});
 
           final gbContext = GBContext(
             apiKey: '',
-            hostURL: '',
             enabled: true,
             attributes: attributes,
             forcedVariation: {},
@@ -123,12 +128,14 @@ void main() {
             gbContext.forcedVariation = testData.forcedVariations!;
           }
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext =
+              GBUtils.initializeEvalContext(gbContext, null);
 
           final evaluator = FeatureEvaluator();
           evaluator.evaluateFeature(evaluationContext, item[2]);
 
-          expect(expectedNumberOfOnFeatureUsageCalls, actualNumberOfOnFeatureUsageCalls);
+          expect(expectedNumberOfOnFeatureUsageCalls,
+              actualNumberOfOnFeatureUsageCalls);
           break;
         }
       }

@@ -19,11 +19,11 @@ void main() {
       for (final item in evalConditions) {
         if (item is List<dynamic>) {
           final testData = GBFeaturesTest.fromMap(item[1]);
-          final attributes = Map<String, dynamic>.from(testData.attributes ?? {});
+          final attributes =
+              Map<String, dynamic>.from(testData.attributes ?? {});
 
           final gbContext = GBContext(
             apiKey: "",
-            hostURL: "",
             enabled: true,
             attributes: attributes,
             forcedVariation: testData.forcedVariations ?? {},
@@ -44,7 +44,8 @@ void main() {
           final listActualStickyAssigmentsDoc = <StickyAssignmentsDocument>[];
 
           item[2].forEach((jsonElement) {
-            listActualStickyAssigmentsDoc.add(StickyAssignmentsDocument.fromJson(jsonElement));
+            listActualStickyAssigmentsDoc
+                .add(StickyAssignmentsDocument.fromJson(jsonElement));
           });
 
           final mapOfDocForContext = <String, StickyAssignmentsDocument>{};
@@ -63,24 +64,31 @@ void main() {
             expectedExperimentResult = GBExperimentResultTest.fromMap(item[4]);
           }
 
-          Map<String, StickyAssignmentsDocument> expectedStickyAssignmentDocs = <String, StickyAssignmentsDocument>{};
+          Map<String, StickyAssignmentsDocument> expectedStickyAssignmentDocs =
+              <String, StickyAssignmentsDocument>{};
 
           (item[5] as Map<String, dynamic>).forEach((key, value) {
-            expectedStickyAssignmentDocs[key] = StickyAssignmentsDocument.fromJson(value);
+            expectedStickyAssignmentDocs[key] =
+                StickyAssignmentsDocument.fromJson(value);
           });
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext =
+              GBUtils.initializeEvalContext(gbContext, null);
 
           final evaluator = FeatureEvaluator();
 
-          final actualExperimentResult = evaluator.evaluateFeature(evaluationContext, item[3]).experimentResult;
+          final actualExperimentResult = evaluator
+              .evaluateFeature(evaluationContext, item[3])
+              .experimentResult;
 
           String status =
               "\n${item[0]}\nExpected Result - ${item[4]} & $expectedStickyAssignmentDocs\n\nActual result - ${actualExperimentResult?.toJson()} & ${gbContext.stickyBucketAssignmentDocs}\n\n";
 
-          if (expectedExperimentResult?.value.toString() == actualExperimentResult?.value.toString() &&
+          if (expectedExperimentResult?.value.toString() ==
+                  actualExperimentResult?.value.toString() &&
               expectedStickyAssignmentDocs.toString() ==
-                  evaluationContext.userContext.stickyBucketAssignmentDocs.toString()) {
+                  evaluationContext.userContext.stickyBucketAssignmentDocs
+                      .toString()) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);
