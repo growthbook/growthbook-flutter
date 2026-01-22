@@ -60,7 +60,6 @@ class FeatureViewModel {
 
     try {
       if (remoteEval && apiUrl != null) {
-
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
@@ -74,7 +73,6 @@ class FeatureViewModel {
 
         await _fetchRemoteEval(apiUrl, payload);
       } else {
-
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
@@ -133,11 +131,9 @@ class FeatureViewModel {
   }
 
   void _handleSuccess(FeaturedDataModel data) {
-    delegate.featuresFetchedSuccessfully(
-      gbFeatures: data.features!,
-      isRemote: true,
-    );
-    cacheFeatures(data);
+    // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
+    // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
+    prepareFeaturesData(data);
     refreshExpiresAt();
   }
 
