@@ -1,8 +1,7 @@
-import 'dart:developer';
-
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 /// Feature Evaluator Class
 /// Takes Context and Feature Key
@@ -83,7 +82,7 @@ class FeatureEvaluator {
             if (!evalCondition) {
               // Check if there is a gate in the parent condition
               if (parentCondition.gate != null) {
-                log('Feature blocked by prerequisite');
+                logger.w('Feature blocked by prerequisite');
                 final featureResultWhenBlockedByPrerequisite = prepareResult(
                   value: null, // Corresponds to .null in Swift
                   source: GBFeatureSource.prerequisite,
@@ -101,7 +100,7 @@ class FeatureEvaluator {
         }
         if (rule.filters != null) {
           if (GBUtils.isFilteredOut(rule.filters!, context.userContext.attributes ?? {})) {
-            log('Skip rule because of filters');
+            logger.w('Skip rule because of filters');
             continue; // Skip to the next rule
           }
         }
@@ -114,7 +113,7 @@ class FeatureEvaluator {
                 rule.condition!,
                 context.globalContext.savedGroups,
               )) {
-            log('Skip rule because of condition');
+            logger.w('Skip rule because of condition');
             continue; // Skip to the next rule
           }
 
@@ -132,7 +131,7 @@ class FeatureEvaluator {
           );
 
           if (!isUserIncluded) {
-            log('Skip rule because user not included in rollout');
+            logger.w('Skip rule because user not included in rollout');
             continue; // Skip to the next rule
           }
 

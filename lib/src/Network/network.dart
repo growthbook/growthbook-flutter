@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
+
+import '../Utils/logger.dart';
 
 typedef OnSuccess = void Function(Map<String, dynamic> onSuccess);
 typedef OnError = void Function(Object error, StackTrace stackTrace);
@@ -49,7 +50,7 @@ class DioClient extends BaseClient {
     required OnError onError,
   }) async {
     try {
-      log('Establishing SSE connection to: $url');
+      logger.i('Establishing SSE connection to: $url');
       final resp = await _dio.get(
         url,
         options: Options(responseType: ResponseType.stream),
@@ -65,7 +66,7 @@ class DioClient extends BaseClient {
             .transform(const SseEventTransformer())
             .listen(
           (sseModel) {
-            log('SSE event received: ${sseModel.name}');
+            logger.i('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
               lastKnownId = sseModel.id;
               String jsonData = sseModel.data ?? "";
@@ -77,9 +78,9 @@ class DioClient extends BaseClient {
             onError(e, s);
           },
           onDone: () async {
-            log('SSE connection closed with status: $statusCode');
+            logger.i('SSE connection closed with status: $statusCode');
             if (statusCode != null && shouldReconnect(statusCode)) {
-              log('Attempting to reconnect SSE...');
+              logger.i('Attempting to reconnect SSE...');
               await listenAndRetry(
                 url: url,
                 onError: onError,
@@ -90,7 +91,7 @@ class DioClient extends BaseClient {
         );
       }
     } catch (error) {
-      log('SSE connection error: $error');
+      logger.e('SSE connection error: $error');
       onError(error, StackTrace.current);
     }
   }
@@ -140,15 +141,14 @@ class DioClient extends BaseClient {
       }
     } on DioException catch (e, s) {
       if (e.response?.statusCode == 304) {
-              log('DioException: $e');
-
-      onError(e, s);
-      return;
-    }
-      log('DioException: $e');
+        logger.e('DioException: $e');
+        onError(e, s);
+        return;
+      }
+      logger.e('DioException: $e');
       onError(e, s);
     } catch (e, s) {
-      log('Unexpected error: $e');
+      logger.e('Unexpected error: $e');
       onError(e, s);
     }
   }
