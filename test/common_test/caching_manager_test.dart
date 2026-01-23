@@ -5,8 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Caching manager test', () {
-    final manager = CachingManager();
+    final manager = FileCacheStorage();
     test('Caching file name', () async {
       const String fileName = "gb-features.txt";
       final String filePath = await manager.getTargetFile(fileName);

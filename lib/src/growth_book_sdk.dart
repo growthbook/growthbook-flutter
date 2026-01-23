@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 typedef VoidCallback = void Function();
 
@@ -30,7 +33,11 @@ class GBSDKBuilderApp {
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url,
+      String? cacheDirectory,
+      CacheStorage? cacheStorage})
+      : cachingManager = cacheStorage ??
+            FileCacheStorage(cacheDirectory: cacheDirectory, apiKey: apiKey);
 
   final String apiKey;
   final String? encryptionKey;
@@ -51,6 +58,7 @@ class GBSDKBuilderApp {
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+  CacheStorage cachingManager;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -72,8 +80,12 @@ class GBSDKBuilderApp {
         context: gbContext,
         client: client,
         onInitializationFailure: onInitializationFailure,
+      cachingManager: cachingManager,
         refreshHandler: refreshHandler,
         ttlSeconds: ttlSeconds);
+    await cachingManager.saveContent(
+        fileName: Constant.featureCache,
+        content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -81,6 +93,11 @@ class GBSDKBuilderApp {
 
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
+    return this;
+  }
+
+  GBSDKBuilderApp setCachingManager(CacheStorage cachingManager) {
+    this.cachingManager = cachingManager;
     return this;
   }
 
@@ -102,27 +119,29 @@ class GBSDKBuilderApp {
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
-  GrowthBookSDK._({
-    OnInitializationFailure? onInitializationFailure,
-    required GBContext context,
-    EvaluationContext? evaluationContext,
-    BaseClient? client,
-    CacheRefreshHandler? refreshHandler,
+  GrowthBookSDK._(
+      {OnInitializationFailure? onInitializationFailure,
+      required GBContext context,
+      EvaluationContext? evaluationContext,
+      BaseClient? client,
+      CacheRefreshHandler? refreshHandler,
     required int ttlSeconds,
-  })  : _context = context,
+      required CacheStorage cachingManager})
+: _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
+        _cachingManager = cachingManager,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
-      encryptionKey: _context.encryptionKey ?? "",
-      backgroundSync: _context.backgroundSync,
-    );
+        delegate: this,
+        source: FeatureDataSource(context: _context, client: _baseClient),
+        encryptionKey: _context.encryptionKey ?? "",
+        backgroundSync: _context.backgroundSync,
+        manager: cachingManager);
     autoRefresh();
   }
 
@@ -131,6 +150,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   EvaluationContext _evaluationContext;
 
   late FeatureViewModel _featureViewModel;
+
+  final CacheStorage _cachingManager;
 
   final BaseClient _baseClient;
 
@@ -226,6 +247,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
             result.variationID) {
       updateSubscriptions(key: key, experiment: experiment, result: result);
     }
+  }
+
+  void clearCache() {
+    _cachingManager.clearCache();
   }
 
   void updateSubscriptions(

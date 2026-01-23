@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 
 import '../mocks/network_mock.dart';
@@ -15,6 +16,7 @@ void main() {
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
+      CacheStorage cachingManager = FileCacheStorage();
 
       setUp(
         () {
@@ -36,6 +38,7 @@ void main() {
           featureViewModel = FeatureViewModel(
             encryptionKey: testApiKey,
             delegate: dataSourceMock,
+            manager: cachingManager,
             source: FeatureDataSource(
               client: const MockNetworkClient(),
               context: context,
@@ -50,6 +53,7 @@ void main() {
         featureViewModel = FeatureViewModel(
           encryptionKey: "3tfeoyW0wlo47bDnbWDkxg==",
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,
@@ -63,6 +67,7 @@ void main() {
       test('Remote eval success test', () async {
         featureViewModel = FeatureViewModel(
           encryptionKey: testApiKey,
+          manager: cachingManager,
           delegate: dataSourceMock,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
@@ -89,6 +94,7 @@ void main() {
       test('Remote eval failed test', () async {
         featureViewModel = FeatureViewModel(
           encryptionKey: '',
+          manager: cachingManager,
           delegate: dataSourceMock,
           source: FeatureDataSource(
             client: const MockNetworkClient(
@@ -117,6 +123,7 @@ void main() {
       test('Error test', () async {
         final viewModel = FeatureViewModel(
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(
               error: true,
@@ -136,6 +143,7 @@ void main() {
         featureViewModel = FeatureViewModel(
           encryptionKey: testApiKey,
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,

@@ -17,6 +17,7 @@ class FeatureViewModel {
     required this.delegate,
     required this.source,
     required this.encryptionKey,
+    required this.manager,
     this.backgroundSync,
     this.ttlSeconds = 60,
   });
@@ -28,7 +29,7 @@ class FeatureViewModel {
   final int ttlSeconds;
   int? _expiresAt;
 
-  final CachingManager manager = CachingManager();
+  final CacheStorage manager;
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
@@ -172,7 +173,7 @@ class FeatureViewModel {
         isRemote: true,
       );
       final featureData = utf8Encoder.convert(jsonEncode(data));
-      manager.putData(
+      manager.saveContent(
         fileName: Constant.featureCache,
         content: Uint8List.fromList(featureData),
       );
@@ -185,7 +186,7 @@ class FeatureViewModel {
         );
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(data.savedGroups));
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: Uint8List.fromList(savedGroupsData),
         );
@@ -224,7 +225,7 @@ class FeatureViewModel {
         delegate.featuresFetchedSuccessfully(
             gbFeatures: extractedFeatures, isRemote: true);
         final featureData = utf8Encoder.convert(jsonEncode(extractedFeatures));
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.featureCache,
           content: Uint8List.fromList(featureData),
         );
@@ -262,7 +263,7 @@ class FeatureViewModel {
             savedGroups: extractedSavedGroups, isRemote: true);
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(extractedSavedGroups));
-        manager.putData(
+        manager.saveContent(
           fileName: Constant.savedGroupsCache,
           content: Uint8List.fromList(savedGroupsData),
         );
@@ -290,7 +291,7 @@ class FeatureViewModel {
 
   void cacheFeatures(FeaturedDataModel data) {
     final featureData = utf8Encoder.convert(jsonEncode(data));
-    manager.putData(
+    manager.saveContent(
       fileName: Constant.featureCache,
       content: Uint8List.fromList(featureData),
     );

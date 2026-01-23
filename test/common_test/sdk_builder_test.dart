@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
@@ -9,15 +10,34 @@ import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import '../mocks/network_mock.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Initialization', () {
     const testApiKey = '<API_KEY>';
     const attr = <String, String>{};
     const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
 
-    CachingManager manager = CachingManager();
+    CacheStorage manager = FileCacheStorage();
 
     var isRefreshed = false;
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getApplicationSupportDirectory') {
+          return '/tmp'; 
+        }
+        return null;
+      });
+    });
+
+    tearDownAll(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
 
     test("- default", () async {
       final sdk = await GBSDKBuilderApp(
@@ -27,7 +47,9 @@ void main() {
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
@@ -66,7 +88,9 @@ void main() {
       manager.clearCache();
     });
 
-    test('- with initialization without throwing assertion error for wrong host url', () async {
+    test(
+        '- with initialization without throwing assertion error for wrong host url',
+        () async {
       final sdkInstance = GBSDKBuilderApp(
         apiKey: testApiKey,
         hostURL: testHostURL,
@@ -134,7 +158,8 @@ void main() {
       );
 
       final dataExpectedResult = utf8.encode(expectedResult);
-      final features = json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
+      final features =
+          json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
 
       expect(
         sdkInstance.features["testfeature1"]?.rules?[0].condition,
@@ -160,7 +185,9 @@ void main() {
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+        )
+            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+            .initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
@@ -180,7 +207,9 @@ void main() {
         },
         refreshHandler: null,
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       sdkInstance.context.features = {
         'feature 1': GBFeature(defaultValue: true),

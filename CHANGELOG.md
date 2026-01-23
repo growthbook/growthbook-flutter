@@ -78,6 +78,15 @@
  -  All methods now use a single _evaluationContext that includes sticky bucket data.
  -  refresh() now also synchronizes this context.
  -  Sticky bucketing now works correctly at all times.
+ 
+ # 3.9.11
+- Added ability to set custom path for caching 
+- Added ability to provide a custom implementation of cache storage
+- Added support for setting a cache key for stored entries
+- Removed singleton pattern from `CachingManager`
+- Fixed subscription logic
+- Added getAllResults method
+- Updated subscribe method
 
 ## [3.9.11](https://github.com/growthbook/growthbook-flutter/compare/v3.9.10...v3.9.11) (2025-06-19)
 
