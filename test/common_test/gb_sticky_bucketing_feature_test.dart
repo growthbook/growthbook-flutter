@@ -69,7 +69,7 @@ void main() {
             expectedStickyAssignmentDocs[key] = StickyAssignmentsDocument.fromJson(value);
           });
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null, null);
 
           final evaluator = FeatureEvaluator();
 

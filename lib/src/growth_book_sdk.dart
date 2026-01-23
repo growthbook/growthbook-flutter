@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -49,6 +51,7 @@ class GBSDKBuilderApp {
   final int ttlSeconds;
 
   CacheRefreshHandler? refreshHandler;
+  CacheRefreshHandlerV2? refreshHandlerV2;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
 
@@ -79,8 +82,14 @@ class GBSDKBuilderApp {
     return gb;
   }
 
+@Deprecated('Use setRefreshHandlerV2 instead')
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
+    return this;
+  }
+
+  GBSDKBuilderApp setRefreshHandlerV2(CacheRefreshHandlerV2 refreshHandlerV2) {
+    this.refreshHandlerV2 = refreshHandlerV2;
     return this;
   }
 
@@ -108,12 +117,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
+    CacheRefreshHandlerV2? refreshHandlerV2,
     required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
-            evaluationContext ?? GBUtils.initializeEvalContext(context, null),
+            evaluationContext ?? GBUtils.initializeEvalContext(context, null, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
+        _refreshHandlerV2 = refreshHandlerV2,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
@@ -138,6 +149,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final CacheRefreshHandler? _refreshHandler;
 
+  final CacheRefreshHandlerV2? _refreshHandlerV2;
+
   List<dynamic> _forcedFeatures;
 
   Map<String, dynamic> _attributeOverrides;
@@ -161,7 +174,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
     _evaluationContext =
-        GBUtils.initializeEvalContext(_context, _refreshHandler);
+        GBUtils.initializeEvalContext(_context, _refreshHandler, _refreshHandlerV2);
   }
 
   @override
@@ -175,6 +188,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       log('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
         _refreshHandler!(true);
+      } else if (_refreshHandlerV2 != null) {
+        _refreshHandlerV2!(true, null);
       }
     }
   }
@@ -185,6 +200,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (isRemote) {
       if (_refreshHandler != null) {
         _refreshHandler!(false);
+      } else if (_refreshHandlerV2 != null) {
+        _refreshHandlerV2!(false, error);
       }
     }
   }
@@ -387,6 +404,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (isRemote) {
       if (_refreshHandler != null) {
         _refreshHandler!(false);
+      } else if (_refreshHandlerV2 != null) {
+        _refreshHandlerV2!(false, error);
       }
     }
   }
@@ -399,6 +418,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (isRemote) {
       if (_refreshHandler != null) {
         _refreshHandler!(true);
+      } else if (_refreshHandlerV2 != null) {
+        _refreshHandlerV2!(true, null);
       }
     }
   }
