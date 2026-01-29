@@ -406,13 +406,17 @@ class GBConditionEvaluator {
           break;
 
         case '\$regex':
-          try {
-            final regEx = RegExp(conditionValue.toString());
-            evaluatedValue = regEx.hasMatch(attributeValue.toString());
-          } catch (e) {
-            evaluatedValue = false;
-          }
-          break;
+          return _evalRegex(conditionValue: conditionValue, attributeValue: attributeValue, isCaseSensitive: true, negate: false);
+
+        case '\$regexi':
+           return _evalRegex(conditionValue: conditionValue, attributeValue: attributeValue, isCaseSensitive: false, negate: false);
+
+        case '\$notRegex':
+          return _evalRegex(conditionValue: conditionValue, attributeValue: attributeValue, isCaseSensitive: true, negate: true);
+
+
+        case '\$notRegexi':
+          return _evalRegex(conditionValue: conditionValue, attributeValue: attributeValue, isCaseSensitive: false, negate: true);
 
         default:
           conditionValue = false;
@@ -428,4 +432,23 @@ class GBConditionEvaluator {
     }
     return conditionValue.contains(actualValue);
   }
+
+  bool _evalRegex({
+    required dynamic conditionValue,
+    required dynamic attributeValue,
+    required bool isCaseSensitive,
+    required bool negate
+    }) {
+
+      if (conditionValue == null || attributeValue == null) {
+        return false;
+      }
+      try {
+        final regex = RegExp(conditionValue.toString(), caseSensitive: isCaseSensitive);
+        final matches = regex.hasMatch(attributeValue.toString());
+        return negate != matches;
+      } catch (_) {
+        return false;
+      }
+    }
 }
