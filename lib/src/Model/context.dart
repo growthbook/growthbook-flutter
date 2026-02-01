@@ -42,7 +42,8 @@ class GBContext {
   /// Force specific experiments to always assign a specific variation (used for QA).
   Map<String, dynamic>? forcedVariation;
 
-  Map<StickyAttributeKey, StickyAssignmentsDocument>? stickyBucketAssignmentDocs;
+  Map<StickyAttributeKey, StickyAssignmentsDocument>?
+      stickyBucketAssignmentDocs;
 
   List<String>? stickyBucketIdentifierAttributes;
 
@@ -80,7 +81,9 @@ class GBContext {
 
   String? getFeaturesURL() {
     if (hostURL != null && apiKey != null) {
-      return '$hostURL/api/features/$apiKey';
+      return Uri.parse(hostURL!)
+          .replace(path: 'api/features/$apiKey')
+          .toString();
     } else {
       return null;
     }
@@ -88,7 +91,7 @@ class GBContext {
 
   String? getRemoteEvalUrl() {
     if (hostURL != null && apiKey != null) {
-      return '$hostURL/api/eval/$apiKey';
+      return Uri.parse(hostURL!).replace(path: 'api/eval/$apiKey').toString();
     } else {
       return null;
     }
