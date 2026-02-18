@@ -82,7 +82,7 @@ class GBContext {
   String? getFeaturesURL() {
     if (hostURL != null && apiKey != null) {
       return Uri.parse(hostURL!)
-          .replace(path: 'api/features/$apiKey')
+          .replace(path: '/api/features/$apiKey')
           .toString();
     } else {
       return null;
@@ -91,7 +91,7 @@ class GBContext {
 
   String? getRemoteEvalUrl() {
     if (hostURL != null && apiKey != null) {
-      return Uri.parse(hostURL!).replace(path: 'api/eval/$apiKey').toString();
+      return Uri.parse(hostURL!).replace(path: '/api/eval/$apiKey').toString();
     } else {
       return null;
     }

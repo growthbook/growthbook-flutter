@@ -62,7 +62,7 @@ void main() {
         final url = context.getFeaturesURL();
         expect(url, isNotNull);
         // Uri.replace replaces the entire path, so the original path should be replaced
-        expect(url, contains('/api/features/test-api-key'));
+        expect(url, equals('https://example.growthbook.io/api/features/test-api-key'));
       });
     });
 
@@ -125,7 +125,7 @@ void main() {
         final url = context.getRemoteEvalUrl();
         expect(url, isNotNull);
         // Uri.replace replaces the entire path, so the original path should be replaced
-        expect(url, contains('/api/eval/test-api-key'));
+        expect(url, equals('https://example.growthbook.io/api/eval/test-api-key'));
       });
     });
   });
