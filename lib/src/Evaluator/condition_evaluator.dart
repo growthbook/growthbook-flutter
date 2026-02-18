@@ -454,7 +454,7 @@ class GBConditionEvaluator {
 
   bool isIn(dynamic actualValue, List<dynamic> conditionValue,
       {bool inSensitive = false}) {
-    dynamic _caseFole(dynamic value) {
+    dynamic caseFole(dynamic value) {
       if (inSensitive && value is String) {
         return value.toLowerCase();
       } else {
@@ -468,12 +468,12 @@ class GBConditionEvaluator {
       }
       return actualValue.any(
         (attr) => conditionValue.any(
-          (cond) => _caseFole(attr) == _caseFole(cond),
+          (cond) => caseFole(attr) == caseFole(cond),
         ),
       );
     }
     return conditionValue.any(
-      (cond) => _caseFole(actualValue) == _caseFole(cond),
+      (cond) => caseFole(actualValue) == caseFole(cond),
     );
   }
 
