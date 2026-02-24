@@ -101,6 +101,25 @@ class CachingManager extends CachingLayer {
     return null;
   }
 
+  Future<void> removeContent({required String fileName}) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('$_key/$fileName');
+      return;
+    }
+
+    try {
+      final filePath = await getTargetFile(fileName);
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+        log('Cache file removed: $fileName');
+      }
+    } catch (e) {
+      log('Failed to remove content: $e');
+    }
+  }
+
   Future<void> clearCache() async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
