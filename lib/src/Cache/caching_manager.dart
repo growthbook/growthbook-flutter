@@ -44,19 +44,26 @@ class CachingManager extends CachingLayer {
       return;
     }
 
-    final fileManager = File(await getTargetFile(fileName));
-    if (fileManager.existsSync()) {
-      try {
-        fileManager.deleteSync();
-      } catch (e) {
-        log('Failed to remove file: $e');
-      }
-    }
+    final targetPath = await getTargetFile(fileName);
+    final targetFile = File(targetPath);
+    final tempFile = File('$targetPath.tmp');
+
     try {
-      fileManager.writeAsBytesSync(content);
+      // Write to temp file first
+      tempFile.writeAsBytesSync(content, flush: true);
+
+      // Atomic rename — replaces target file safely
+      tempFile.renameSync(targetPath);
+
       log('Content saved successfully to: $fileName');
     } catch (e) {
       log('Failed to save content: $e');
+      // Clean up temp file if it exists
+      try {
+        if (tempFile.existsSync()) {
+          tempFile.deleteSync();
+        }
+      } catch (_) {}
     }
   }
 
