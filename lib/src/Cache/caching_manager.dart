@@ -45,7 +45,6 @@ class CachingManager extends CachingLayer {
     }
 
     final targetPath = await getTargetFile(fileName);
-    final targetFile = File(targetPath);
     final tempFile = File('$targetPath.tmp');
 
     try {
