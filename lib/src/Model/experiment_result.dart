@@ -2,6 +2,9 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'experiment_result.g.dart';
 
+String? _toStringValue(dynamic value) => value?.toString();
+String _toStringRequired(dynamic value) => value.toString();
+
 /// The result of running an Experiment given a specific Context
 @JsonSerializable()
 class GBExperimentResult {
@@ -33,6 +36,7 @@ class GBExperimentResult {
   bool? hashUsed;
 
   /// The value of that attribute
+  @JsonKey(fromJson: _toStringValue)
   String? hashValue;
 
   /// Whether or not the user is part of the experiment
@@ -40,6 +44,7 @@ class GBExperimentResult {
 
   //new properties v0.4.0
   /// The unique key for the assigned variation
+  @JsonKey(fromJson: _toStringRequired)
   String key;
 
   /// If sticky bucketing was used to assign a variation
@@ -57,8 +62,13 @@ class GBExperimentResult {
   /// Used for holdout groups
   bool? passthrough;
 
-  factory GBExperimentResult.fromJson(Map<String, dynamic> value) =>
-      _$GBExperimentResultFromJson(value);
+  factory GBExperimentResult.fromJson(Map<String, dynamic> value) {
+  try {
+    return _$GBExperimentResultFromJson(value);
+  } catch (e) {
+    rethrow;
+  }
+}
 
   Map<String, dynamic> toJson() => _$GBExperimentResultToJson(this);
 

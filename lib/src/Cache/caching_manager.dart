@@ -44,19 +44,25 @@ class CachingManager extends CachingLayer {
       return;
     }
 
-    final fileManager = File(await getTargetFile(fileName));
-    if (fileManager.existsSync()) {
-      try {
-        fileManager.deleteSync();
-      } catch (e) {
-        log('Failed to remove file: $e');
-      }
-    }
+    final targetPath = await getTargetFile(fileName);
+    final tempFile = File('$targetPath.tmp');
+
     try {
-      fileManager.writeAsBytesSync(content);
+      // Write to temp file first
+      tempFile.writeAsBytesSync(content, flush: true);
+
+      // Atomic rename — replaces target file safely
+      tempFile.renameSync(targetPath);
+
       log('Content saved successfully to: $fileName');
     } catch (e) {
       log('Failed to save content: $e');
+      // Clean up temp file if it exists
+      try {
+        if (tempFile.existsSync()) {
+          tempFile.deleteSync();
+        }
+      } catch (_) {}
     }
   }
 
@@ -99,6 +105,25 @@ class CachingManager extends CachingLayer {
       log('Failed to get content: $e');
     }
     return null;
+  }
+
+  Future<void> removeContent({required String fileName}) async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('$_key/$fileName');
+      return;
+    }
+
+    try {
+      final filePath = await getTargetFile(fileName);
+      final file = File(filePath);
+      if (await file.exists()) {
+        await file.delete();
+        log('Cache file removed: $fileName');
+      }
+    } catch (e) {
+      log('Failed to remove content: $e');
+    }
   }
 
   Future<void> clearCache() async {
