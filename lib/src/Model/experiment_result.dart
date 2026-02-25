@@ -66,7 +66,6 @@ class GBExperimentResult {
   try {
     return _$GBExperimentResultFromJson(value);
   } catch (e) {
-    print('Failed to parse GBExperimentResult: $value');
     rethrow;
   }
 }
