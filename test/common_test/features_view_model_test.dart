@@ -131,6 +131,28 @@ void main() {
       });
 
       test(
+        '304 Not Modified should not report error and should refresh TTL',
+        () async {
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+            ttlSeconds: 60,
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          // 304 means "cache is still valid" -- not an error
+          expect(dataSourceMock.isError, false);
+          // TTL should have been refreshed, so cache is not expired
+          expect(featureViewModel.isCacheExpired(), false);
+        },
+      );
+
+      test(
           'concurrent fetchFeatures calls should only trigger one network call',
           () async {
         featureViewModel = FeatureViewModel(

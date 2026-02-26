@@ -106,13 +106,20 @@ class FeatureViewModel {
   }
 
   Future<void> _fetchFromNetwork() async {
+    bool hadError = false;
     await source.fetchFeatures(
       (data) => _handleSuccess(data),
-      (e, s) => delegate.featuresFetchFailed(
-        error: GBError(error: e, stackTrace: s.toString()),
-        isRemote: true,
-      ),
+      (e, s) {
+        hadError = true;
+        delegate.featuresFetchFailed(
+          error: GBError(error: e, stackTrace: s.toString()),
+          isRemote: true,
+        );
+      },
     );
+    if (!hadError) {
+      refreshExpiresAt();
+    }
   }
 
   Future<void> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
@@ -134,7 +141,6 @@ class FeatureViewModel {
     // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
     // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
     prepareFeaturesData(data);
-    refreshExpiresAt();
   }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
