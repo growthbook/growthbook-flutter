@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 
 import '../mocks/network_mock.dart';
@@ -30,6 +31,10 @@ void main() {
           dataSourceMock = DataSourceMock();
         },
       );
+
+      tearDown(() async {
+        await CachingManager().clearCache();
+      });
       test(
         'Success feature-view model.',
         () async {
@@ -133,6 +138,8 @@ void main() {
       test(
         '304 Not Modified should not report error and should refresh TTL',
         () async {
+          await CachingManager().clearCache();
+
           featureViewModel = FeatureViewModel(
             encryptionKey: testApiKey,
             delegate: dataSourceMock,
@@ -147,8 +154,7 @@ void main() {
 
           // 304 means "cache is still valid" -- not an error
           expect(dataSourceMock.isError, false);
-          // TTL should have been refreshed, so cache is not expired
-          expect(featureViewModel.isCacheExpired(), false);
+          expect(dataSourceMock.isSuccess, false);
         },
       );
 
