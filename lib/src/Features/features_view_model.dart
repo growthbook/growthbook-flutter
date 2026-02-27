@@ -106,35 +106,58 @@ class FeatureViewModel {
   }
 
   Future<void> _fetchFromNetwork() async {
-    await source.fetchFeatures(
-      (data) => _handleSuccess(data),
-      (e, s) => delegate.featuresFetchFailed(
-        error: GBError(error: e, stackTrace: s.toString()),
-        isRemote: true,
-      ),
-    );
+    bool success = false;
+    try {
+      await source.fetchFeatures(
+        (data) {
+          success = _handleSuccess(data);
+        },
+        (e, s) {
+          success = false;
+          delegate.featuresFetchFailed(
+            error: GBError(error: e, stackTrace: s.toString()),
+            isRemote: true,
+          );
+        },
+      );
+    } catch (e) {
+      success = false;
+    }
+    if (success) {
+      refreshExpiresAt();
+    }
   }
 
   Future<void> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
-    await source.fetchRemoteEval(
-      apiUrl: apiUrl,
-      params: payload,
-      onSuccess: (data) => {prepareFeaturesData(data), refreshExpiresAt()},
-      onError: (e, s) => {
-        log('Remote Eval Error: $e'),
-        delegate.featuresFetchFailed(
-          error: GBError(error: e, stackTrace: s.toString()),
-          isRemote: true,
-        )
-      },
-    );
+    bool success = false;
+    try {
+      await source.fetchRemoteEval(
+        apiUrl: apiUrl,
+        params: payload,
+        onSuccess: (data) {
+          success = prepareFeaturesData(data);
+        },
+        onError: (e, s) {
+          success = false;
+          log('Remote Eval Error: $e');
+          delegate.featuresFetchFailed(
+            error: GBError(error: e, stackTrace: s.toString()),
+            isRemote: true,
+          );
+        },
+      );
+    } catch (e) {
+      success = false;
+    }
+    if (success) {
+      refreshExpiresAt();
+    }
   }
 
-  void _handleSuccess(FeaturedDataModel data) {
+  bool _handleSuccess(FeaturedDataModel data) {
     // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
     // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
-    prepareFeaturesData(data);
-    refreshExpiresAt();
+    return prepareFeaturesData(data);
   }
 
   Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
@@ -150,20 +173,22 @@ class FeatureViewModel {
     }
   }
 
-  void prepareFeaturesData(FeaturedDataModel data) {
+  bool prepareFeaturesData(FeaturedDataModel data) {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
+        return false;
       } else {
-        handleValidFeatures(data);
+        return handleValidFeatures(data);
       }
     } catch (e, s) {
       handleException(e, s);
+      return false;
     }
   }
 
-  void handleValidFeatures(FeaturedDataModel data) {
+  bool handleValidFeatures(FeaturedDataModel data) {
     if (data.features != null && data.encryptedFeatures == null) {
       // Handle non-encrypted features
       delegate.featuresAPIModelSuccessfully(data);
@@ -190,27 +215,32 @@ class FeatureViewModel {
           content: Uint8List.fromList(savedGroupsData),
         );
       }
+      return true;
     } else {
       // Handle encrypted features/savedGroups if available
+      var isHandleEncryptedFeatures = false;
+      var isHandleEncryptedSavedGroups = true;
+
       if (data.encryptedFeatures != null) {
-        handleEncryptedFeatures(data.encryptedFeatures!);
+        isHandleEncryptedFeatures = handleEncryptedFeatures(data.encryptedFeatures!);
       }
 
       if (data.encryptedSavedGroups != null) {
-        handleEncryptedSavedGroups(data.encryptedSavedGroups!);
+        isHandleEncryptedSavedGroups = handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
+      return isHandleEncryptedFeatures && isHandleEncryptedSavedGroups;
     }
   }
 
-  void handleEncryptedFeatures(String encryptedFeatures) {
+  bool handleEncryptedFeatures(String encryptedFeatures) {
     if (encryptedFeatures.isEmpty) {
       logError("Failed to parse encrypted data.");
-      return;
+      return false;
     }
 
     if (encryptionKey.isEmpty) {
       logError("Encryption key is missing.");
-      return;
+      return false;
     }
 
     try {
@@ -228,26 +258,29 @@ class FeatureViewModel {
           fileName: Constant.featureCache,
           content: Uint8List.fromList(featureData),
         );
+        return true;
       } else {
         logError("Failed to extract features from encrypted string.");
+        return false;
       }
     } catch (e, s) {
       delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
         isRemote: true,
       );
+      return false;
     }
   }
 
-  void handleEncryptedSavedGroups(String encryptedSavedGroups) {
+  bool handleEncryptedSavedGroups(String encryptedSavedGroups) {
     if (encryptedSavedGroups.isEmpty) {
       logError("Failed to parse encrypted data.");
-      return;
+      return false;
     }
 
     if (encryptionKey.isEmpty) {
       logError("Encryption key is missing.");
-      return;
+      return false;
     }
 
     try {
@@ -266,14 +299,17 @@ class FeatureViewModel {
           fileName: Constant.savedGroupsCache,
           content: Uint8List.fromList(savedGroupsData),
         );
+        return true;
       } else {
         logError("Failed to extract savedGroups from encrypted string.");
+        return false;
       }
     } catch (e, s) {
       delegate.savedGroupsFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
         isRemote: false,
       );
+      return false;
     }
   }
 
@@ -303,6 +339,7 @@ class FeatureViewModel {
   bool isCacheExpired() {
     if (_expiresAt == null) return true;
     final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-    return now >= _expiresAt!;
+    final result = now >= _expiresAt!;
+    return result;
   }
 }
