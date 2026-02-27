@@ -123,7 +123,7 @@ class DioClient extends BaseClient {
           headers: headers,
           validateStatus: (status) =>
               status != null &&
-              (status >= 200 && status < 300 || status == 304),
+              ((status >= 200 && status < 300)|| status == 304),
         ),
       );
 
@@ -132,7 +132,10 @@ class DioClient extends BaseClient {
         _etagCache.put(url, newEtag);
       }
 
-      if (response.statusCode == 304) return;
+      if (response.statusCode == 304) {
+        log('Not Modified response occur');
+        return;
+      }
 
       if (response.data is Map<String, dynamic>) {
         onSuccess(response.data);
