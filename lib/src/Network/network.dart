@@ -123,7 +123,7 @@ class DioClient extends BaseClient {
           headers: headers,
           validateStatus: (status) =>
               status != null &&
-              ((status >= 200 && status < 300)|| status == 304),
+              ((status >= 200 && status < 300) || status == 304),
         ),
       );
 
@@ -133,7 +133,7 @@ class DioClient extends BaseClient {
       }
 
       if (response.statusCode == 304) {
-        log('Not Modified response occur');
+        log('304 Not Modified — using cached data');
         return;
       }
 
