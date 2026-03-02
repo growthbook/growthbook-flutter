@@ -106,7 +106,8 @@ class FeatureViewModel {
   }
 
   Future<void> _fetchFromNetwork() async {
-    bool success = false;
+    // null = no callback invoked (304 Not Modified), true = success, false = error  
+    bool? success;
     try {
       await source.fetchFeatures(
         (data) {
@@ -123,7 +124,8 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    if (success) {
+    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid) 
+    if (success != false) {
       refreshExpiresAt();
     }
   }
