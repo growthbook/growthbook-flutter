@@ -7,9 +7,10 @@ class GBContext {
   GBContext({
     this.apiKey,
     this.encryptionKey,
-    this.hostURL,
     this.enabled,
     this.attributes,
+    this.streamingHost,
+    this.apiHost,
     this.forcedVariation,
     this.stickyBucketAssignmentDocs,
     this.stickyBucketIdentifierAttributes,
@@ -31,7 +32,10 @@ class GBContext {
   String? encryptionKey;
 
   /// Host URL for GrowthBook
-  String? hostURL;
+  String? apiHost;
+
+  /// Streaming  URL for GrowthBook
+  String? streamingHost;
 
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
@@ -78,22 +82,4 @@ class GBContext {
 
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
-
-  String? getFeaturesURL() {
-    if (hostURL != null && apiKey != null) {
-      return Uri.parse(hostURL!)
-          .replace(path: '/api/features/$apiKey')
-          .toString();
-    } else {
-      return null;
-    }
-  }
-
-  String? getRemoteEvalUrl() {
-    if (hostURL != null && apiKey != null) {
-      return Uri.parse(hostURL!).replace(path: '/api/eval/$apiKey').toString();
-    } else {
-      return null;
-    }
-  }
 }

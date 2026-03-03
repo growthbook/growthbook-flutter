@@ -47,7 +47,7 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl,
+  Future<void> fetchFeatures(
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
     // If there's already an ongoing request — wait for it to complete
     if (_ongoingFetch != null) {
@@ -59,7 +59,7 @@ class FeatureViewModel {
     _ongoingFetch = completer;
 
     try {
-      if (remoteEval && apiUrl != null) {
+      if (remoteEval) {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
@@ -71,7 +71,7 @@ class FeatureViewModel {
           );
         }
 
-        await _fetchRemoteEval(apiUrl, payload);
+        await _fetchRemoteEval(payload);
       } else {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
@@ -130,11 +130,10 @@ class FeatureViewModel {
     }
   }
 
-  Future<void> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
+  Future<void> _fetchRemoteEval(RemoteEvalModel? payload) async {
     bool success = false;
     try {
       await source.fetchRemoteEval(
-        apiUrl: apiUrl,
         params: payload,
         onSuccess: (data) {
           success = prepareFeaturesData(data);
