@@ -6,6 +6,14 @@
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
 
+## [4.2.3](https://github.com/growthbook/growthbook-flutter/compare/v4.2.2...v4.2.3) (2026-03-03)
+
+
+### Bug Fixes
+
+* Handle HTTP 304 (Not Modified) as success instead of error      ([#143](https://github.com/growthbook/growthbook-flutter/issues/143)) ([585beb7](https://github.com/growthbook/growthbook-flutter/commit/585beb7c2babc95ed70c0fbcf1640fc301b6017d))
+* use Uri class for URL construction in GBContext ([#139](https://github.com/growthbook/growthbook-flutter/issues/139)) ([c736f7c](https://github.com/growthbook/growthbook-flutter/commit/c736f7c3ae4482b317f43bb92ed77d206bca0fa0))
+
 ## [4.2.2](https://github.com/growthbook/growthbook-flutter/compare/v4.2.1...v4.2.2) (2026-01-22)
 
 
