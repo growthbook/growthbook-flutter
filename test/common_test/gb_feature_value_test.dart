@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 import '../Helper/gb_test_helper.dart';
 import '../mocks/network_mock.dart';
@@ -56,7 +57,7 @@ void main() {
         }
         index++;
       }
-      customLogger('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      logger.i('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
       expect(failedScenarios.length, 0);
     });
 
