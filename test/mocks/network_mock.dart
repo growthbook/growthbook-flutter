@@ -5,10 +5,15 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 class MockNetworkClient implements BaseClient {
   final bool error;
-  const MockNetworkClient({this.error = false});
+  final bool notModified;
+  const MockNetworkClient({this.error = false, this.notModified = false});
 
   @override
   Future<void> consumeGetRequest(String url, OnSuccess onSuccess, OnError onError) async {
+    if (notModified) {
+      // Simulate 304 Not Modified: neither callback is called
+      return;
+    }
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
       onSuccess(pseudoResponse);
