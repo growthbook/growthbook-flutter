@@ -34,7 +34,7 @@ void main() {
       );
 
       tearDown(() async {
-        await CachingManager().clearCache();
+        await cachingManager.clearCache();
       });
       test(
         'Success feature-view model.',
@@ -144,7 +144,7 @@ void main() {
       test(
         '304 Not Modified should not report error and should refresh TTL',
         () async {
-          await CachingManager().clearCache();
+          await cachingManager.clearCache();
 
           featureViewModel = FeatureViewModel(
             encryptionKey: testApiKey,
@@ -153,6 +153,7 @@ void main() {
               client: const MockNetworkClient(notModified: true),
               context: context,
             ),
+            manager: cachingManager,
             ttlSeconds: 60,
           );
 
