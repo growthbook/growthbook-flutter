@@ -65,10 +65,12 @@ class FeatureViewModel {
 
         if (receivedData != null) {
           final featureMap = _fetchCachedFeatures(receivedData);
-          delegate.featuresFetchedSuccessfully(
-            gbFeatures: featureMap,
-            isRemote: false,
-          );
+          if (featureMap != null) {
+            delegate.featuresFetchedSuccessfully(
+              gbFeatures: featureMap,
+              isRemote: false,
+            );
+          }
         }
 
         await _fetchRemoteEval(apiUrl, payload);
@@ -76,8 +78,11 @@ class FeatureViewModel {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
-        if (receivedData != null) {
-          final featureMap = _fetchCachedFeatures(receivedData);
+        final featureMap = receivedData != null
+            ? _fetchCachedFeatures(receivedData)
+            : null;
+
+        if (featureMap != null) {
           delegate.featuresFetchedSuccessfully(
             gbFeatures: featureMap,
             isRemote: false,
@@ -162,16 +167,24 @@ class FeatureViewModel {
     return prepareFeaturesData(data);
   }
 
-  Map<String, GBFeature> _fetchCachedFeatures(Uint8List receivedData) {
-    final receivedDataJson = utf8Decoder.convert(receivedData);
-    final receiveFeatureJsonMap =
-        jsonDecode(receivedDataJson) as Map<String, dynamic>;
+  Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
+    if (receivedData.isEmpty) return null;
 
-    if (encryptionKey.isNotEmpty) {
-      const converter = GBFeaturesConverter();
-      return converter.fromJson(receiveFeatureJsonMap);
-    } else {
-      return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+    final receivedDataJson = utf8Decoder.convert(receivedData);
+    if (receivedDataJson.trim().isEmpty) return null;
+
+    try {
+      final receiveFeatureJsonMap =
+          jsonDecode(receivedDataJson) as Map<String, dynamic>;
+
+      if (encryptionKey.isNotEmpty) {
+        const converter = GBFeaturesConverter();
+        return converter.fromJson(receiveFeatureJsonMap);
+      } else {
+        return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
+      }
+    } on FormatException {
+      return null;
     }
   }
 

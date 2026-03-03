@@ -1,7 +1,10 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/constant.dart';
 
 import '../mocks/network_mock.dart';
 import '../mocks/network_view_model_mock.dart';
@@ -182,6 +185,56 @@ void main() {
         expect(dataSourceMock.isSuccess, true);
         expect(dataSourceMock.counterNetworkCall, 1);
       });
+
+      test(
+        'empty cache should not throw FormatException and should fallback to network',
+        () async {
+          CachingManager().putData(
+            fileName: Constant.featureCache,
+            content: Uint8List(0),
+          );
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(),
+              context: context,
+            ),
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          expect(dataSourceMock.isSuccess, true);
+          expect(dataSourceMock.isError, false);
+        },
+      );
+
+      test(
+        'corrupt cache (invalid JSON) should not throw and should fallback to network',
+        () async {
+          final corruptData = Uint8List.fromList([123, 34]);
+
+          CachingManager().putData(
+            fileName: Constant.featureCache,
+            content: corruptData,
+          );
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(),
+              context: context,
+            ),
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          expect(dataSourceMock.isSuccess, true);
+          expect(dataSourceMock.isError, false);
+        },
+      );
     },
   );
 }
