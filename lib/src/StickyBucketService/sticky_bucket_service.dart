@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 
@@ -16,13 +17,13 @@ abstract class StickyBucketService {
 
 class LocalStorageStickyBucketService extends StickyBucketService {
   final String prefix;
-  CachingLayer? localStorage;
+  CacheStorage? localStorage;
 
   final utf8Encoder = const Utf8Encoder();
 
   LocalStorageStickyBucketService(
       {this.prefix = 'gbStickyBuckets__', this.localStorage}) {
-    localStorage ??= CachingManager();
+    localStorage ??= FileCacheStorage();
   }
 
   @override
