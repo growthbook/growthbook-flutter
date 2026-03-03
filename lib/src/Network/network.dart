@@ -120,12 +120,22 @@ class DioClient extends BaseClient {
 
       final response = await _dio.get(
         url,
-        options: Options(headers: headers),
+        options: Options(
+          headers: headers,
+          validateStatus: (status) =>
+              status != null &&
+              ((status >= 200 && status < 300) || status == 304),
+        ),
       );
 
       final newEtag = response.headers.value("etag");
       if (newEtag != null && _featuresRegex.hasMatch(url)) {
         _etagCache.put(url, newEtag);
+      }
+
+      if (response.statusCode == 304) {
+        logger.i('304 Not Modified — using cached data');
+        return;
       }
 
       if (response.data is Map<String, dynamic>) {
@@ -140,11 +150,6 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      if (e.response?.statusCode == 304) {
-        logger.e('DioException: $e');
-        onError(e, s);
-        return;
-      }
       logger.e('DioException: $e');
       onError(e, s);
     } catch (e, s) {
