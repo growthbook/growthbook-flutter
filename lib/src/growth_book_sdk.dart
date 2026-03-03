@@ -126,6 +126,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
           context: _context, client: _baseClient),
       encryptionKey: _context.encryptionKey ?? "",
       backgroundSync: _context.backgroundSync,
+      ttlSeconds: ttlSeconds
     );
     autoRefresh();
   }

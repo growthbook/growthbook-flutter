@@ -32,10 +32,10 @@ class FeatureURLBuilder {
     } else {
       baseUrl = apiHost ?? defaultHost;
     }
-    String baseUrlWithFeaturePath =
-        baseUrl.endsWith('/') ? '$baseUrl$endpoint' : '$baseUrl/$endpoint';
 
-    return '$baseUrlWithFeaturePath/$apiKey';
+    return Uri.parse(baseUrl)
+          .replace(path: '/$endpoint/$apiKey')
+          .toString();
   }
 }
 
