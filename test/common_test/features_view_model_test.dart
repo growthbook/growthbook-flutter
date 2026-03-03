@@ -32,6 +32,10 @@ void main() {
           dataSourceMock = DataSourceMock();
         },
       );
+
+      tearDown(() async {
+        await CachingManager().clearCache();
+      });
       test(
         'Success feature-view model.',
         () async {
@@ -136,6 +140,29 @@ void main() {
         await viewModel.fetchFeatures('');
         expect(dataSourceMock.isError, true);
       });
+
+      test(
+        '304 Not Modified should not report error and should refresh TTL',
+        () async {
+          await CachingManager().clearCache();
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+            ttlSeconds: 60,
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          // 304 means "cache is still valid" -- not an error
+          expect(dataSourceMock.isError, false);
+          expect(dataSourceMock.isSuccess, false);
+        },
+      );
 
       test(
           'concurrent fetchFeatures calls should only trigger one network call',
