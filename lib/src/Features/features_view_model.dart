@@ -87,13 +87,10 @@ class FeatureViewModel {
             gbFeatures: featureMap,
             isRemote: false,
           );
+        }
 
-          // If cache is expired, fetch fresh data from network
-          if (isCacheExpired()) {
-            await _fetchFromNetwork();
-          }
-        } else {
-          // No cache available, fetch from network
+        // If cache is missing, corrupt, or expired, fetch fresh data from network
+        if (featureMap == null || isCacheExpired()) {
           await _fetchFromNetwork();
         }
       }
@@ -170,10 +167,10 @@ class FeatureViewModel {
   Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
     if (receivedData.isEmpty) return null;
 
-    final receivedDataJson = utf8Decoder.convert(receivedData);
-    if (receivedDataJson.trim().isEmpty) return null;
-
     try {
+      final receivedDataJson = utf8Decoder.convert(receivedData);
+      if (receivedDataJson.trim().isEmpty) return null;
+
       final receiveFeatureJsonMap =
           jsonDecode(receivedDataJson) as Map<String, dynamic>;
 
@@ -183,7 +180,10 @@ class FeatureViewModel {
       } else {
         return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
       }
-    } on FormatException {
+    } catch (e, s) {
+      log('Failed to parse cached features, clearing corrupt cache: $e');
+      manager.removeContent(fileName: Constant.featureCache);
+      handleException(e, s);
       return null;
     }
   }
