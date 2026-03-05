@@ -6,6 +6,13 @@
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
 
+## [4.2.4](https://github.com/growthbook/growthbook-flutter/compare/v4.2.3...v4.2.4) (2026-03-05)
+
+
+### Bug Fixes
+
+* guard _fetchCachedFeatures against empty/corrupt cache data ([#145](https://github.com/growthbook/growthbook-flutter/issues/145)) ([8adb57e](https://github.com/growthbook/growthbook-flutter/commit/8adb57e0fbd050231b169545173eaeb2f5ab8ceb))
+
 ## [4.2.3](https://github.com/growthbook/growthbook-flutter/compare/v4.2.2...v4.2.3) (2026-03-03)
 
 
