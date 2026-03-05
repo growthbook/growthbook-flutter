@@ -114,7 +114,6 @@ class DioClient extends BaseClient {
           headers["If-None-Match"] = etag;
         }
         headers["Cache-Control"] = "max-age=3600";
-        headers["Accept-Encoding"] = "gzip, deflate, br";
       }
 
       final response = await _dio.get(
