@@ -1,5 +1,6 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
+import 'package:growthbook_sdk_flutter/src/StickyBucketService/file_sticky_bucket_service.dart';
+import 'package:growthbook_sdk_flutter/src/StickyBucketService/in_memory_sticky_bucket_service.dart';
 import 'package:tuple/tuple.dart';
 
 /// Constant class for GrowthBook
@@ -39,7 +40,9 @@ typedef GBCondition = Map<String, dynamic>;
 /// It updates back whether cache was refreshed or not
 typedef GBCacheRefreshHandler = void Function(bool);
 
-typedef GBStickyBucketingService = LocalStorageStickyBucketService;
+typedef GBFileStickyBucketingService = FileStickyBucketService;
+
+typedef GBInMemoryStickyBucketingService = InMemoryStickyBucketService;
 
 /// A function that takes experiment and result as arguments.
 typedef TrackingCallBack = void Function(GBTrackData trackData);
@@ -65,7 +68,6 @@ class GBError {
   });
 }
 
-
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
 class GBTrackData {
   GBTrackData({
@@ -76,7 +78,6 @@ class GBTrackData {
   final GBExperiment experiment;
 
   final GBExperimentResult experimentResult;
-
 }
 
 class AssignedExperiment {
