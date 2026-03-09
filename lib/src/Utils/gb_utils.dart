@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:collection';
 
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
@@ -690,7 +692,7 @@ class GBUtils {
   }
 
   static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+      GBContext gbContext, CacheRefreshHandler? refreshHandler, CacheRefreshHandlerV2? refreshHandlerV2) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -703,7 +705,7 @@ class GBUtils {
       stickyBucketService: gbContext.stickyBucketService,
       trackingCallBackWithUser: gbContext.trackingCallBack!,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
-      featureRefreshCallback: refreshHandler,
+      featureRefreshCallback: refreshHandlerV2,
       url: gbContext.url,
     );
 
