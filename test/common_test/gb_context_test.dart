@@ -37,7 +37,10 @@ void main() {
         );
         final url = context.getFeaturesURL();
         expect(url, isNotNull);
-        expect(url, equals('https://example.growthbook.io/api/features/test-api-key-123'));
+        expect(
+            url,
+            equals(
+                'https://example.growthbook.io/api/features/test-api-key-123'));
       });
 
       test('handles hostURL with trailing slash', () {
@@ -49,10 +52,12 @@ void main() {
         );
         final url = context.getFeaturesURL();
         expect(url, isNotNull);
-        expect(url, equals('https://example.growthbook.io/api/features/test-api-key'));
+        expect(url,
+            equals('https://example.growthbook.io/api/features/test-api-key'));
       });
 
-      test('preserves existing path in hostURL when constructing features URL', () {
+      test('preserves existing path in hostURL when constructing features URL',
+          () {
         const hostUrl = 'https://example.growthbook.io/some/path';
         const apiKey = 'test-api-key';
         final context = GBContext(
@@ -61,8 +66,10 @@ void main() {
         );
         final url = context.getFeaturesURL();
         expect(url, isNotNull);
-        // Uri.replace replaces the entire path, so the original path should be replaced
-        expect(url, equals('https://example.growthbook.io/api/features/test-api-key'));
+        expect(
+            url,
+            equals(
+                'https://example.growthbook.io/some/path/api/features/test-api-key'));
       });
     });
 
@@ -100,7 +107,8 @@ void main() {
         );
         final url = context.getRemoteEvalUrl();
         expect(url, isNotNull);
-        expect(url, equals('https://example.growthbook.io/api/eval/test-api-key-456'));
+        expect(url,
+            equals('https://example.growthbook.io/api/eval/test-api-key-456'));
       });
 
       test('handles hostURL with trailing slash', () {
@@ -112,7 +120,8 @@ void main() {
         );
         final url = context.getRemoteEvalUrl();
         expect(url, isNotNull);
-        expect(url, equals('https://example.growthbook.io/api/eval/test-api-key'));
+        expect(
+            url, equals('https://example.growthbook.io/api/eval/test-api-key'));
       });
 
       test('preserves existing path in hostURL when constructing eval URL', () {
@@ -124,8 +133,22 @@ void main() {
         );
         final url = context.getRemoteEvalUrl();
         expect(url, isNotNull);
-        // Uri.replace replaces the entire path, so the original path should be replaced
-        expect(url, equals('https://example.growthbook.io/api/eval/test-api-key'));
+        expect(
+            url,
+            equals(
+                'https://example.growthbook.io/some/path/api/eval/test-api-key'));
+      });
+
+      test('handles hostURL with multiple trailing slashes', () {
+        final context = GBContext(
+          hostURL: 'https://example.growthbook.io/some/path//',
+          apiKey: 'test-api-key',
+        );
+        expect(
+          context.getFeaturesURL(),
+          equals(
+              'https://example.growthbook.io/some/path/api/features/test-api-key'),
+        );
       });
     });
   });
