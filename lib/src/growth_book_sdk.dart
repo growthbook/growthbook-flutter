@@ -5,6 +5,7 @@ import 'dart:developer';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
+import 'package:growthbook_sdk_flutter/src/Plugins/growth_book_plugin.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
@@ -51,6 +52,7 @@ class GBSDKBuilderApp {
   CacheRefreshHandler? refreshHandler;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+  final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -73,9 +75,11 @@ class GBSDKBuilderApp {
         client: client,
         onInitializationFailure: onInitializationFailure,
         refreshHandler: refreshHandler,
+        plugins: _plugins,
         ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
+    gb._initializePlugins();
     return gb;
   }
 
@@ -96,6 +100,12 @@ class GBSDKBuilderApp {
     this.featureUsageCallback = featureUsageCallback;
     return this;
   }
+
+  /// Registers a plugin that will receive experiment and feature evaluation events.
+  GBSDKBuilderApp addPlugin(GrowthBookPlugin plugin) {
+    _plugins.add(plugin);
+    return this;
+  }
 }
 
 /// The main export of the libraries is a simple GrowthBook wrapper class that
@@ -108,6 +118,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
+    List<GrowthBookPlugin>? plugins,
     required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
@@ -115,6 +126,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
+        _plugins = plugins ?? [],
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
@@ -138,6 +150,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final OnInitializationFailure? _onInitializationFailure;
 
   final CacheRefreshHandler? _refreshHandler;
+
+  final List<GrowthBookPlugin> _plugins;
 
   List<dynamic> _forcedFeatures;
 
@@ -163,6 +177,29 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   void _updateEvaluationContext() {
     _evaluationContext =
         GBUtils.initializeEvalContext(_context, _refreshHandler);
+  }
+
+  void _initializePlugins() {
+    final clientKey = _context.apiKey ?? '';
+    for (final plugin in _plugins) {
+      try {
+        plugin.initialize(clientKey);
+      } catch (e) {
+        log('GrowthBookPlugin.initialize error: $e');
+      }
+    }
+  }
+
+  /// Releases resources held by all registered plugins.
+  /// Call this when the SDK instance is no longer needed.
+  void dispose() {
+    for (final plugin in _plugins) {
+      try {
+        plugin.close();
+      } catch (e) {
+        log('GrowthBookPlugin.close error: $e');
+      }
+    }
   }
 
   @override
@@ -254,7 +291,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   GBFeatureResult feature(String id) {
     _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
+    return result;
   }
 
   void _triggerBackgroundRefreshIfNeeded() {
@@ -285,6 +324,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       experiment,
     );
     fireSubscriptions(experiment, result);
+    if (result.inExperiment) {
+      _notifyExperimentViewed(experiment, result);
+    }
     return result;
   }
 
@@ -373,7 +415,29 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
+    return result;
+  }
+
+  void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
+    for (final plugin in _plugins) {
+      try {
+        plugin.onFeatureEvaluated(id, result);
+      } catch (e) {
+        log('GrowthBookPlugin.onFeatureEvaluated error: $e');
+      }
+    }
+  }
+
+  void _notifyExperimentViewed(GBExperiment experiment, GBExperimentResult result) {
+    for (final plugin in _plugins) {
+      try {
+        plugin.onExperimentViewed(experiment, result);
+      } catch (e) {
+        log('GrowthBookPlugin.onExperimentViewed error: $e');
+      }
+    }
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
