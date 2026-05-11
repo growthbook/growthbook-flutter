@@ -5,8 +5,6 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Plugins/growth_book_plugin.dart';
-import 'package:growthbook_sdk_flutter/src/Plugins/growth_book_tracking_plugin.dart';
 
 import '../mocks/network_mock.dart';
 
@@ -183,15 +181,15 @@ void main() {
       dio = Dio()..httpClientAdapter = adapter;
     });
 
-    GrowthBookTrackingPlugin _makePlugin({
+    GrowthBookTrackingPlugin makePlugin({
       int batchSize = GrowthBookTrackingPlugin.defaultBatchSize,
       Duration batchTimeout = const Duration(seconds: 60),
     }) =>
         GrowthBookTrackingPlugin(batchSize: batchSize, batchTimeout: batchTimeout, dio: dio);
 
-    GBExperiment _exp() => GBExperiment(key: 'test-exp', variations: [0, 1]);
+    GBExperiment exp() => GBExperiment(key: 'test-exp', variations: [0, 1]);
 
-    GBExperimentResult _expResult() => GBExperimentResult(
+    GBExperimentResult expResult() => GBExperimentResult(
           inExperiment: true,
           variationID: 1,
           key: '1',
@@ -201,9 +199,9 @@ void main() {
 
     // No-op without clientKey
     test('no-op with empty clientKey', () async {
-      final plugin = _makePlugin(batchSize: 1);
+      final plugin = makePlugin(batchSize: 1);
       plugin.initialize('');
-      plugin.onExperimentViewed(_exp(), _expResult());
+      plugin.onExperimentViewed(exp(), expResult());
       plugin.close();
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(adapter.requestCount, equals(0));
@@ -219,10 +217,10 @@ void main() {
       });
       dio.httpClientAdapter = adapter;
 
-      final plugin = _makePlugin(batchSize: 3);
+      final plugin = makePlugin(batchSize: 3);
       plugin.initialize('sdk-test');
       for (var i = 0; i < 3; i++) {
-        plugin.onExperimentViewed(_exp(), _expResult());
+        plugin.onExperimentViewed(exp(), expResult());
       }
 
       final body = await completer.future.timeout(const Duration(seconds: 3));
@@ -231,10 +229,10 @@ void main() {
     });
 
     test('does not flush before batch size is reached', () async {
-      final plugin = _makePlugin(batchSize: 5);
+      final plugin = makePlugin(batchSize: 5);
       plugin.initialize('sdk-test');
       for (var i = 0; i < 4; i++) {
-        plugin.onExperimentViewed(_exp(), _expResult());
+        plugin.onExperimentViewed(exp(), expResult());
       }
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(adapter.requestCount, equals(0));
@@ -255,7 +253,7 @@ void main() {
         dio: dio,
       );
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(_exp(), _expResult());
+      plugin.onExperimentViewed(exp(), expResult());
 
       await completer.future.timeout(const Duration(seconds: 3));
       expect(adapter.requestCount, greaterThan(0));
@@ -270,9 +268,9 @@ void main() {
       });
       dio.httpClientAdapter = adapter;
 
-      final plugin = _makePlugin(batchSize: 100);
+      final plugin = makePlugin(batchSize: 100);
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(_exp(), _expResult());
+      plugin.onExperimentViewed(exp(), expResult());
 
       expect(adapter.requestCount, equals(0));
       plugin.close();
@@ -282,7 +280,7 @@ void main() {
     });
 
     test('close() with no events does not send request', () async {
-      final plugin = _makePlugin();
+      final plugin = makePlugin();
       plugin.initialize('sdk-test');
       plugin.close();
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -294,9 +292,9 @@ void main() {
       adapter = _MockHttpAdapter((_) async => throw Exception('network error'));
       dio.httpClientAdapter = adapter;
 
-      final plugin = _makePlugin(batchSize: 100);
+      final plugin = makePlugin(batchSize: 100);
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(_exp(), _expResult());
+      plugin.onExperimentViewed(exp(), expResult());
       expect(() => plugin.close(), returnsNormally);
     });
 
@@ -315,7 +313,7 @@ void main() {
         dio: dio,
       );
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(_exp(), _expResult());
+      plugin.onExperimentViewed(exp(), expResult());
 
       final req = await completer.future.timeout(const Duration(seconds: 3));
       expect(req.path,
@@ -338,7 +336,7 @@ void main() {
       });
       dio.httpClientAdapter = adapter;
 
-      final plugin = _makePlugin(batchSize: 1);
+      final plugin = makePlugin(batchSize: 1);
       plugin.initialize('sdk-test');
       plugin.onFeatureEvaluated(
         'my-feature',

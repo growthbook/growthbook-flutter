@@ -4,7 +4,6 @@ import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Plugins/growth_book_plugin.dart';
 
 /// A built-in GrowthBook plugin that batches experiment and feature evaluation
 /// events and POSTs them to the GrowthBook ingest endpoint.
