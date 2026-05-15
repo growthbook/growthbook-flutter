@@ -34,7 +34,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   static const int defaultBatchSize = 100;
   static const Duration defaultBatchTimeout = Duration(seconds: 10);
 
-  static const String _sdkVersion = '4.2.4';
+  static const String _sdkVersion = '4.2.4'; // x-release-please-version
 
   final String _ingestorHost;
   final int _batchSize;
