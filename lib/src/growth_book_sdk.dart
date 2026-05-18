@@ -184,8 +184,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// Releases resources held by all registered plugins.
   /// Call this when the SDK instance is no longer needed.
-  void dispose() {
-    _pluginRegistry.close();
+  Future<void> dispose() {
+    return _pluginRegistry.close();
   }
 
   @override

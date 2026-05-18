@@ -91,9 +91,9 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
 
   /// Stops the flush timer and sends all buffered events before returning.
   @override
-  void close() {
+  Future<void> close() async {
     _stopTimer();
-    _flushSync();
+    await _flushSync();
   }
 
   // ---------------------------------------------------------------------------
@@ -122,10 +122,10 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     _post(events);
   }
 
-  void _flushSync() {
+  Future<void> _flushSync() async {
     final events = _drainQueue();
     if (events.isEmpty) return;
-    _post(events);
+    await _post(events);
   }
 
   List<GBIngestEvent> _drainQueue() {

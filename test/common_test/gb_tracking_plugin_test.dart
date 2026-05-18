@@ -32,7 +32,7 @@ class MockPlugin extends GrowthBookPlugin {
       featureCallCount++;
 
   @override
-  void close() => closeCalled = true;
+  Future<void> close() async => closeCalled = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ void main() {
     test('plugin.close called via dispose()', () async {
       final plugin = MockPlugin();
       final sdk = await _makeSDK(plugins: [plugin]);
-      sdk.dispose();
+      await sdk.dispose();
       expect(plugin.closeCalled, isTrue);
     });
 
@@ -168,6 +168,7 @@ void main() {
       expect(() => sdk.run(_makeExp()), returnsNormally);
       expect(() => sdk.dispose(), returnsNormally);
     });
+
   });
 
   // -------------------------------------------------------------------------
@@ -393,5 +394,5 @@ class _CrashingPlugin extends GrowthBookPlugin {
           Map<String, dynamic>? attributes) =>
       throw Exception('crash');
   @override
-  void close() => throw Exception('crash');
+  Future<void> close() => throw Exception('crash');
 }

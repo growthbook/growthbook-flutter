@@ -24,7 +24,7 @@ abstract class GrowthBookPlugin {
 
   /// Called when the SDK is disposed. Implementations should flush any buffered
   /// data before returning.
-  void close();
+  Future<void> close();
 }
 
 // ---------------------------------------------------------------------------

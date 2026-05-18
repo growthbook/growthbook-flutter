@@ -52,10 +52,10 @@ class PluginRegistry {
     }
   }
 
-  void close() {
+  Future<void> close() async {
     for (final plugin in _plugins) {
       try {
-        plugin.close();
+        await plugin.close();
       } catch (e) {
         log('GrowthBookPlugin.close error: $e');
       }
