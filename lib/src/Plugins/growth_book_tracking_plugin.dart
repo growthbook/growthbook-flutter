@@ -5,40 +5,42 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
-/// A built-in GrowthBook plugin that batches experiment and feature evaluation
-/// events and POSTs them to the GrowthBook ingest endpoint.
-///
-/// **Wire contract**
-/// - Endpoint:  POST `{ingestorHost}/track?client_key={clientKey}`
-/// - Default host: `https://us1.gb-ingest.com`
-/// - Body: `[{ "event": "...", ... }, ...]`  (plain JSON array)
-/// - Headers: `Content-Type: application/json`, `User-Agent: growthbook-flutter-sdk/{version}`
-///
-/// **Batch defaults**
-/// - batchSize: 100 events
-/// - batchTimeout: 10 seconds
-///
-/// If initialized with an empty `clientKey` the plugin degrades to a no-op.
-class GrowthBookTrackingPlugin extends GrowthBookPlugin {
-  GrowthBookTrackingPlugin({
-    String ingestorHost = defaultIngestorHost,
-    int batchSize = defaultBatchSize,
-    Duration batchTimeout = defaultBatchTimeout,
-    Dio? dio,
-  })  : _ingestorHost = ingestorHost,
-        _batchSize = batchSize,
-        _batchTimeout = batchTimeout,
-        _dio = dio ?? Dio();
+/// Configuration for [GrowthBookTrackingPlugin].
+class GrowthBookTrackingPluginConfig {
+  const GrowthBookTrackingPluginConfig({
+    this.ingestorHost = defaultIngestorHost,
+    this.batchSize = defaultBatchSize,
+    this.batchTimeout = defaultBatchTimeout,
+  });
 
   static const String defaultIngestorHost = 'https://us1.gb-ingest.com';
   static const int defaultBatchSize = 100;
   static const Duration defaultBatchTimeout = Duration(seconds: 10);
 
+  final String ingestorHost;
+  final int batchSize;
+  final Duration batchTimeout;
+}
+
+/// A built-in GrowthBook plugin that batches experiment and feature evaluation
+/// events and POSTs them to the GrowthBook ingest endpoint.
+///
+/// **Wire contract**
+/// - Endpoint:  POST `{config.ingestorHost}/track?client_key={clientKey}`
+/// - Body: `[{ "event_name": "...", "properties": {...}, "attributes": {...} }]`
+/// - Headers: `Content-Type: application/json`, `User-Agent: growthbook-flutter-sdk/{version}`
+///
+/// If initialized with an empty `clientKey` the plugin degrades to a no-op.
+class GrowthBookTrackingPlugin extends GrowthBookPlugin {
+  GrowthBookTrackingPlugin({
+    GrowthBookTrackingPluginConfig config = const GrowthBookTrackingPluginConfig(),
+    Dio? dio,
+  })  : _config = config,
+        _dio = dio ?? Dio();
+
   static const String _sdkVersion = '4.2.4'; // x-release-please-version
 
-  final String _ingestorHost;
-  final int _batchSize;
-  final Duration _batchTimeout;
+  final GrowthBookTrackingPluginConfig _config;
   final Dio _dio;
 
   String _clientKey = '';
@@ -100,13 +102,13 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
 
   void _enqueue(GBIngestEvent event) {
     _eventQueue.add(event);
-    if (_eventQueue.length >= _batchSize) {
+    if (_eventQueue.length >= _config.batchSize) {
       _flushAsync();
     }
   }
 
   void _startTimer() {
-    _flushTimer = Timer.periodic(_batchTimeout, (_) => _flushAsync());
+    _flushTimer = Timer.periodic(_config.batchTimeout, (_) => _flushAsync());
   }
 
   void _stopTimer() {
@@ -133,7 +135,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   }
 
   Future<void> _post(List<GBIngestEvent> events) async {
-    final url = '$_ingestorHost/track?client_key=$_clientKey';
+    final url = '${_config.ingestorHost}/track?client_key=$_clientKey';
 
     try {
       await _dio.post<void>(

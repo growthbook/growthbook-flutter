@@ -184,10 +184,13 @@ void main() {
     });
 
     GrowthBookTrackingPlugin makePlugin({
-      int batchSize = GrowthBookTrackingPlugin.defaultBatchSize,
+      int batchSize = GrowthBookTrackingPluginConfig.defaultBatchSize,
       Duration batchTimeout = const Duration(seconds: 60),
     }) =>
-        GrowthBookTrackingPlugin(batchSize: batchSize, batchTimeout: batchTimeout, dio: dio);
+        GrowthBookTrackingPlugin(
+          config: GrowthBookTrackingPluginConfig(batchSize: batchSize, batchTimeout: batchTimeout),
+          dio: dio,
+        );
 
     GBExperiment exp() => GBExperiment(key: 'test-exp', variations: [0, 1]);
 
@@ -251,7 +254,7 @@ void main() {
       dio.httpClientAdapter = adapter;
 
       final plugin = GrowthBookTrackingPlugin(
-        batchTimeout: const Duration(milliseconds: 100),
+        config: const GrowthBookTrackingPluginConfig(batchTimeout: Duration(milliseconds: 100)),
         dio: dio,
       );
       plugin.initialize('sdk-test');
@@ -310,8 +313,7 @@ void main() {
       dio.httpClientAdapter = adapter;
 
       final plugin = GrowthBookTrackingPlugin(
-        ingestorHost: GrowthBookTrackingPlugin.defaultIngestorHost,
-        batchSize: 1,
+        config: const GrowthBookTrackingPluginConfig(batchSize: 1),
         dio: dio,
       );
       plugin.initialize('sdk-test');
