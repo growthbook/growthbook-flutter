@@ -74,7 +74,7 @@ class GBSDKBuilderApp {
         client: client,
         onInitializationFailure: onInitializationFailure,
         refreshHandler: refreshHandler,
-        plugins: _plugins,
+        pluginRegistry: PluginRegistry(_plugins),
         ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
@@ -117,7 +117,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     EvaluationContext? evaluationContext,
     BaseClient? client,
     CacheRefreshHandler? refreshHandler,
-    List<GrowthBookPlugin>? plugins,
+    PluginRegistry? pluginRegistry,
     required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
@@ -125,7 +125,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _baseClient = client ?? DioClient(),
-        _plugins = plugins ?? [],
+        _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
@@ -150,7 +150,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final CacheRefreshHandler? _refreshHandler;
 
-  final List<GrowthBookPlugin> _plugins;
+  final PluginRegistry _pluginRegistry;
 
   List<dynamic> _forcedFeatures;
 
@@ -179,26 +179,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   void _initializePlugins() {
-    final clientKey = _context.apiKey ?? '';
-    for (final plugin in _plugins) {
-      try {
-        plugin.initialize(clientKey);
-      } catch (e) {
-        log('GrowthBookPlugin.initialize error: $e');
-      }
-    }
+    _pluginRegistry.initialize(_context.apiKey ?? '');
   }
 
   /// Releases resources held by all registered plugins.
   /// Call this when the SDK instance is no longer needed.
   void dispose() {
-    for (final plugin in _plugins) {
-      try {
-        plugin.close();
-      } catch (e) {
-        log('GrowthBookPlugin.close error: $e');
-      }
-    }
+    _pluginRegistry.close();
   }
 
   @override
@@ -420,23 +407,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
-    for (final plugin in _plugins) {
-      try {
-        plugin.onFeatureEvaluated(id, result);
-      } catch (e) {
-        log('GrowthBookPlugin.onFeatureEvaluated error: $e');
-      }
-    }
+    _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
   }
 
   void _notifyExperimentViewed(GBExperiment experiment, GBExperimentResult result) {
-    for (final plugin in _plugins) {
-      try {
-        plugin.onExperimentViewed(experiment, result);
-      } catch (e) {
-        log('GrowthBookPlugin.onExperimentViewed error: $e');
-      }
-    }
+    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off

@@ -9,6 +9,7 @@ export 'src/Model/model.dart';
 export 'src/Network/network.dart';
 export 'src/Plugins/growth_book_plugin.dart';
 export 'src/Plugins/growth_book_tracking_plugin.dart';
+export 'src/Plugins/plugin_registry.dart';
 export 'src/Utils/utils.dart';
 export 'src/growth_book_sdk.dart';
 export 'src/Model/sticky_assignments_document.dart';
