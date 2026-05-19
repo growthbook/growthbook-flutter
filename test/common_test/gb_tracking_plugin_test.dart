@@ -22,11 +22,13 @@ class MockPlugin extends GrowthBookPlugin {
   void initialize(String clientKey) => initializedWith = clientKey;
 
   @override
-  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result) =>
+  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result,
+          Map<String, dynamic>? attributes) =>
       experimentCallCount++;
 
   @override
-  void onFeatureEvaluated(String featureKey, GBFeatureResult result) =>
+  void onFeatureEvaluated(String featureKey, GBFeatureResult result,
+          Map<String, dynamic>? attributes) =>
       featureCallCount++;
 
   @override
@@ -201,7 +203,7 @@ void main() {
     test('no-op with empty clientKey', () async {
       final plugin = makePlugin(batchSize: 1);
       plugin.initialize('');
-      plugin.onExperimentViewed(exp(), expResult());
+      plugin.onExperimentViewed(exp(), expResult(), null);
       plugin.close();
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(adapter.requestCount, equals(0));
@@ -209,10 +211,9 @@ void main() {
 
     // Batch size flush
     test('flushes when batch size is reached', () async {
-      final completer = Completer<Map<String, dynamic>>();
+      final completer = Completer<RequestOptions>();
       adapter = _MockHttpAdapter((options) async {
-        final body = jsonDecode(options.data as String) as Map<String, dynamic>;
-        if (!completer.isCompleted) completer.complete(body);
+        if (!completer.isCompleted) completer.complete(options);
         return _ok();
       });
       dio.httpClientAdapter = adapter;
@@ -220,19 +221,20 @@ void main() {
       final plugin = makePlugin(batchSize: 3);
       plugin.initialize('sdk-test');
       for (var i = 0; i < 3; i++) {
-        plugin.onExperimentViewed(exp(), expResult());
+        plugin.onExperimentViewed(exp(), expResult(), null);
       }
 
-      final body = await completer.future.timeout(const Duration(seconds: 3));
-      expect(body['client_key'], equals('sdk-test'));
-      expect((body['events'] as List).length, equals(3));
+      final req = await completer.future.timeout(const Duration(seconds: 3));
+      expect(req.uri.queryParameters['client_key'], equals('sdk-test'));
+      final events = jsonDecode(req.data as String) as List;
+      expect(events.length, equals(3));
     });
 
     test('does not flush before batch size is reached', () async {
       final plugin = makePlugin(batchSize: 5);
       plugin.initialize('sdk-test');
       for (var i = 0; i < 4; i++) {
-        plugin.onExperimentViewed(exp(), expResult());
+        plugin.onExperimentViewed(exp(), expResult(), null);
       }
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(adapter.requestCount, equals(0));
@@ -253,7 +255,7 @@ void main() {
         dio: dio,
       );
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(exp(), expResult());
+      plugin.onExperimentViewed(exp(), expResult(), null);
 
       await completer.future.timeout(const Duration(seconds: 3));
       expect(adapter.requestCount, greaterThan(0));
@@ -270,7 +272,7 @@ void main() {
 
       final plugin = makePlugin(batchSize: 100);
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(exp(), expResult());
+      plugin.onExperimentViewed(exp(), expResult(), null);
 
       expect(adapter.requestCount, equals(0));
       plugin.close();
@@ -294,7 +296,7 @@ void main() {
 
       final plugin = makePlugin(batchSize: 100);
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(exp(), expResult());
+      plugin.onExperimentViewed(exp(), expResult(), null);
       expect(() => plugin.close(), returnsNormally);
     });
 
@@ -313,11 +315,11 @@ void main() {
         dio: dio,
       );
       plugin.initialize('sdk-test');
-      plugin.onExperimentViewed(exp(), expResult());
+      plugin.onExperimentViewed(exp(), expResult(), null);
 
       final req = await completer.future.timeout(const Duration(seconds: 3));
-      expect(req.path,
-          equals('${GrowthBookTrackingPlugin.defaultIngestorHost}/track'));
+      expect(req.uri.queryParameters['client_key'], equals('sdk-test'));
+      expect(req.uri.path, equals('/track'));
       expect(req.method, equals('POST'));
       expect(req.headers['Content-Type'], equals('application/json'));
       expect(
@@ -328,10 +330,10 @@ void main() {
     });
 
     test('feature_evaluated event included in payload', () async {
-      final completer = Completer<Map<String, dynamic>>();
+      final completer = Completer<List<dynamic>>();
       adapter = _MockHttpAdapter((options) async {
-        final body = jsonDecode(options.data as String) as Map<String, dynamic>;
-        if (!completer.isCompleted) completer.complete(body);
+        final events = jsonDecode(options.data as String) as List;
+        if (!completer.isCompleted) completer.complete(events);
         return _ok();
       });
       dio.httpClientAdapter = adapter;
@@ -346,10 +348,10 @@ void main() {
           off: false,
           source: GBFeatureSource.defaultValue,
         ),
+        null,
       );
 
-      final body = await completer.future.timeout(const Duration(seconds: 3));
-      final events = body['events'] as List;
+      final events = await completer.future.timeout(const Duration(seconds: 3));
       expect(events.first['event'], equals('feature_evaluated'));
       expect(events.first['featureKey'], equals('my-feature'));
     });
@@ -377,10 +379,12 @@ class _CrashingPlugin extends GrowthBookPlugin {
   @override
   void initialize(String clientKey) => throw Exception('crash');
   @override
-  void onExperimentViewed(GBExperiment e, GBExperimentResult r) =>
+  void onExperimentViewed(GBExperiment e, GBExperimentResult r,
+          Map<String, dynamic>? attributes) =>
       throw Exception('crash');
   @override
-  void onFeatureEvaluated(String key, GBFeatureResult r) =>
+  void onFeatureEvaluated(String key, GBFeatureResult r,
+          Map<String, dynamic>? attributes) =>
       throw Exception('crash');
   @override
   void close() => throw Exception('crash');

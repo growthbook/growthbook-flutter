@@ -9,9 +9,10 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 /// events and POSTs them to the GrowthBook ingest endpoint.
 ///
 /// **Wire contract**
-/// - Endpoint:  POST `{ingestorHost}/track`
+/// - Endpoint:  POST `{ingestorHost}/track?client_key={clientKey}`
 /// - Default host: `https://us1.gb-ingest.com`
-/// - Body: `{ "client_key": "...", "events": [...] }`
+/// - Body: `[{ "event": "...", ... }, ...]`  (plain JSON array)
+/// - Headers: `Content-Type: application/json`, `User-Agent: growthbook-flutter-sdk/{version}`
 ///
 /// **Batch defaults**
 /// - batchSize: 100 events
@@ -33,7 +34,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   static const int defaultBatchSize = 100;
   static const Duration defaultBatchTimeout = Duration(seconds: 10);
 
-  static const String _sdkVersion = '1.0.0';
+  static const String _sdkVersion = '4.2.4';
 
   final String _ingestorHost;
   final int _batchSize;
@@ -59,15 +60,23 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   }
 
   @override
-  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result) {
+  void onExperimentViewed(
+    GBExperiment experiment,
+    GBExperimentResult result,
+    Map<String, dynamic>? attributes,
+  ) {
     if (!_isInitialized) return;
-    _enqueue(GBExperimentViewedEvent.from(experiment, result));
+    _enqueue(GBExperimentViewedEvent.from(experiment, result, attributes));
   }
 
   @override
-  void onFeatureEvaluated(String featureKey, GBFeatureResult result) {
+  void onFeatureEvaluated(
+    String featureKey,
+    GBFeatureResult result,
+    Map<String, dynamic>? attributes,
+  ) {
     if (!_isInitialized) return;
-    _enqueue(GBFeatureEvaluatedEvent.from(featureKey, result));
+    _enqueue(GBFeatureEvaluatedEvent.from(featureKey, result, attributes));
   }
 
   /// Stops the flush timer and sends all buffered events before returning.
@@ -106,8 +115,6 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   void _flushSync() {
     final events = _drainQueue();
     if (events.isEmpty) return;
-    // Best-effort synchronous post — fire and forget since Dart has no
-    // blocking primitives on the main isolate.
     _post(events);
   }
 
@@ -118,13 +125,12 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   }
 
   Future<void> _post(List<GBIngestEvent> events) async {
-    final payload = GBIngestPayload(clientKey: _clientKey, events: events);
-    final url = '$_ingestorHost/track';
+    final url = '$_ingestorHost/track?client_key=$_clientKey';
 
     try {
       await _dio.post<void>(
         url,
-        data: jsonEncode(payload.toJson()),
+        data: jsonEncode(events.map((e) => e.toJson()).toList()),
         options: Options(
           headers: {
             'Content-Type': 'application/json',

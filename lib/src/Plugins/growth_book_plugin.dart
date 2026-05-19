@@ -9,10 +9,18 @@ abstract class GrowthBookPlugin {
   void initialize(String clientKey);
 
   /// Called every time a user is exposed to an experiment variation.
-  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result);
+  void onExperimentViewed(
+    GBExperiment experiment,
+    GBExperimentResult result,
+    Map<String, dynamic>? attributes,
+  );
 
   /// Called every time a feature flag is evaluated.
-  void onFeatureEvaluated(String featureKey, GBFeatureResult result);
+  void onFeatureEvaluated(
+    String featureKey,
+    GBFeatureResult result,
+    Map<String, dynamic>? attributes,
+  );
 
   /// Called when the SDK is disposed. Implementations should flush any buffered
   /// data before returning.
@@ -36,15 +44,20 @@ class GBExperimentViewedEvent extends GBIngestEvent {
     required this.variationId,
     this.hashAttribute,
     this.hashValue,
+    this.attributes,
   });
 
   factory GBExperimentViewedEvent.from(
-      GBExperiment experiment, GBExperimentResult result) {
+    GBExperiment experiment,
+    GBExperimentResult result,
+    Map<String, dynamic>? attributes,
+  ) {
     return GBExperimentViewedEvent(
       experimentKey: experiment.key,
       variationId: result.variationID ?? 0,
       hashAttribute: result.hashAttribute,
       hashValue: result.hashValue,
+      attributes: attributes,
     );
   }
 
@@ -53,6 +66,7 @@ class GBExperimentViewedEvent extends GBIngestEvent {
   final int variationId;
   final String? hashAttribute;
   final String? hashValue;
+  final Map<String, dynamic>? attributes;
 
   @override
   Map<String, dynamic> toJson() => {
@@ -61,6 +75,8 @@ class GBExperimentViewedEvent extends GBIngestEvent {
         'variationId': variationId,
         if (hashAttribute != null) 'hashAttribute': hashAttribute,
         if (hashValue != null) 'hashValue': hashValue,
+        if (attributes != null && attributes!.isNotEmpty)
+          'attributes': attributes,
       };
 }
 
@@ -70,14 +86,20 @@ class GBFeatureEvaluatedEvent extends GBIngestEvent {
     required this.value,
     required this.source,
     this.ruleId,
+    this.attributes,
   });
 
-  factory GBFeatureEvaluatedEvent.from(String featureKey, GBFeatureResult result) {
+  factory GBFeatureEvaluatedEvent.from(
+    String featureKey,
+    GBFeatureResult result,
+    Map<String, dynamic>? attributes,
+  ) {
     return GBFeatureEvaluatedEvent(
       featureKey: featureKey,
       value: result.value,
       source: result.source?.name ?? 'unknownFeature',
       ruleId: result.ruleId,
+      attributes: attributes,
     );
   }
 
@@ -86,6 +108,7 @@ class GBFeatureEvaluatedEvent extends GBIngestEvent {
   final dynamic value;
   final String source;
   final String? ruleId;
+  final Map<String, dynamic>? attributes;
 
   @override
   Map<String, dynamic> toJson() => {
@@ -94,18 +117,7 @@ class GBFeatureEvaluatedEvent extends GBIngestEvent {
         'value': value,
         'source': source,
         if (ruleId != null && ruleId!.isNotEmpty) 'ruleId': ruleId,
-      };
-}
-
-/// The payload POSTed to `{ingestorHost}/track`.
-class GBIngestPayload {
-  const GBIngestPayload({required this.clientKey, required this.events});
-
-  final String clientKey;
-  final List<GBIngestEvent> events;
-
-  Map<String, dynamic> toJson() => {
-        'client_key': clientKey,
-        'events': events.map((e) => e.toJson()).toList(),
+        if (attributes != null && attributes!.isNotEmpty)
+          'attributes': attributes,
       };
 }
