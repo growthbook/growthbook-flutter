@@ -352,8 +352,12 @@ void main() {
       );
 
       final events = await completer.future.timeout(const Duration(seconds: 3));
-      expect(events.first['event'], equals('feature_evaluated'));
-      expect(events.first['featureKey'], equals('my-feature'));
+      expect(events.first['event_name'], equals('Feature Evaluated'));
+      final props = events.first['properties'] as Map<String, dynamic>;
+      expect(props['feature'], equals('my-feature'));
+      final attrs = events.first['attributes'] as Map<String, dynamic>;
+      expect(attrs['sdk_language'], equals('dart'));
+      expect(attrs['sdk_version'], isNotNull);
     });
   });
 

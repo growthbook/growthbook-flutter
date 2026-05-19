@@ -66,7 +66,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBExperimentViewedEvent.from(experiment, result, attributes));
+    _enqueue(GBExperimentViewedEvent.from(experiment, result, _mergedAttributes(attributes)));
   }
 
   @override
@@ -76,7 +76,15 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBFeatureEvaluatedEvent.from(featureKey, result, attributes));
+    _enqueue(GBFeatureEvaluatedEvent.from(featureKey, result, _mergedAttributes(attributes)));
+  }
+
+  static Map<String, dynamic> _mergedAttributes(Map<String, dynamic>? userAttributes) {
+    return {
+      'sdk_language': 'dart',
+      'sdk_version': _sdkVersion,
+      ...?userAttributes,
+    };
   }
 
   /// Stops the flush timer and sends all buffered events before returning.

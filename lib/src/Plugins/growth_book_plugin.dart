@@ -40,62 +40,55 @@ sealed class GBIngestEvent {
 
 class GBExperimentViewedEvent extends GBIngestEvent {
   const GBExperimentViewedEvent({
-    required this.experimentKey,
+    required this.experimentId,
     required this.variationId,
-    this.hashAttribute,
-    this.hashValue,
-    this.attributes,
+    required this.attributes,
   });
 
   factory GBExperimentViewedEvent.from(
     GBExperiment experiment,
     GBExperimentResult result,
-    Map<String, dynamic>? attributes,
+    Map<String, dynamic> attributes,
   ) {
     return GBExperimentViewedEvent(
-      experimentKey: experiment.key,
+      experimentId: experiment.key,
       variationId: result.variationID ?? 0,
-      hashAttribute: result.hashAttribute,
-      hashValue: result.hashValue,
       attributes: attributes,
     );
   }
 
-  final String event = 'experiment_viewed';
-  final String experimentKey;
+  final String eventName = 'Experiment Viewed';
+  final String experimentId;
   final int variationId;
-  final String? hashAttribute;
-  final String? hashValue;
-  final Map<String, dynamic>? attributes;
+  final Map<String, dynamic> attributes;
 
   @override
   Map<String, dynamic> toJson() => {
-        'event': event,
-        'experimentKey': experimentKey,
-        'variationId': variationId,
-        if (hashAttribute != null) 'hashAttribute': hashAttribute,
-        if (hashValue != null) 'hashValue': hashValue,
-        if (attributes != null && attributes!.isNotEmpty)
-          'attributes': attributes,
+        'event_name': eventName,
+        'properties': {
+          'experimentId': experimentId,
+          'variationId': variationId,
+        },
+        'attributes': attributes,
       };
 }
 
 class GBFeatureEvaluatedEvent extends GBIngestEvent {
   const GBFeatureEvaluatedEvent({
-    required this.featureKey,
+    required this.feature,
     required this.value,
     required this.source,
+    required this.attributes,
     this.ruleId,
-    this.attributes,
   });
 
   factory GBFeatureEvaluatedEvent.from(
     String featureKey,
     GBFeatureResult result,
-    Map<String, dynamic>? attributes,
+    Map<String, dynamic> attributes,
   ) {
     return GBFeatureEvaluatedEvent(
-      featureKey: featureKey,
+      feature: featureKey,
       value: result.value,
       source: result.source?.name ?? 'unknownFeature',
       ruleId: result.ruleId,
@@ -103,21 +96,22 @@ class GBFeatureEvaluatedEvent extends GBIngestEvent {
     );
   }
 
-  final String event = 'feature_evaluated';
-  final String featureKey;
+  final String eventName = 'Feature Evaluated';
+  final String feature;
   final dynamic value;
   final String source;
   final String? ruleId;
-  final Map<String, dynamic>? attributes;
+  final Map<String, dynamic> attributes;
 
   @override
   Map<String, dynamic> toJson() => {
-        'event': event,
-        'featureKey': featureKey,
-        'value': value,
-        'source': source,
-        if (ruleId != null && ruleId!.isNotEmpty) 'ruleId': ruleId,
-        if (attributes != null && attributes!.isNotEmpty)
-          'attributes': attributes,
+        'event_name': eventName,
+        'properties': {
+          'feature': feature,
+          'value': value,
+          'source': source,
+          if (ruleId != null && ruleId!.isNotEmpty) 'ruleId': ruleId,
+        },
+        'attributes': attributes,
       };
 }
