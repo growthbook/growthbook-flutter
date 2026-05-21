@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
-import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
@@ -11,7 +10,6 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/gb_utils.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 // ---------------------------------------------------------------------------
@@ -287,17 +285,17 @@ void main() {
   group('RoundToExtension', () {
     test('roundTo rounds to given fraction digits', () {
       // Use int literal (extends num) so RoundToExtension takes priority over DoubleExt
-      final n = 3 as num;
+      const n = 3 as num;
       expect(n.roundTo(numFractionDigits: 4), 3.0);
     });
 
     test('roundTo with 0 fraction digits (default) returns whole number', () {
-      final n = 5 as num;
+      const n = 5 as num;
       expect(n.roundTo(numFractionDigits: 0), 5.0);
     });
 
     test('roundTo clamps negative fractionDigits to 0', () {
-      final n = 7 as num;
+      const n = 7 as num;
       expect(() => n.roundTo(numFractionDigits: -1), returnsNormally);
     });
   });
