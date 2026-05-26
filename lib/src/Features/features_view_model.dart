@@ -37,8 +37,8 @@ class FeatureViewModel {
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-      (data) {
-        prepareFeaturesData(data);
+      (data) async {
+        await prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
@@ -112,8 +112,8 @@ class FeatureViewModel {
     bool? success;
     try {
       await source.fetchFeatures(
-        (data) {
-          success = _handleSuccess(data);
+        (data) async {
+          success = await _handleSuccess(data);
         },
         (e, s) {
           success = false;
@@ -138,8 +138,8 @@ class FeatureViewModel {
       await source.fetchRemoteEval(
         apiUrl: apiUrl,
         params: payload,
-        onSuccess: (data) {
-          success = prepareFeaturesData(data);
+        onSuccess: (data) async {
+          success = await prepareFeaturesData(data);
         },
         onError: (e, s) {
           success = false;
@@ -158,10 +158,10 @@ class FeatureViewModel {
     }
   }
 
-  bool _handleSuccess(FeaturedDataModel data) {
+  Future<bool> _handleSuccess(FeaturedDataModel data) async {
     // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
     // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
-    return prepareFeaturesData(data);
+    return await prepareFeaturesData(data);
   }
 
   Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
@@ -188,7 +188,7 @@ class FeatureViewModel {
     }
   }
 
-  bool prepareFeaturesData(FeaturedDataModel data) {
+  Future<bool> prepareFeaturesData(FeaturedDataModel data) async {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
@@ -203,10 +203,10 @@ class FeatureViewModel {
     }
   }
 
-  bool handleValidFeatures(FeaturedDataModel data) {
+  Future<bool> handleValidFeatures(FeaturedDataModel data) async {
     if (data.features != null && data.encryptedFeatures == null) {
       // Handle non-encrypted features
-      delegate.featuresAPIModelSuccessfully(data);
+      await delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(
         gbFeatures: data.features!,
         isRemote: true,

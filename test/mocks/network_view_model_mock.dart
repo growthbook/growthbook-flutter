@@ -21,7 +21,7 @@ class DataSourceMock extends FeaturesFlowDelegate {
   }
 
   @override
-  void featuresAPIModelSuccessfully(FeaturedDataModel model) {}
+  Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {}
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {

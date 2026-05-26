@@ -76,3 +76,29 @@ Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
 }
 
 }
+
+class InMemoryStickyBucketService extends StickyBucketService {
+  final Map<String, StickyAssignmentsDocument> _store = {};
+  
+  @override
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(Map<String, String> attributes) async {
+    final docs = <String, StickyAssignmentsDocument>{};
+    for (final entry in attributes.entries) {
+      final doc = await getAssignments(entry.key, entry.value);
+      if (doc != null) {
+        docs['${doc.attributeName}||${doc.attributeValue}'] = doc;
+      }
+    }
+    return docs;
+  }
+  
+  @override
+  Future<StickyAssignmentsDocument?> getAssignments(String attributeName, String attributeValue) async {
+    return _store['$attributeName||$attributeValue'];
+  }
+  
+  @override
+  Future<void> saveAssignments(StickyAssignmentsDocument doc) async {
+    _store['${doc.attributeName}||${doc.attributeValue}'] = doc;
+  }
+}
