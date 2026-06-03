@@ -67,9 +67,10 @@ class DioClient extends BaseClient {
           (sseModel) {
             log('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
+              final data = sseModel.data;
+              if (data == null || data.isEmpty) return;
               lastKnownId = sseModel.id;
-              String jsonData = sseModel.data ?? "";
-              Map<String, dynamic> jsonMap = jsonDecode(jsonData);
+              Map<String, dynamic> jsonMap = jsonDecode(data);
               onSuccess(jsonMap);
             }
           },
