@@ -4,6 +4,36 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import '../Helper/gb_test_helper.dart';
 
 void main() {
+  group('forcedVariations double value', () {
+    test('does not throw FormatException when value is double (e.g. 1.0 from JSON)', () {
+      final gbContext = GBContext(
+        apiKey: '',
+        hostURL: '',
+        enabled: true,
+        attributes: {'id': 'user1'},
+        forcedVariation: {'my-test': 1.0},
+        qaMode: false,
+        trackingCallBack: (_) {},
+        backgroundSync: false,
+        features: {},
+      );
+
+      final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+      final experiment = GBExperiment(
+        key: 'my-test',
+        variations: [0, 1, 2],
+      );
+
+      expect(
+        () => ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment),
+        returnsNormally,
+      );
+
+      final result = ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
+      expect(result.variationID, 1);
+    });
+  });
+
   group('GBExperimentRun Test', () {
     late final List evaluateCondition;
     setUpAll(() {
