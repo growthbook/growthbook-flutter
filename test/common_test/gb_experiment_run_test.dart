@@ -4,33 +4,46 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import '../Helper/gb_test_helper.dart';
 
 void main() {
-  group('forcedVariations double value', () {
-    test('does not throw FormatException when value is double (e.g. 1.0 from JSON)', () {
+  group('forcedVariations value parsing', () {
+    GBExperimentResult evaluate(dynamic forcedValue) {
       final gbContext = GBContext(
         apiKey: '',
         hostURL: '',
         enabled: true,
         attributes: {'id': 'user1'},
-        forcedVariation: {'my-test': 1.0},
+        forcedVariation: {'my-test': forcedValue},
         qaMode: false,
         trackingCallBack: (_) {},
         backgroundSync: false,
         features: {},
       );
-
       final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
-      final experiment = GBExperiment(
-        key: 'my-test',
-        variations: [0, 1, 2],
-      );
+      final experiment = GBExperiment(key: 'my-test', variations: [0, 1, 2]);
+      return ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
+    }
 
-      expect(
-        () => ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment),
-        returnsNormally,
-      );
+    test('int value 1 → variationID 1', () {
+      expect(evaluate(1).variationID, 1);
+    });
 
-      final result = ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
-      expect(result.variationID, 1);
+    test('double value 1.0 → variationID 1 (no FormatException)', () {
+      expect(evaluate(1.0).variationID, 1);
+    });
+
+    test('string "1" → variationID 1', () {
+      expect(evaluate('1').variationID, 1);
+    });
+
+    test('string "1.0" → variationID 1', () {
+      expect(evaluate('1.0').variationID, 1);
+    });
+
+    test('invalid value "abc" → does not crash, falls through', () {
+      expect(() => evaluate('abc'), returnsNormally);
+    });
+
+    test('invalid value true → does not crash, falls through', () {
+      expect(() => evaluate(true), returnsNormally);
     });
   });
 

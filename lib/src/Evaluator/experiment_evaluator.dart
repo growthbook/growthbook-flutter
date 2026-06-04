@@ -39,21 +39,25 @@ class ExperimentEvaluator {
       if (context.userContext.forcedVariationsMap != null &&
           context.userContext.forcedVariationsMap?[experiment.key] != null) {
         final rawValue = context.userContext.forcedVariationsMap![experiment.key];
-        int forcedVariationIndex;
+        int? forcedVariationIndex;
         if (rawValue is int) {
           forcedVariationIndex = rawValue;
-        } else {
-          forcedVariationIndex = double.parse(rawValue.toString()).toInt();
+        } else if (rawValue is double) {
+          forcedVariationIndex = rawValue.toInt();
+        } else if (rawValue is String) {
+          forcedVariationIndex = int.tryParse(rawValue) ?? double.tryParse(rawValue)?.toInt();
         }
-
-        // Return the experiment result using the forced variation index and indicating that no hash was used
-        return _getExperimentResult(
-          featureId: featureId,
-          context: context,
-          experiment: experiment,
-          variationIndex: forcedVariationIndex,
-          hashUsed: false,
-        );
+        if (forcedVariationIndex == null) {
+          log('Skip forcedVariation: unsupported value type ${rawValue.runtimeType}');
+        } else {
+          return _getExperimentResult(
+            featureId: featureId,
+            context: context,
+            experiment: experiment,
+            variationIndex: forcedVariationIndex,
+            hashUsed: false,
+          );
+        }
       }
     }
 
