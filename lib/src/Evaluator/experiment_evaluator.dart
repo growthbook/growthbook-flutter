@@ -38,7 +38,13 @@ class ExperimentEvaluator {
       // Retrieve the forced variation for the experiment key
       if (context.userContext.forcedVariationsMap != null &&
           context.userContext.forcedVariationsMap?[experiment.key] != null) {
-        int forcedVariationIndex = int.parse(context.userContext.forcedVariationsMap![experiment.key].toString());
+        final rawValue = context.userContext.forcedVariationsMap![experiment.key];
+        int forcedVariationIndex;
+        if (rawValue is int) {
+          forcedVariationIndex = rawValue;
+        } else {
+          forcedVariationIndex = double.parse(rawValue.toString()).toInt();
+        }
 
         // Return the experiment result using the forced variation index and indicating that no hash was used
         return _getExperimentResult(
