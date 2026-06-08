@@ -118,12 +118,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
-      encryptionKey: _context.encryptionKey ?? "",
-      backgroundSync: _context.backgroundSync,
-      ttlSeconds: ttlSeconds
-    );
+        delegate: this,
+        source: FeatureDataSource(context: _context, client: _baseClient),
+        encryptionKey: _context.encryptionKey ?? "",
+        backgroundSync: _context.backgroundSync,
+        ttlSeconds: ttlSeconds);
     autoRefresh();
   }
 
@@ -177,6 +176,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       if (_refreshHandler != null) {
         _refreshHandler!(true);
       }
+    }
+  }
+
+  @override
+  void featuresNotModified() {
+    if (_refreshHandler != null) {
+      _refreshHandler!(true);
     }
   }
 

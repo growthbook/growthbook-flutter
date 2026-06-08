@@ -161,6 +161,29 @@ void main() {
       );
 
       test(
+        '304 Not Modified should call featuresNotModified() on delegate',
+        () async {
+          await CachingManager().clearCache();
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+            ttlSeconds: 60,
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          expect(dataSourceMock.isNotModified, true);
+          expect(dataSourceMock.isError, false);
+          expect(dataSourceMock.isSuccess, false);
+        },
+      );
+
+      test(
           'concurrent fetchFeatures calls should only trigger one network call',
           () async {
         featureViewModel = FeatureViewModel(

@@ -126,9 +126,12 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid) 
+    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
+    }
+    if (success == null) {
+      delegate.featuresNotModified();
     }
   }
 

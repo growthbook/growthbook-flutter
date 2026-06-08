@@ -10,6 +10,9 @@ class DataSourceMock extends FeaturesFlowDelegate {
   bool _isError = false;
   bool get isError => _isError;
 
+  bool _isNotModified = false;
+  bool get isNotModified => _isNotModified;
+
   @override
   void featuresFetchedSuccessfully(
       {required GBFeatures gbFeatures, required bool isRemote}) {
@@ -27,6 +30,11 @@ class DataSourceMock extends FeaturesFlowDelegate {
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _isError = true;
     _isSuccess = false;
+  }
+
+  @override
+  void featuresNotModified() {
+    _isNotModified = true;
   }
 
   @override
