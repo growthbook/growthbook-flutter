@@ -38,6 +38,18 @@ void main() {
       expect(evaluate('1.0').variationID, 1);
     });
 
+    test('fractional double 1.9 → does not crash, forced variation skipped', () {
+      expect(() => evaluate(1.9), returnsNormally);
+    });
+
+    test('fractional string "1.9" → does not crash, forced variation skipped', () {
+      expect(() => evaluate('1.9'), returnsNormally);
+    });
+
+    test('out-of-bounds index 99 → does not crash, forced variation skipped', () {
+      expect(() => evaluate(99), returnsNormally);
+    });
+
     test('invalid value "abc" → does not crash, falls through', () {
       expect(() => evaluate('abc'), returnsNormally);
     });

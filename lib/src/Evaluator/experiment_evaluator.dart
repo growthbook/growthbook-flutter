@@ -43,20 +43,38 @@ class ExperimentEvaluator {
         if (rawValue is int) {
           forcedVariationIndex = rawValue;
         } else if (rawValue is double) {
-          forcedVariationIndex = rawValue.toInt();
+          if (rawValue.isFinite && rawValue == rawValue.truncateToDouble()) {
+            forcedVariationIndex = rawValue.toInt();
+          } else {
+            log('Skip forcedVariation: fractional or non-finite double value $rawValue');
+          }
         } else if (rawValue is String) {
-          forcedVariationIndex = int.tryParse(rawValue) ?? double.tryParse(rawValue)?.toInt();
-        }
-        if (forcedVariationIndex == null) {
-          log('Skip forcedVariation: unsupported value type ${rawValue.runtimeType}');
+          final asInt = int.tryParse(rawValue);
+          if (asInt != null) {
+            forcedVariationIndex = asInt;
+          } else {
+            final asDouble = double.tryParse(rawValue);
+            if (asDouble != null && asDouble.isFinite && asDouble == asDouble.truncateToDouble()) {
+              forcedVariationIndex = asDouble.toInt();
+            } else {
+              log('Skip forcedVariation: non-integer string value "$rawValue"');
+            }
+          }
         } else {
-          return _getExperimentResult(
-            featureId: featureId,
-            context: context,
-            experiment: experiment,
-            variationIndex: forcedVariationIndex,
-            hashUsed: false,
-          );
+          log('Skip forcedVariation: unsupported value type ${rawValue.runtimeType}');
+        }
+        if (forcedVariationIndex != null) {
+          if (forcedVariationIndex < 0 || forcedVariationIndex >= experiment.variations.length) {
+            log('Skip forcedVariation: index $forcedVariationIndex out of bounds (variations: ${experiment.variations.length})');
+          } else {
+            return _getExperimentResult(
+              featureId: featureId,
+              context: context,
+              experiment: experiment,
+              variationIndex: forcedVariationIndex,
+              hashUsed: false,
+            );
+          }
         }
       }
     }
