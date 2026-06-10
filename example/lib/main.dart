@@ -57,7 +57,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   void initializeSDK() async {
     gb = await GBSDKBuilderApp(
       apiKey: kReleaseMode ? '<PROD_KEY>' : '<DEV_KEY>',
-      hostURL: 'https://example.growthbook.io/',
+      apiHost: 'https://example.growthbook.io/',
       attributes: userAttr,
       growthBookTrackingCallBack: (trackData) {},
       gbFeatures: {

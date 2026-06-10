@@ -17,13 +17,11 @@ void main() {
       late GBContext context;
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
-      const testHostURL = '<HOST URL>';
 
       setUp(
         () {
           context = GBContext(
             apiKey: testApiKey,
-            hostURL: testHostURL,
             attributes: attr,
             enabled: true,
             forcedVariation: {},
@@ -48,7 +46,7 @@ void main() {
               context: context,
             ),
           );
-          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+          await featureViewModel.fetchFeatures();
           expect(dataSourceMock.isSuccess, true);
         },
       );
@@ -58,12 +56,11 @@ void main() {
           encryptionKey: "3tfeoyW0wlo47bDnbWDkxg==",
           delegate: dataSourceMock,
           source: FeatureDataSource(
-            client: const MockNetworkClient(),
-            context: context,
-          ),
+              client: const MockNetworkClient(),
+              context: context),
         );
 
-        await featureViewModel.fetchFeatures(context.getFeaturesURL());
+        await featureViewModel.fetchFeatures();
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -88,7 +85,7 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
+        await featureViewModel.fetchFeatures(
             remoteEval: true, payload: payload);
         expect(dataSourceMock.isSuccess, true);
       });
@@ -116,7 +113,7 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
+        await featureViewModel.fetchFeatures(
             remoteEval: true, payload: payload);
 
         expect(dataSourceMock.isError, true);
@@ -133,7 +130,7 @@ void main() {
           encryptionKey: '',
         );
 
-        await viewModel.fetchFeatures('');
+        await viewModel.fetchFeatures();
         expect(dataSourceMock.isError, true);
       });
 
@@ -152,7 +149,7 @@ void main() {
             ttlSeconds: 60,
           );
 
-          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+          await featureViewModel.fetchFeatures();
 
           // 304 means "cache is still valid" -- not an error
           expect(dataSourceMock.isError, false);
@@ -174,9 +171,9 @@ void main() {
         );
 
         final futures = [
-          featureViewModel.fetchFeatures(context.getFeaturesURL()),
-          featureViewModel.fetchFeatures(context.getFeaturesURL()),
-          featureViewModel.fetchFeatures(context.getFeaturesURL()),
+          featureViewModel.fetchFeatures(),
+          featureViewModel.fetchFeatures(),
+          featureViewModel.fetchFeatures(),
         ];
 
         await Future.wait(futures);

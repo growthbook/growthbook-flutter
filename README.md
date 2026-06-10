@@ -94,7 +94,8 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 // Initialize the SDK
 final sdk = await GBSDKBuilderApp(
   apiKey: "sdk_your_api_key",
-  hostURL: "https://growthbook.io",
+  apiHost: '<GrowthBook_URL>', 
+  streamingHost: '<GrowthBook_StreamingHost_URL>',
   attributes: {
     'id': 'user_123',
     'email': 'user@example.com',

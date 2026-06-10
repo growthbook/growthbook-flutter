@@ -22,21 +22,20 @@ void main() {
     test("- default", () async {
       final sdk = await GBSDKBuilderApp(
         apiKey: testApiKey,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         attributes: attr,
         client: client,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       /// Test API key
       expect(sdk.context.apiKey, testApiKey);
 
       /// Feature mode
       expect(sdk.context.enabled, true);
-
-      /// Test HostUrl
-      expect(sdk.context.hostURL, testHostURL);
 
       /// Test qaMode
       expect(sdk.context.qaMode, false);
@@ -55,7 +54,7 @@ void main() {
         qaMode: true,
         client: client,
         forcedVariations: variations,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         attributes: attr,
         growthBookTrackingCallBack: (trackData) {},
         backgroundSync: false,
@@ -66,10 +65,12 @@ void main() {
       manager.clearCache();
     });
 
-    test('- with initialization without throwing assertion error for wrong host url', () async {
+    test(
+        '- with initialization without throwing assertion error for wrong host url',
+        () async {
       final sdkInstance = GBSDKBuilderApp(
         apiKey: testApiKey,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         client: client,
         growthBookTrackingCallBack: (_) {},
         backgroundSync: false,
@@ -81,7 +82,7 @@ void main() {
     test('- with network client', () async {
       GrowthBookSDK sdk = await GBSDKBuilderApp(
         apiKey: testApiKey,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         attributes: attr,
         client: client,
         growthBookTrackingCallBack: (trackData) {},
@@ -99,7 +100,7 @@ void main() {
       () async {
         GrowthBookSDK sdk = await GBSDKBuilderApp(
           apiKey: testApiKey,
-          hostURL: testHostURL,
+          apiHost: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
           growthBookTrackingCallBack: (trackData) {},
@@ -116,7 +117,7 @@ void main() {
 
     test('- testEncrypt', () async {
       final sdkInstance = await GBSDKBuilderApp(
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         apiKey: testApiKey,
         growthBookTrackingCallBack: (trackData) {},
         attributes: attr,
@@ -134,7 +135,8 @@ void main() {
       );
 
       final dataExpectedResult = utf8.encode(expectedResult);
-      final features = json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
+      final features =
+          json.decode(utf8.decode(dataExpectedResult)) as Map<String, dynamic>;
 
       expect(
         sdkInstance.features["testfeature1"]?.rules?[0].condition,
@@ -153,14 +155,16 @@ void main() {
 
         await GBSDKBuilderApp(
           apiKey: testApiKey,
-          hostURL: testHostURL,
+          apiHost: testHostURL,
           attributes: attr,
           client: const MockNetworkClient(error: true),
           growthBookTrackingCallBack: (trackData) {},
           gbFeatures: {'some-feature': GBFeature(defaultValue: true)},
           onInitializationFailure: (e) => error = e,
           backgroundSync: false,
-        ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+        )
+            .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+            .initialize();
 
         expect(error != null, true);
         expect(error?.error is DioException, true);
@@ -173,14 +177,16 @@ void main() {
 
       final sdkInstance = await GBSDKBuilderApp(
         apiKey: testApiKey,
-        hostURL: testHostURL,
+        apiHost: testHostURL,
         attributes: attr,
         growthBookTrackingCallBack: (trackData) {
           countTrackingCallback += 1;
         },
         refreshHandler: null,
         backgroundSync: false,
-      ).setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed).initialize();
+      )
+          .setRefreshHandler((refreshHandler) => refreshHandler = isRefreshed)
+          .initialize();
 
       sdkInstance.context.features = {
         'feature 1': GBFeature(defaultValue: true),
