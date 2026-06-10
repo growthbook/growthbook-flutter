@@ -13,6 +13,13 @@ class DataSourceMock extends FeaturesFlowDelegate {
   bool _isNotModified = false;
   bool get isNotModified => _isNotModified;
 
+  void reset() {
+    _isSuccess = false;
+    _isError = false;
+    _isNotModified = false;
+    counterNetworkCall = 0;
+  }
+
   @override
   void featuresFetchedSuccessfully(
       {required GBFeatures gbFeatures, required bool isRemote}) {

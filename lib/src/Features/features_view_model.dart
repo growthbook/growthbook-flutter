@@ -91,7 +91,7 @@ class FeatureViewModel {
 
         // If cache is missing, corrupt, or expired, fetch fresh data from network
         if (featureMap == null || isCacheExpired()) {
-          await _fetchFromNetwork();
+          await _fetchFromNetwork(hasCachedFeatures: featureMap != null);
         }
       }
 
@@ -107,8 +107,8 @@ class FeatureViewModel {
     }
   }
 
-  Future<void> _fetchFromNetwork() async {
-    // null = no callback invoked (304 Not Modified), true = success, false = error  
+  Future<void> _fetchFromNetwork({bool hasCachedFeatures = false}) async {
+    // null = no callback invoked (304 Not Modified), true = success, false = error
     bool? success;
     try {
       await source.fetchFeatures(
@@ -130,7 +130,9 @@ class FeatureViewModel {
     if (success != false) {
       refreshExpiresAt();
     }
-    if (success == null) {
+    // Only notify delegate of 304 if there was a valid cached payload to confirm.
+    // Without an existing cache, 304 is meaningless — callers must not treat it as success.
+    if (success == null && hasCachedFeatures) {
       delegate.featuresNotModified();
     }
   }

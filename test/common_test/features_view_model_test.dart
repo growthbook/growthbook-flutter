@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -161,7 +162,7 @@ void main() {
       );
 
       test(
-        '304 Not Modified should call featuresNotModified() on delegate',
+        '304 Not Modified without cache should NOT call featuresNotModified()',
         () async {
           await CachingManager().clearCache();
 
@@ -177,9 +178,38 @@ void main() {
 
           await featureViewModel.fetchFeatures(context.getFeaturesURL());
 
-          expect(dataSourceMock.isNotModified, true);
+          // 304 with no existing cache is meaningless — must not signal success
+          expect(dataSourceMock.isNotModified, false);
           expect(dataSourceMock.isError, false);
           expect(dataSourceMock.isSuccess, false);
+        },
+      );
+
+      test(
+        '304 Not Modified with existing cache should call featuresNotModified()',
+        () async {
+          // Pre-populate cache with valid feature data
+          final cacheData = utf8.encode(MockResponse.successResponse);
+          CachingManager().putData(
+            fileName: Constant.featureCache,
+            content: Uint8List.fromList(cacheData),
+          );
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: '',
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+          );
+
+          // _expiresAt starts as null → isCacheExpired() == true, so network is always triggered
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          // Cache was valid AND server confirmed 304 → featuresNotModified should fire
+          expect(dataSourceMock.isNotModified, true);
+          expect(dataSourceMock.isError, false);
         },
       );
 
