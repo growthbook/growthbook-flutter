@@ -91,6 +91,66 @@ void main() {
     );
 
     test(
+      'SSE features event with malformed JSON routes error through onError',
+      () async {
+        const ssePayload = 'event: features\nid: 4\ndata: {not valid json\n\n';
+        final client = DioClient();
+        client.client.httpClientAdapter = _MockSseAdapter(ssePayload);
+
+        Object? unhandledError;
+        final errors = <Object>[];
+        final successCalls = <Map<String, dynamic>>[];
+
+        await runZonedGuarded(
+          () async {
+            await client.listenAndRetry(
+              url: 'http://test.local/sse',
+              onSuccess: successCalls.add,
+              onError: (e, _) => errors.add(e),
+            );
+            await pumpEventQueue();
+          },
+          (e, _) => unhandledError = e,
+        );
+
+        expect(unhandledError, isNull);
+        expect(successCalls, isEmpty);
+        expect(errors.length, 1);
+        expect(errors.first, isA<FormatException>());
+      },
+    );
+
+    test(
+      'SSE features event with non-object JSON routes error through onError',
+      () async {
+        const ssePayload = 'event: features\nid: 5\ndata: [1,2,3]\n\n';
+        final client = DioClient();
+        client.client.httpClientAdapter = _MockSseAdapter(ssePayload);
+
+        Object? unhandledError;
+        final errors = <Object>[];
+        final successCalls = <Map<String, dynamic>>[];
+
+        await runZonedGuarded(
+          () async {
+            await client.listenAndRetry(
+              url: 'http://test.local/sse',
+              onSuccess: successCalls.add,
+              onError: (e, _) => errors.add(e),
+            );
+            await pumpEventQueue();
+          },
+          (e, _) => unhandledError = e,
+        );
+
+        expect(unhandledError, isNull);
+        expect(successCalls, isEmpty);
+        expect(errors.length, 1);
+        expect(errors.first, isA<FormatException>());
+      },
+    );
+
+    test(
       'SSE features event with valid JSON data calls onSuccess correctly',
       () async {
         final payload = jsonEncode({'status': 200, 'features': {}});
