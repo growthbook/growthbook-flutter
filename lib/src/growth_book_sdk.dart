@@ -83,9 +83,11 @@ class GBSDKBuilderApp {
       cachingManager: cachingManager,
         refreshHandler: refreshHandler,
         ttlSeconds: ttlSeconds);
-    await cachingManager.saveContent(
-        fileName: Constant.featureCache,
-        content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
+    if (gbFeatures.isNotEmpty) {
+      await cachingManager.saveContent(
+          fileName: Constant.featureCache,
+          content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
+    }
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
@@ -250,8 +252,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  void clearCache() {
-    _cachingManager.clearCache();
+  Future<void> clearCache() async {
+    await _cachingManager.clearCache();
   }
 
   void updateSubscriptions(
