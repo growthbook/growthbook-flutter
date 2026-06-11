@@ -54,6 +54,64 @@ void main() {
 
       expect(evaluator.evalOperatorCondition("\$nin", "abc", ["abc"], {}), false);
     });
+
+    group('Case-insensitive membership operators', () {
+      final evaluator = GBConditionEvaluator();
+
+      // $ini — basic string case-insensitivity
+      test('\$ini matches string regardless of case', () {
+        expect(evaluator.evalOperatorCondition("\$ini", "Hello", ["hello"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", "WORLD", ["world", "foo"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", "bar", ["BAZ"], {}), false);
+      });
+
+      // $ini — non-string values compared as-is (intentional: no lowercasing)
+      test('\$ini compares non-string values as-is', () {
+        expect(evaluator.evalOperatorCondition("\$ini", 42, [42, "hello"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", 42, [43], {}), false);
+        expect(evaluator.evalOperatorCondition("\$ini", null, [null], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", null, ["null"], {}), false);
+        expect(evaluator.evalOperatorCondition("\$ini", true, [true], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", false, [true], {}), false);
+      });
+
+      // $ini — mixed-type list attribute
+      test('\$ini with list attribute containing mixed types', () {
+        expect(evaluator.evalOperatorCondition("\$ini", ["Hello", 42], ["hello"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", ["Hello", 42], [42], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", ["Hello", 42], ["HELLO", 42], {}), true);
+        expect(evaluator.evalOperatorCondition("\$ini", ["foo", 1], ["bar", 2], {}), false);
+        expect(evaluator.evalOperatorCondition("\$ini", [], ["hello"], {}), false);
+      });
+
+      // $nini
+      test('\$nini returns false when value matches (case-insensitive)', () {
+        expect(evaluator.evalOperatorCondition("\$nini", "Hello", ["hello"], {}), false);
+        expect(evaluator.evalOperatorCondition("\$nini", "xyz", ["abc"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$nini", 42, [42], {}), false);
+        expect(evaluator.evalOperatorCondition("\$nini", 42, [43], {}), true);
+      });
+
+      // $alli — all conditions must match at least one attribute element
+      test('\$alli matches all conditions case-insensitively', () {
+        expect(evaluator.evalOperatorCondition("\$alli", ["Hello", "World"], ["hello", "world"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$alli", ["Hello", "World"], ["HELLO", "WORLD"], {}), true);
+        expect(evaluator.evalOperatorCondition("\$alli", ["Hello"], ["world"], {}), false);
+      });
+
+      // $alli — non-string elements compared as-is
+      test('\$alli with non-string values in attribute list', () {
+        expect(evaluator.evalOperatorCondition("\$alli", ["hello", 42], ["HELLO", 42], {}), true);
+        expect(evaluator.evalOperatorCondition("\$alli", ["hello", 42], ["HELLO", 43], {}), false);
+        expect(evaluator.evalOperatorCondition("\$alli", [null, "foo"], [null, "FOO"], {}), true);
+      });
+
+      // $alli — non-list attributeValue returns false
+      test('\$alli returns false when attribute is not a list', () {
+        expect(evaluator.evalOperatorCondition("\$alli", "hello", ["hello"], {}), false);
+        expect(evaluator.evalOperatorCondition("\$alli", 42, [42], {}), false);
+      });
+    });
   });
 
   test('Test condition fail attribute does not exist', () {
