@@ -12,7 +12,7 @@ import '../mocks/network_view_model_mock.dart';
 // the catch block inside prepareFeaturesData.
 class _ThrowingDelegate extends DataSourceMock {
   @override
-  void featuresAPIModelSuccessfully(FeaturedDataModel model) {
+  Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
     throw Exception('deliberate error for testing');
   }
 }
@@ -88,16 +88,16 @@ void main() {
     // prepareFeaturesData
     // -------------------------------------------------------------------------
     group('prepareFeaturesData', () {
-      test('returns false when both features and encryptedFeatures are null', () {
+      test('returns false when both features and encryptedFeatures are null', () async {
         final vm = buildViewModel();
         final data = FeaturedDataModel(
           features: null,
           encryptedFeatures: null,
         );
-        expect(vm.prepareFeaturesData(data), isFalse);
+        expect(await vm.prepareFeaturesData(data), isFalse);
       });
 
-      test('catch block calls handleException when delegate throws', () {
+      test('catch block calls handleException when delegate throws', () async {
         final throwingDelegate = _ThrowingDelegate();
         final vm = buildViewModel(customDelegate: throwingDelegate);
         final data = FeaturedDataModel(
@@ -105,7 +105,7 @@ void main() {
           encryptedFeatures: null,
         );
         // Should not throw — exception is caught inside prepareFeaturesData
-        expect(() => vm.prepareFeaturesData(data), returnsNormally);
+        await vm.prepareFeaturesData(data);
         expect(throwingDelegate.isError, isTrue);
       });
     });
@@ -114,25 +114,25 @@ void main() {
     // handleValidFeatures — saved groups
     // -------------------------------------------------------------------------
     group('handleValidFeatures with savedGroups', () {
-      test('calls savedGroupsFetchedSuccessfully when savedGroups is present', () {
+      test('calls savedGroupsFetchedSuccessfully when savedGroups is present', () async {
         final vm = buildViewModel();
         final data = FeaturedDataModel(
           features: {'flag': GBFeature(defaultValue: true)},
           encryptedFeatures: null,
           savedGroups: {'admins': ['user-1', 'user-2']},
         );
-        vm.handleValidFeatures(data);
+        await vm.handleValidFeatures(data);
         expect(delegate.isSuccess, isTrue);
       });
 
-      test('skips savedGroups when null', () {
+      test('skips savedGroups when null', () async {
         final vm = buildViewModel();
         final data = FeaturedDataModel(
           features: {'flag': GBFeature(defaultValue: false)},
           encryptedFeatures: null,
           savedGroups: null,
         );
-        expect(() => vm.handleValidFeatures(data), returnsNormally);
+        await expectLater(vm.handleValidFeatures(data), completes);
       });
     });
 
@@ -140,24 +140,24 @@ void main() {
     // handleValidFeatures — encrypted path
     // -------------------------------------------------------------------------
     group('handleValidFeatures encrypted path', () {
-      test('delegates to handleEncryptedFeatures when encryptedFeatures is set', () {
+      test('delegates to handleEncryptedFeatures when encryptedFeatures is set', () async {
         final vm = buildViewModel(encryptionKey: validEncryptionKey);
         final data = FeaturedDataModel(
           features: null,
           encryptedFeatures: validEncryptedFeatures,
         );
-        final result = vm.handleValidFeatures(data);
+        final result = await vm.handleValidFeatures(data);
         expect(result, isTrue);
         expect(delegate.isSuccess, isTrue);
       });
 
-      test('returns false when encryptedFeatures decryption fails', () {
+      test('returns false when encryptedFeatures decryption fails', () async {
         final vm = buildViewModel(encryptionKey: wrongEncryptionKey);
         final data = FeaturedDataModel(
           features: null,
           encryptedFeatures: validEncryptedFeatures,
         );
-        expect(vm.handleValidFeatures(data), isFalse);
+        expect(await vm.handleValidFeatures(data), isFalse);
       });
     });
 

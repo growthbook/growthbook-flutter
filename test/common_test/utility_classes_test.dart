@@ -197,7 +197,7 @@ void main() {
   group('GBUtils.getStickyBucketAttributes', () {
     test('returns empty map when stickyBucketIdentifierAttributes is empty', () {
       final context = _gbContext(stickyBucketIdentifierAttributes: []);
-      final result = GBUtils.getStickyBucketAttributes(context, null, {});
+      final result = GBUtils.getStickyBucketAttributes(context, null, {}, {});
       expect(result, isEmpty);
     });
 
@@ -209,6 +209,7 @@ void main() {
         context,
         null,
         {'id': 'user-42'},
+        {},
       );
       expect(result.containsKey('id'), isTrue);
     });
@@ -221,7 +222,7 @@ void main() {
     test('does nothing when stickyBucketService is null', () async {
       final context = _gbContext();
       await expectLater(
-        GBUtils.refreshStickyBuckets(context, null, {}),
+        GBUtils.refreshStickyBuckets(context, null, {}, {}),
         completes,
       );
     });
@@ -234,7 +235,7 @@ void main() {
         stickyBucketService: svc,
         stickyBucketIdentifierAttributes: ['id'],
       );
-      await GBUtils.refreshStickyBuckets(context, null, {'id': 'user-1'});
+      await GBUtils.refreshStickyBuckets(context, null, {'id': 'user-1'}, {});
       // No crash — docs map is assigned (may be empty since nothing was saved)
       expect(context.stickyBucketAssignmentDocs, isNotNull);
     });

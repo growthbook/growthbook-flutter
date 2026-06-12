@@ -195,7 +195,7 @@ class FeatureViewModel {
         log("JSON is null.");
         return false;
       } else {
-        return handleValidFeatures(data);
+        return await handleValidFeatures(data);
       }
     } catch (e, s) {
       handleException(e, s);

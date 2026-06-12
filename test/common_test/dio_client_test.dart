@@ -100,7 +100,7 @@ void main() {
         Map<String, dynamic>? received;
         await c.consumeGetRequest(
           'http://test.com/data',
-          (data) => received = data,
+          (data) async { received = data; },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -117,7 +117,7 @@ void main() {
         Map<String, dynamic>? received;
         await c.consumeGetRequest(
           'http://test.com/data',
-          (data) => received = data,
+          (data) async { received = data; },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -169,7 +169,7 @@ void main() {
 
         await c.consumeGetRequest(
           'http://test.com/data',
-          (_) => successCalled = true,
+          (_) async { successCalled = true; },
           (e, s) => errorCalled = true,
         );
 
@@ -205,8 +205,8 @@ void main() {
               headers: {'content-type': ['application/json']});
         });
 
-        await c.consumeGetRequest(featuresUrl, (_) {}, (e, s) {});
-        await c.consumeGetRequest(featuresUrl, (_) {}, (e, s) {});
+        await c.consumeGetRequest(featuresUrl, (_) async {}, (e, s) {});
+        await c.consumeGetRequest(featuresUrl, (_) async {}, (e, s) {});
 
         expect(secondRequestOptions?.headers['If-None-Match'], '"abc123"');
       });
@@ -221,7 +221,7 @@ void main() {
               headers: {'content-type': ['application/json']});
         });
 
-        await c.consumeGetRequest(nonFeaturesUrl, (_) {}, (e, s) {});
+        await c.consumeGetRequest(nonFeaturesUrl, (_) async {}, (e, s) {});
 
         expect(capturedOptions?.headers.containsKey('If-None-Match'), isFalse);
         expect(capturedOptions?.headers.containsKey('Cache-Control'), isFalse);
@@ -277,7 +277,7 @@ void main() {
         await c.consumePostRequest(
           'http://test.com/api',
           {'key': 'value'},
-          (data) => received = data,
+          (data) async { received = data; },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -323,7 +323,7 @@ void main() {
         final completer = Completer<Map<String, dynamic>>();
         await c.consumeSseConnections(
           'http://test.com/sse',
-          (data) {
+          (data) async {
             if (!completer.isCompleted) completer.complete(data);
           },
           (e, s) {
@@ -347,7 +347,7 @@ void main() {
         Object? capturedError;
         await c.consumeSseConnections(
           'http://test.com/sse',
-          (_) {},
+          (_) async {},
           (e, s) => capturedError = e,
         );
 
