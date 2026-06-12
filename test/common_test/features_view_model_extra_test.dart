@@ -249,7 +249,7 @@ void main() {
       test('reads cached features via GBFeaturesConverter when encryptionKey is set', () async {
         // Pre-populate cache with mock features JSON
         final cacheContent = Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        FileCacheStorage().putData(
+        await FileCacheStorage().saveContent(
           fileName: Constant.featureCache,
           content: cacheContent,
         );
