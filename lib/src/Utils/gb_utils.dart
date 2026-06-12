@@ -21,7 +21,7 @@ class FNV {
   /// Fowler-Noll-Vo hash - 32 bit
   /// Returns an integer representing the hash.
   int fnv1a32(String str) {
-    int hval = 0x811c9dc5;
+    int hval = init32;
     for (int i = 0; i < str.length; i++) {
       hval ^= str.codeUnitAt(i);
 
@@ -230,6 +230,10 @@ class GBUtils {
         fallback: fallbackAttribute,
         attributes: attributes);
     String? hashValue = hashAttrResult[1];
+
+    if (hashValue.isEmpty || hashValue == "null") {
+      return false;
+    }
 
     // Calculate the hash
     double? hash = hashFunction(
@@ -513,7 +517,7 @@ class GBUtils {
 
     // Check if any bucket versions from 0 to minExperimentBucketVersion are blocked.
     if (minExperimentBucketVersion > 0) {
-      for (int version = 0; version <= minExperimentBucketVersion; version++) {
+      for (int version = 0; version < minExperimentBucketVersion; version++) {
         final blockedKey = getStickyBucketExperimentKey(experimentKey, version);
         if (assignments.containsKey(blockedKey)) {
           // A blocked version was found.

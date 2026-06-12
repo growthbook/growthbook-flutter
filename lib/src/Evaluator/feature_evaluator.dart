@@ -150,28 +150,7 @@ class FeatureEvaluator {
               }
             }
           }
-          if (rule.range == null) {
-            if (rule.coverage != null) {
-              // Get the key for hash attribute (defaults to 'id' if not specified)
-              String key = rule.hashAttribute ?? Constant.idAttribute;
 
-              // Get the user hash value from context attributes based on the key
-              String? attributeValue = context.userContext.attributes?[key].toString();
-
-              // If attributeValue is empty or null, skip the rule
-              if (attributeValue == null || attributeValue.isEmpty) {
-                continue; // Skip the current rule
-              }
-
-              // Compute the hash using the Fowler-Noll-Vo algorithm (fnv32-1a)
-              double hashFNV = GBUtils.hash(seed: featureKey, value: attributeValue, version: 1) ?? 0.0;
-
-              // If the computed hash value is greater than rule.coverage, skip the rule
-              if (hashFNV > rule.coverage!) {
-                continue ruleLoop; // Skip the current rule
-              }
-            }
-          }
           final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force, ruleId: rule.id);
           onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
