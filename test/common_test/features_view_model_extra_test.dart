@@ -43,6 +43,7 @@ void main() {
       return FeatureViewModel(
         encryptionKey: encryptionKey,
         delegate: customDelegate ?? delegate,
+        manager: FileCacheStorage(),
         source: FeatureDataSource(
           client: MockNetworkClient(error: networkError),
           context: context,
@@ -64,7 +65,7 @@ void main() {
     });
 
     tearDown(() async {
-      await CachingManager().clearCache();
+      await FileCacheStorage().clearCache();
     });
 
     // -------------------------------------------------------------------------
@@ -248,7 +249,7 @@ void main() {
       test('reads cached features via GBFeaturesConverter when encryptionKey is set', () async {
         // Pre-populate cache with mock features JSON
         final cacheContent = Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        CachingManager().putData(
+        FileCacheStorage().putData(
           fileName: Constant.featureCache,
           content: cacheContent,
         );
@@ -256,6 +257,7 @@ void main() {
         final vm = FeatureViewModel(
           encryptionKey: '3tfeoyW0wlo47bDnbWDkxg==',
           delegate: delegate,
+          manager: FileCacheStorage(),
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,

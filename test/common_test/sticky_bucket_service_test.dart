@@ -7,7 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dar
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 
 // In-memory CachingLayer to avoid touching the real filesystem between tests.
-class _InMemoryCache implements CachingLayer {
+class _InMemoryCache implements CacheStorage {
   final _store = <String, Uint8List>{};
 
   @override
@@ -20,10 +20,17 @@ class _InMemoryCache implements CachingLayer {
     required Uint8List content,
   }) async =>
       _store[fileName] = content;
+
+  @override
+  Future<void> removeContent({required String fileName}) async =>
+      _store.remove(fileName);
+
+  @override
+  Future<void> clearCache() async => _store.clear();
 }
 
-// CachingLayer that always throws on both read and write.
-class _ThrowingCache implements CachingLayer {
+// CacheStorage that always throws on both read and write.
+class _ThrowingCache implements CacheStorage {
   @override
   Future<Uint8List?> getContent({required String fileName}) =>
       throw Exception('storage unavailable');
@@ -34,9 +41,15 @@ class _ThrowingCache implements CachingLayer {
     required Uint8List content,
   }) =>
       throw Exception('storage unavailable');
+
+  @override
+  Future<void> removeContent({required String fileName}) async {}
+
+  @override
+  Future<void> clearCache() async {}
 }
 
-LocalStorageStickyBucketService _makeService({CachingLayer? cache}) =>
+LocalStorageStickyBucketService _makeService({CacheStorage? cache}) =>
     LocalStorageStickyBucketService(
       localStorage: cache ?? _InMemoryCache(),
     );

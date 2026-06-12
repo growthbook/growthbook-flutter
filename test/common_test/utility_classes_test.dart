@@ -16,7 +16,7 @@ import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-class _InMemoryCache implements CachingLayer {
+class _InMemoryCache implements CacheStorage {
   final _store = <String, Uint8List>{};
 
   @override
@@ -27,6 +27,13 @@ class _InMemoryCache implements CachingLayer {
   Future<void> saveContent(
           {required String fileName, required Uint8List content}) async =>
       _store[fileName] = content;
+
+  @override
+  Future<void> removeContent({required String fileName}) async =>
+      _store.remove(fileName);
+
+  @override
+  Future<void> clearCache() async => _store.clear();
 }
 
 EvaluationContext _evalContext({
