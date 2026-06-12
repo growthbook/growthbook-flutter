@@ -16,7 +16,7 @@ class MockNetworkClient implements BaseClient {
     }
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(
@@ -36,7 +36,7 @@ class MockNetworkClient implements BaseClient {
       String baseUrl, Map<String, dynamic> params, OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(
@@ -55,7 +55,7 @@ class MockNetworkClient implements BaseClient {
   Future<void> consumeSseConnections(String url, OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(

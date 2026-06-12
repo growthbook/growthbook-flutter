@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
 
-typedef OnSuccess = void Function(Map<String, dynamic> onSuccess);
+typedef OnSuccess = Future<void> Function(Map<String, dynamic> onSuccess);
 typedef OnError = void Function(Object error, StackTrace stackTrace);
 
 abstract class BaseClient {
@@ -64,13 +64,13 @@ class DioClient extends BaseClient {
             .transform(const Utf8Decoder())
             .transform(const SseEventTransformer())
             .listen(
-          (sseModel) {
+          (sseModel) async {
             log('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
               lastKnownId = sseModel.id;
               String jsonData = sseModel.data ?? "";
               Map<String, dynamic> jsonMap = jsonDecode(jsonData);
-              onSuccess(jsonMap);
+              await onSuccess(jsonMap);
             }
           },
           onError: (dynamic e, dynamic s) async {
@@ -137,10 +137,10 @@ class DioClient extends BaseClient {
       }
 
       if (response.data is Map<String, dynamic>) {
-        onSuccess(response.data);
+        await onSuccess(response.data);
       } else if (response.data is String) {
         try {
-          onSuccess(jsonDecode(response.data));
+          await onSuccess(jsonDecode(response.data));
         } catch (e) {
           onError(e, StackTrace.current);
         }
@@ -187,7 +187,7 @@ class DioClient extends BaseClient {
           },
         ),
       );
-      onSuccess(response.data);
+      await onSuccess(response.data);
     } catch (e, s) {
       onError(e, s);
     }

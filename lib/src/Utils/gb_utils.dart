@@ -450,9 +450,19 @@ class GBUtils {
     List<GBExperiment>? experiments,
   }) {
     var attributes = <String, String>{};
-    final identifierAttributes = deriveStickyBucketIdentifierAttributes(
-      context: context, data: data, experiments: experiments,
-    );
+    // Re-derive when fresh feature data arrives so new hash/fallback attributes are picked up.
+    // When data is null (e.g. setAttributes call), preserve any explicitly configured or
+    // previously cached identifiers and only derive if none are present.
+    if (data != null) {
+      context.stickyBucketIdentifierAttributes = deriveStickyBucketIdentifierAttributes(
+        context: context, data: data, experiments: experiments,
+      );
+    } else {
+      context.stickyBucketIdentifierAttributes ??= deriveStickyBucketIdentifierAttributes(
+        context: context, data: data, experiments: experiments,
+      );
+    }
+    final identifierAttributes = context.stickyBucketIdentifierAttributes!;
 
     for (var attr in identifierAttributes) {
       var hashValue = GBUtils.getHashAttribute(
