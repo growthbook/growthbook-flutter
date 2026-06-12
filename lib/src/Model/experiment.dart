@@ -33,6 +33,7 @@ class GBExperiment {
     this.seed,
     this.name,
     this.phase,
+    this.customFields,
   });
 
   /// The globally unique tracking key for the experiment
@@ -105,6 +106,9 @@ class GBExperiment {
   /// Id of the current experiment phase
   String? phase;
 
+  /// Custom fields defined in the GrowthBook UI
+  Map<String, dynamic>? customFields;
+
   factory GBExperiment.fromJson(Map<String, dynamic> value) => _$GBExperimentFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBExperimentToJson(this);
@@ -130,6 +134,7 @@ class GBExperiment {
         "filters: $filters \n"
         "seed: $seed \n"
         "name: $name \n"
-        "phase: $phase \n";
+        "phase: $phase \n"
+        "customFields: $customFields \n";
   }
 }
