@@ -7,7 +7,6 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_contex
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
