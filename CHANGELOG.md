@@ -6,6 +6,14 @@
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
 
+## [4.2.5](https://github.com/growthbook/growthbook-flutter/compare/v4.2.4...v4.2.5) (2026-06-12)
+
+
+### Bug Fixes
+
+* fix URL construction in GBContext to handle trailing slashes ([#147](https://github.com/growthbook/growthbook-flutter/issues/147)) ([24f9d4f](https://github.com/growthbook/growthbook-flutter/commit/24f9d4fc14f07c44bb2d0bebcba568b433a95648))
+* resolve dart analyzer warnings in test files ([c5b0486](https://github.com/growthbook/growthbook-flutter/commit/c5b04861385222bab52c634837677788afdf267e))
+
 ## [4.2.4](https://github.com/growthbook/growthbook-flutter/compare/v4.2.3...v4.2.4) (2026-03-05)
 
 
