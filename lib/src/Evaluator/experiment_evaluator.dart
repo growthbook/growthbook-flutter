@@ -3,8 +3,6 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'experiment_helper.dart';
 import '../MultiUserMode/Model/evaluation_context.dart';
 import '../Utils/gb_variation_meta.dart';
-import '../Utils/logger.dart';
-
 class ExperimentEvaluator {
   // Takes Context and Experiment and returns ExperimentResult
   GBExperimentResult evaluateExperiment(EvaluationContext context, GBExperiment experiment, {String? featureId}) {
