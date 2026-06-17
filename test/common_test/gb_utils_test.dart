@@ -1,3 +1,4 @@
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
@@ -103,7 +104,7 @@ void main() {
           }
         }
       }
-      customLogger(
+      logger.i(
           'Passed Test ${passedScenarios.length} out of ${evalCondition.length}');
       expect(failedScenarios.length, 0);
     });
@@ -125,7 +126,7 @@ void main() {
           failedScenarios.add(status);
         }
       }
-      customLogger(
+      logger.i(
           'Passed Test ${passedScenarios.length} out of ${evaluateConditions.length}');
       expect(failedScenarios.length, 0);
     });
@@ -167,7 +168,7 @@ void main() {
       expect(testResult, true);
       expect(failedScenarios.length, 0);
 
-      customLogger(
+      logger.i(
           'Passed Test ${passedScenarios.length} out of ${evalCondition.length}');
       expect(failedScenarios.length, 0);
     });
