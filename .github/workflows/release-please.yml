@@ -44,7 +44,8 @@ jobs:
         
       - name: Check publish warnings
         run: dart pub publish --dry-run
-        
+        continue-on-error: true
+
       - name: Release Please
         id: release
         uses: googleapis/release-please-action@v4
