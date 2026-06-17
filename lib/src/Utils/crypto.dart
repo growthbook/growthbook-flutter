@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:pointycastle/export.dart';
 
 // Dart equivalent of CryptoProtocol abstract class

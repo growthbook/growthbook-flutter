@@ -8,6 +8,7 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 import 'gb_features_converter.dart';
 

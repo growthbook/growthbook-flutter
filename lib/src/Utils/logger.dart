@@ -20,6 +20,8 @@ class DynamicLogFilter extends LogFilter {
   }
 }
 
+/// Process-global log filter shared by every `GrowthBookSDK` instance.
+/// Use `GrowthBookSDK.setLogLevel(...)` to change verbosity at runtime.
 final logFilter = DynamicLogFilter(Level.warning);
 
 final logger = Logger(

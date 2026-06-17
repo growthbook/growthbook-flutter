@@ -6,6 +6,8 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_log_level.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -101,6 +103,14 @@ class GBSDKBuilderApp {
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
+  /// Sets the SDK-wide log level. Defaults to `GBLogLevel.warning`.
+  ///
+  /// Logging configuration is process-global — calling this affects every
+  /// active `GrowthBookSDK` instance. Configure once at app startup.
+  static void setLogLevel(GBLogLevel level) {
+    logFilter.level = toLoggerLevel(level);
+  }
+
   GrowthBookSDK._({
     OnInitializationFailure? onInitializationFailure,
     required GBContext context,
