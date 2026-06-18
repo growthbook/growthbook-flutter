@@ -23,19 +23,18 @@ class FNV {
   int fnv1a32(String data) {
     int hash = init32;
     for (int i = 0; i < data.length; i++) {
-        int b = data.codeUnitAt(i); // Get the character code (16-bit)
-        hash ^= b; // XOR the hash with the character's value
-        // 32-bit multiplication: (hash * 0x01000193)
-        // JS implementation uses shifts: (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24) + hval
-        // Dart int is 64-bit, so we need to ensure 32-bit wrapping behavior
-        hash = (
-            (hash << 24) +
-            (hash << 8) +
-            (hash << 7) +
-            (hash << 4) +
-            (hash << 1) +
-            hash
-        ).toUnsigned(32); 
+      int b = data.codeUnitAt(i); // Get the character code (16-bit)
+      hash ^= b; // XOR the hash with the character's value
+      // 32-bit multiplication: (hash * 0x01000193)
+      // JS implementation uses shifts: (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24) + hval
+      // Dart int is 64-bit, so we need to ensure 32-bit wrapping behavior
+      hash = ((hash << 24) +
+              (hash << 8) +
+              (hash << 7) +
+              (hash << 4) +
+              (hash << 1) +
+              hash)
+          .toUnsigned(32);
     }
     return hash;
   }
@@ -470,8 +469,10 @@ class GBUtils {
 
     if (context.stickyBucketIdentifierAttributes != null) {
       for (var attr in context.stickyBucketIdentifierAttributes!) {
-        var hashValue =
-            GBUtils.getHashAttribute(attributes: attributes, attr: attr, attributeOverrides: attributeOverrides);
+        var hashValue = GBUtils.getHashAttribute(
+            attributes: attributes,
+            attr: attr,
+            attributeOverrides: attributeOverrides);
         attributes[attr] = hashValue[1];
       }
     }
