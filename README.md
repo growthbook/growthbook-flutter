@@ -100,8 +100,10 @@ final sdk = await GBSDKBuilderApp(
     'email': 'user@example.com',
     'country': 'US',
   },
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Track experiment exposures
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     print('Experiment: ${experiment.key}, Variation: ${result.variationID}');
   },
 ).initialize();
@@ -144,7 +146,10 @@ class MyHomePage extends StatelessWidget {
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
+
     // Google Analytics
     FirebaseAnalytics.instance.logEvent(
       name: 'experiment_viewed',
@@ -198,8 +203,10 @@ final sdk = await GBSDKBuilderApp(
   },
   
   // Analytics Integration
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Send to your analytics platform
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     analytics.track('Experiment Viewed', {
       'experiment_id': experiment.key,
       'variation_id': result.variationID,
