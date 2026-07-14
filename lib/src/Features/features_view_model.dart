@@ -78,9 +78,8 @@ class FeatureViewModel {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
-        final featureMap = receivedData != null
-            ? _fetchCachedFeatures(receivedData)
-            : null;
+        final featureMap =
+            receivedData != null ? _fetchCachedFeatures(receivedData) : null;
 
         if (featureMap != null) {
           delegate.featuresFetchedSuccessfully(
@@ -108,7 +107,7 @@ class FeatureViewModel {
   }
 
   Future<void> _fetchFromNetwork() async {
-    // null = no callback invoked (304 Not Modified), true = success, false = error  
+    // null = no callback invoked (304 Not Modified), true = success, false = error
     bool? success;
     try {
       await source.fetchFeatures(
@@ -126,7 +125,7 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid) 
+    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
     }
@@ -237,11 +236,13 @@ class FeatureViewModel {
       var isHandleEncryptedSavedGroups = true;
 
       if (data.encryptedFeatures != null) {
-        isHandleEncryptedFeatures = handleEncryptedFeatures(data.encryptedFeatures!);
+        isHandleEncryptedFeatures =
+            handleEncryptedFeatures(data.encryptedFeatures!);
       }
 
       if (data.encryptedSavedGroups != null) {
-        isHandleEncryptedSavedGroups = handleEncryptedSavedGroups(data.encryptedSavedGroups!);
+        isHandleEncryptedSavedGroups =
+            handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
       return isHandleEncryptedFeatures && isHandleEncryptedSavedGroups;
     }

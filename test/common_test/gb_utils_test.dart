@@ -206,7 +206,7 @@ void main() {
 
             try {
               if (expectedElem is String) {
-                final decrypted =await DecryptionUtils.decrypt(payload, key);
+                final decrypted = await DecryptionUtils.decrypt(payload, key);
                 final actual =
                     decrypted is String ? decrypted.trim() : decrypted;
                 expect(actual, expectedElem);

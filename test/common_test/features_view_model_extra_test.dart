@@ -88,7 +88,8 @@ void main() {
     // prepareFeaturesData
     // -------------------------------------------------------------------------
     group('prepareFeaturesData', () {
-      test('returns false when both features and encryptedFeatures are null', () {
+      test('returns false when both features and encryptedFeatures are null',
+          () {
         final vm = buildViewModel();
         final data = FeaturedDataModel(
           features: null,
@@ -114,12 +115,15 @@ void main() {
     // handleValidFeatures — saved groups
     // -------------------------------------------------------------------------
     group('handleValidFeatures with savedGroups', () {
-      test('calls savedGroupsFetchedSuccessfully when savedGroups is present', () {
+      test('calls savedGroupsFetchedSuccessfully when savedGroups is present',
+          () {
         final vm = buildViewModel();
         final data = FeaturedDataModel(
           features: {'flag': GBFeature(defaultValue: true)},
           encryptedFeatures: null,
-          savedGroups: {'admins': ['user-1', 'user-2']},
+          savedGroups: {
+            'admins': ['user-1', 'user-2']
+          },
         );
         vm.handleValidFeatures(data);
         expect(delegate.isSuccess, isTrue);
@@ -140,7 +144,8 @@ void main() {
     // handleValidFeatures — encrypted path
     // -------------------------------------------------------------------------
     group('handleValidFeatures encrypted path', () {
-      test('delegates to handleEncryptedFeatures when encryptedFeatures is set', () {
+      test('delegates to handleEncryptedFeatures when encryptedFeatures is set',
+          () {
         final vm = buildViewModel(encryptionKey: validEncryptionKey);
         final data = FeaturedDataModel(
           features: null,
@@ -245,9 +250,12 @@ void main() {
     // _fetchCachedFeatures with non-empty encryptionKey (line 179)
     // -------------------------------------------------------------------------
     group('fetchFeatures with pre-populated cache and encryptionKey', () {
-      test('reads cached features via GBFeaturesConverter when encryptionKey is set', () async {
+      test(
+          'reads cached features via GBFeaturesConverter when encryptionKey is set',
+          () async {
         // Pre-populate cache with mock features JSON
-        final cacheContent = Uint8List.fromList(utf8.encode(MockResponse.successResponse));
+        final cacheContent =
+            Uint8List.fromList(utf8.encode(MockResponse.successResponse));
         CachingManager().putData(
           fileName: Constant.featureCache,
           content: cacheContent,

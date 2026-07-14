@@ -9,9 +9,11 @@ import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 class FeatureEvaluator {
   /// Takes context and feature key and returns the calculated feature result against that key.
-  GBFeatureResult evaluateFeature(EvaluationContext context, String featureKey) {
+  GBFeatureResult evaluateFeature(
+      EvaluationContext context, String featureKey) {
     /// This callback serves for listening for feature usage events
-    final onFeatureUsageCallbackWithUser = context.options.featureUsageCallbackWithUser;
+    final onFeatureUsageCallbackWithUser =
+        context.options.featureUsageCallbackWithUser;
 
     // Check if the feature has been evaluated already and return early if it has
 
@@ -21,7 +23,8 @@ class FeatureEvaluator {
         source: GBFeatureSource.cyclicPrerequisite,
       );
 
-      onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenCircularDependencyDetected);
+      onFeatureUsageCallbackWithUser?.call(
+          featureKey, featureResultWhenCircularDependencyDetected);
 
       return featureResultWhenCircularDependencyDetected;
     }
@@ -54,7 +57,8 @@ class FeatureEvaluator {
           for (var parentCondition in rule.parentConditions!) {
             context.stackContext.evaluatedFeatures = evaluatedFeatures.toSet();
             // Evaluate the parent condition using a new FeatureEvaluator
-            GBFeatureResult parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
+            GBFeatureResult parentResult =
+                FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
             // Check if the source of the parent result is cyclic prerequisite
             if (parentResult.source == GBFeatureSource.cyclicPrerequisite) {
@@ -63,7 +67,8 @@ class FeatureEvaluator {
                 source: GBFeatureSource.cyclicPrerequisite,
               );
 
-              onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenCircularDependencyDetected);
+              onFeatureUsageCallbackWithUser?.call(
+                  featureKey, featureResultWhenCircularDependencyDetected);
 
               return featureResultWhenCircularDependencyDetected;
             }
@@ -88,7 +93,8 @@ class FeatureEvaluator {
                   source: GBFeatureSource.prerequisite,
                 );
 
-                onFeatureUsageCallbackWithUser?.call(featureKey, featureResultWhenBlockedByPrerequisite);
+                onFeatureUsageCallbackWithUser?.call(
+                    featureKey, featureResultWhenBlockedByPrerequisite);
 
                 return featureResultWhenBlockedByPrerequisite;
               }
@@ -99,7 +105,8 @@ class FeatureEvaluator {
           }
         }
         if (rule.filters != null) {
-          if (GBUtils.isFilteredOut(rule.filters!, context.userContext.attributes ?? {})) {
+          if (GBUtils.isFilteredOut(
+              rule.filters!, context.userContext.attributes ?? {})) {
             logger.d('Skip rule because of filters');
             continue; // Skip to the next rule
           }
@@ -122,7 +129,8 @@ class FeatureEvaluator {
             context.userContext.attributes ?? {},
             rule.seed ?? featureKey,
             rule.hashAttribute,
-            (context.options.stickyBucketService != null && (rule.disableStickyBucketing != true))
+            (context.options.stickyBucketService != null &&
+                    (rule.disableStickyBucketing != true))
                 ? rule.fallbackAttribute
                 : null,
             rule.range,
@@ -139,18 +147,20 @@ class FeatureEvaluator {
           if (rule.tracks != null) {
             for (var track in rule.tracks!) {
               if (track.experiment != null && track.result != null) {
-                  var experiment = track.experiment!;
-                  var result = track.result!;
-                  if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-                    context.options
-                        .trackingCallBackWithUser!(GBTrackData(experiment: experiment, experimentResult: result));
-                  }
-                
+                var experiment = track.experiment!;
+                var result = track.result!;
+                if (!ExperimentHelper.shared.isTracked(experiment, result)) {
+                  context.options.trackingCallBackWithUser!(GBTrackData(
+                      experiment: experiment, experimentResult: result));
+                }
               }
             }
           }
 
-          final forcedFeatureResult = prepareResult(value: rule.force!, source: GBFeatureSource.force, ruleId: rule.id);
+          final forcedFeatureResult = prepareResult(
+              value: rule.force!,
+              source: GBFeatureSource.force,
+              ruleId: rule.id);
           onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
@@ -179,26 +189,29 @@ class FeatureEvaluator {
               name: rule.name,
               phase: rule.phase,
             );
-            GBExperimentResult result = ExperimentEvaluator().evaluateExperiment(context, exp, featureId: featureKey);
+            GBExperimentResult result = ExperimentEvaluator()
+                .evaluateExperiment(context, exp, featureId: featureKey);
 
             // Check if the result is in the experiment and not a passthrough
             if (result.inExperiment && !(result.passthrough ?? false)) {
               // Return the result value and source if the result is successful
               final experimentFeatureResult = prepareResult(
-                value: result.value,
-                source: GBFeatureSource.experiment,
-                experiment: exp,
-                result: result,
-                ruleId: rule.id
-              );
-              onFeatureUsageCallbackWithUser?.call(featureKey, experimentFeatureResult);
+                  value: result.value,
+                  source: GBFeatureSource.experiment,
+                  experiment: exp,
+                  result: result,
+                  ruleId: rule.id);
+              onFeatureUsageCallbackWithUser?.call(
+                  featureKey, experimentFeatureResult);
               return experimentFeatureResult;
             }
           }
         }
       }
     }
-    final defaultFeatureResult = prepareResult(value: targetFeature.defaultValue, source: GBFeatureSource.defaultValue);
+    final defaultFeatureResult = prepareResult(
+        value: targetFeature.defaultValue,
+        source: GBFeatureSource.defaultValue);
     onFeatureUsageCallbackWithUser?.call(featureKey, defaultFeatureResult);
     return defaultFeatureResult;
   }
@@ -206,26 +219,24 @@ class FeatureEvaluator {
   /// This is a helper method to create a FeatureResult object.
   /// Besides the passed-in arguments, there are two derived values -
   /// on and off, which are just the value cast to booleans.
-  GBFeatureResult prepareResult({
-    dynamic value,
-    required GBFeatureSource source,
-    GBExperiment? experiment,
-    GBExperimentResult? result,
-    String? ruleId = ""
-  }) {
+  GBFeatureResult prepareResult(
+      {dynamic value,
+      required GBFeatureSource source,
+      GBExperiment? experiment,
+      GBExperimentResult? result,
+      String? ruleId = ""}) {
     var isFalse = value == null ||
         value.toString() == 'false' ||
         value.toString() == '0' ||
         (value.toString().isEmpty && value is! Map && value is! List);
     return GBFeatureResult(
-      value: value,
-      on: !isFalse,
-      off: isFalse,
-      source: source,
-      experiment: experiment,
-      experimentResult: result,
-      ruleId: ruleId
-    );
+        value: value,
+        on: !isFalse,
+        off: isFalse,
+        source: source,
+        experiment: experiment,
+        experimentResult: result,
+        ruleId: ruleId);
   }
 
   Map<String, dynamic> getAttributes(GBContext context) {

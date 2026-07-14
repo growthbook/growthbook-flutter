@@ -27,26 +27,28 @@ void main() {
           final attr = testContext.attributes;
 
           final gbContext = GBContext(
-            apiKey: '',
-            hostURL: '',
-            enabled: testContext.enabled,
-            attributes: attr,
-            forcedVariation: testContext.forcedVariations,
-            qaMode: testContext.qaMode,
-            trackingCallBack: (_) {},
-            backgroundSync: false,
-            features: testContext.features,
-            savedGroups: testContext.savedGroups,
-            url: testContext.url
-          );
+              apiKey: '',
+              hostURL: '',
+              enabled: testContext.enabled,
+              attributes: attr,
+              forcedVariation: testContext.forcedVariations,
+              qaMode: testContext.qaMode,
+              trackingCallBack: (_) {},
+              backgroundSync: false,
+              features: testContext.features,
+              savedGroups: testContext.savedGroups,
+              url: testContext.url);
 
-          final evaluationContext = GBUtils.initializeEvalContext(gbContext, null);
+          final evaluationContext =
+              GBUtils.initializeEvalContext(gbContext, null);
 
-          final result = ExperimentEvaluator().evaluateExperiment(evaluationContext, experiment);
+          final result = ExperimentEvaluator()
+              .evaluateExperiment(evaluationContext, experiment);
           final status =
               "${item[0]}\nExpected Result - ${item[3]} & ${item[4]}\nActual result - ${result.value} & ${result.inExperiment}\n\n";
 
-          if (item[3].toString() == result.value.toString() && item[4] == result.inExperiment) {
+          if (item[3].toString() == result.value.toString() &&
+              item[4] == result.inExperiment) {
             passedScenarios.add(status);
           } else {
             failedScenarios.add(status);
@@ -55,7 +57,8 @@ void main() {
           failingIndex++;
         }
       }
-      logger.i('Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+      logger.i(
+          'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
       expect(failedScenarios.length, 0);
     });
   });

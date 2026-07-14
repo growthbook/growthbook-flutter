@@ -51,7 +51,8 @@ void main() {
         await expectLater(sdk.refresh(), completes);
       });
 
-      test('refreshHandler is called with true on successful remote eval', () async {
+      test('refreshHandler is called with true on successful remote eval',
+          () async {
         bool? handlerValue;
         final sdk = await buildSdk(
           remoteEval: true,
@@ -61,7 +62,8 @@ void main() {
         expect(handlerValue, isTrue);
       });
 
-      test('refreshHandler is called with false on remote eval failure', () async {
+      test('refreshHandler is called with false on remote eval failure',
+          () async {
         bool? handlerValue;
         await buildSdk(
           remoteEval: true,
@@ -83,7 +85,8 @@ void main() {
         await expectLater(sdk.refreshForRemoteEval(), completes);
       });
 
-      test('sends current attributes and forced variations in payload', () async {
+      test('sends current attributes and forced variations in payload',
+          () async {
         final sdk = await buildSdk(
           remoteEval: true,
           attributes: {'id': 'user-42', 'plan': 'pro'},
