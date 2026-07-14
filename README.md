@@ -100,8 +100,10 @@ final sdk = await GBSDKBuilderApp(
     'email': 'user@example.com',
     'country': 'US',
   },
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Track experiment exposures
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     print('Experiment: ${experiment.key}, Variation: ${result.variationID}');
   },
 ).initialize();
@@ -144,7 +146,10 @@ class MyHomePage extends StatelessWidget {
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
+
     // Google Analytics
     FirebaseAnalytics.instance.logEvent(
       name: 'experiment_viewed',
@@ -198,8 +203,10 @@ final sdk = await GBSDKBuilderApp(
   },
   
   // Analytics Integration
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Send to your analytics platform
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     analytics.track('Experiment Viewed', {
       'experiment_id': experiment.key,
       'variation_id': result.variationID,
@@ -291,6 +298,68 @@ sdk.setAttributes({
 // Target users with conditions
 // Example: Show feature only to premium users in US
 // This is configured in GrowthBook dashboard, not in code
+```
+
+### Condition Operators
+
+The SDK supports the following operators in targeting conditions:
+
+#### Comparison
+
+| Operator | Description |
+|----------|-------------|
+| `$eq` | Equal to |
+| `$ne` | Not equal to |
+| `$lt` | Less than |
+| `$lte` | Less than or equal |
+| `$gt` | Greater than |
+| `$gte` | Greater than or equal |
+
+#### Membership
+
+| Operator | Description |
+|----------|-------------|
+| `$in` | Value is in array |
+| `$nin` | Value is not in array |
+| `$all` | Array contains all values |
+| `$ini` | Value is in array (case-insensitive string comparison) |
+| `$nini` | Value is not in array (case-insensitive string comparison) |
+| `$alli` | Array contains all values (case-insensitive string comparison) |
+
+> For `$ini`, `$nini`, and `$alli`: string values are compared after lowercasing; non-string values (numbers, booleans, null) are compared as-is.
+
+#### Regex
+
+| Operator | Description |
+|----------|-------------|
+| `$regex` | Matches regex (case-sensitive) |
+| `$notRegex` | Does not match regex (case-sensitive) |
+| `$regexi` | Matches regex (case-insensitive) |
+| `$notRegexi` | Does not match regex (case-insensitive) |
+
+#### Other
+
+| Operator | Description |
+|----------|-------------|
+| `$exists` | Attribute exists (`true`) or is absent (`false`) |
+| `$type` | Attribute type matches string (`"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, `"null"`) |
+| `$not` | Negates a condition |
+| `$size` | Array length matches condition |
+| `$elemMatch` | At least one array element matches condition |
+| `$vgt` / `$vlt` / `$vgte` / `$vlte` / `$veq` / `$vne` | Semantic version comparison |
+
+```dart
+// Example: case-insensitive membership
+// Matches users where country is "us", "US", "Us", etc.
+final condition = {
+  'country': {'\$ini': ['US', 'CA', 'GB']}
+};
+
+// Example: case-insensitive regex
+// Matches "Hello", "hello", "HELLO", etc.
+final condition2 = {
+  'greeting': {'\$regexi': '^hello'}
+};
 ```
 
 ---

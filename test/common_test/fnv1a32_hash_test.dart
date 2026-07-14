@@ -16,7 +16,7 @@ void main() {
       'test123': 950984763,
       'foo': 2851307223,
       'bar': 1991736602,
-      'z': 4278997933,   // bit-31 overflow
+      'z': 4278997933, // bit-31 overflow
       'zz': 1466432373,
       'zzz': 2813343901,
     };
@@ -31,12 +31,12 @@ void main() {
   group('fnv1a32 – Unicode / UTF-16 inputs', () {
     // Verifies codeUnitAt() is not masked to 8 bits (old bug: & 0xFF).
     const vectors = <String, int>{
-      'Ā': 84593183,    // U+0100 — first code unit > 255
-      'ā': 67815564,    // U+0101
-      'я': 3389371454,  // U+044F
+      'Ā': 84593183, // U+0100 — first code unit > 255
+      'ā': 67815564, // U+0101
+      'я': 3389371454, // U+044F
       'тест': 8839891,
-      '耀': 71490847,   // U+8000, high bit set
-      '￿': 2041487694,  // U+FFFF, max BMP
+      '耀': 71490847, // U+8000, high bit set
+      '￿': 2041487694, // U+FFFF, max BMP
     };
 
     vectors.forEach((input, expected) {

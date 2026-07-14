@@ -188,8 +188,16 @@ class GBConditionEvaluator {
   }
 
   ///Evaluates Condition Value against given condition & attributes
-  bool isEvalConditionValue(dynamic conditionValue, dynamic attributeValue,
-      SavedGroupsValues savedGroups) {
+  bool isEvalConditionValue(
+    dynamic conditionValue,
+    dynamic attributeValue,
+    SavedGroupsValues savedGroups, {
+    bool inSensitive = false,
+  }) {
+    // Case-insensitive equality short-circuit for strings.
+    if (inSensitive && conditionValue is String && attributeValue is String) {
+      return conditionValue.toLowerCase() == attributeValue.toLowerCase();
+    }
     // If conditionValue is a string, number, boolean, return true if it's
     // "equal" to attributeValue and false if not.
     if ((conditionValue as Object?).isPrimitive &&
@@ -309,34 +317,27 @@ class GBConditionEvaluator {
         case '\$in':
           return isIn(attributeValue, conditionValue);
 
+        /// Evaluate INI operator - case-insensitive version of $in
+        case '\$ini':
+          return isIn(attributeValue, conditionValue, inSensitive: true);
+
         /// Evaluate NIN operator - attributeValue not in the conditionValue
         /// array.
         case '\$nin':
           return !isIn(attributeValue, conditionValue);
 
+        /// Evaluate NINI operator - case-insensitive version of $nin
+        case '\$nini':
+          return !isIn(attributeValue, conditionValue, inSensitive: true);
+
         /// Evaluate ALL operator - whether condition contains all attribute
         case '\$all':
-          if (attributeValue is List) {
-            /// Loop through conditionValue array
-            /// If none of the elements in the attributeValue array pass
-            /// evalConditionValue(conditionValue[i], attributeValue[j]),
-            /// return false.
-            for (var con in conditionValue) {
-              var result = false;
-              for (var attr in attributeValue) {
-                if (isEvalConditionValue(con, attr, savedGroups)) {
-                  result = true;
-                }
-              }
-              if (!result) {
-                return result;
-              }
-            }
-            return true;
-          } else {
-            /// If attributeValue is not an array, return false
-            return false;
-          }
+          return _isInAll(attributeValue, conditionValue, savedGroups);
+
+        /// Evaluate ALLI operator - case-insensitive version of $all
+        case '\$alli':
+          return _isInAll(attributeValue, conditionValue, savedGroups,
+              inSensitive: true);
         default:
           return false;
       }
@@ -421,13 +422,36 @@ class GBConditionEvaluator {
           break;
 
         case '\$regex':
-          try {
-            final regEx = RegExp(conditionValue.toString());
-            evaluatedValue = regEx.hasMatch(attributeValue.toString());
-          } catch (e) {
-            evaluatedValue = false;
-          }
-          break;
+          return _evalRegex(
+            conditionValue: conditionValue,
+            attributeValue: attributeValue,
+            isCaseSensitive: true,
+            negate: false,
+          );
+
+        case '\$regexi':
+          return _evalRegex(
+            conditionValue: conditionValue,
+            attributeValue: attributeValue,
+            isCaseSensitive: false,
+            negate: false,
+          );
+
+        case '\$notRegex':
+          return _evalRegex(
+            conditionValue: conditionValue,
+            attributeValue: attributeValue,
+            isCaseSensitive: true,
+            negate: true,
+          );
+
+        case '\$notRegexi':
+          return _evalRegex(
+            conditionValue: conditionValue,
+            attributeValue: attributeValue,
+            isCaseSensitive: false,
+            negate: true,
+          );
 
         default:
           conditionValue = false;
@@ -437,10 +461,63 @@ class GBConditionEvaluator {
     return false;
   }
 
-  bool isIn(dynamic actualValue, List<dynamic> conditionValue) {
-    if (actualValue is List) {
-      return actualValue.any((el) => conditionValue.contains(el));
+  bool isIn(dynamic actualValue, List<dynamic> conditionValue,
+      {bool inSensitive = false}) {
+    dynamic caseFold(dynamic value) {
+      if (inSensitive && value is String) {
+        return value.toLowerCase();
+      }
+      return value;
     }
-    return conditionValue.contains(actualValue);
+
+    if (actualValue is List) {
+      if (actualValue.isEmpty) return false;
+      return actualValue.any(
+        (attr) => conditionValue.any(
+          (cond) => caseFold(attr) == caseFold(cond),
+        ),
+      );
+    }
+    return conditionValue.any(
+      (cond) => caseFold(actualValue) == caseFold(cond),
+    );
+  }
+
+  bool _isInAll(
+    dynamic attributeValue,
+    List<dynamic> conditionValue,
+    SavedGroupsValues savedGroups, {
+    bool inSensitive = false,
+  }) {
+    if (attributeValue is! List) return false;
+    for (final condition in conditionValue) {
+      var passed = false;
+      for (final attribute in attributeValue) {
+        if (isEvalConditionValue(condition, attribute, savedGroups,
+            inSensitive: inSensitive)) {
+          passed = true;
+          break;
+        }
+      }
+      if (!passed) return false;
+    }
+    return true;
+  }
+
+  bool _evalRegex({
+    required dynamic conditionValue,
+    required dynamic attributeValue,
+    required bool isCaseSensitive,
+    required bool negate,
+  }) {
+    if (conditionValue == null || attributeValue == null) return false;
+    try {
+      final regex =
+          RegExp(conditionValue.toString(), caseSensitive: isCaseSensitive);
+      final matches = regex.hasMatch(attributeValue.toString());
+      return negate != matches;
+    } catch (_) {
+      return false;
+    }
   }
 }
