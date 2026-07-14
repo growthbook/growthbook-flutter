@@ -220,6 +220,29 @@ final sdk = await GBSDKBuilderApp(
 ).initialize();
 ```
 
+### Configuring Log Level
+
+The SDK logs internal events (feature evaluation skips, cache errors, refresh
+attempts) through a `logger` package instance. Verbosity is controlled by
+`GrowthBookSDK.setLogLevel(...)`, which accepts an SDK-owned `GBLogLevel` enum:
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+void main() {
+  // Configure once at app startup — before initializing the SDK.
+  GrowthBookSDK.setLogLevel(GBLogLevel.debug);
+
+  runApp(const MyApp());
+}
+```
+
+Available levels: `verbose`, `debug`, `info`, `warning` (default), `error`, `off`.
+
+> ⚠️ **Process-global**: log level is shared across all `GrowthBookSDK` instances
+> in the same process. Set it once at app startup rather than per-instance.
+> If you run multiple SDK instances, they will share the same verbosity.
+
 ### Feature Flag Usage
 
 > 📖 **[View detailed feature usage guide →](https://docs.growthbook.io/lib/flutter#using-features)**

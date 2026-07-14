@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_log_level.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -102,6 +103,14 @@ class GBSDKBuilderApp {
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
+  /// Sets the SDK-wide log level. Defaults to `GBLogLevel.warning`.
+  ///
+  /// Logging configuration is process-global — calling this affects every
+  /// active `GrowthBookSDK` instance. Configure once at app startup.
+  static void setLogLevel(GBLogLevel level) {
+    logFilter.level = toLoggerLevel(level);
+  }
+
   GrowthBookSDK._({
     OnInitializationFailure? onInitializationFailure,
     required GBContext context,
@@ -172,7 +181,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.features = gbFeatures;
     _updateEvaluationContext();
     if (isRemote) {
-      log('Features updated from remote source, triggering refresh handler');
+      logger
+          .d('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
         _refreshHandler!(true);
       }
@@ -199,7 +209,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       await refreshForRemoteEval();
     } else {
-      log(context.getFeaturesURL().toString());
+      logger.d(context.getFeaturesURL().toString());
       await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
@@ -262,13 +272,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
       if (_context.remoteEval) {
         refreshForRemoteEval().catchError((e) {
-          log('Background refresh failed: $e');
+          logger.w('Background refresh failed: $e');
         });
       } else {
         _featureViewModel
             .fetchFeatures(context.getFeaturesURL())
             .catchError((e) {
-          log('Background refresh failed: $e');
+          logger.w('Background refresh failed: $e');
         });
       }
     }
