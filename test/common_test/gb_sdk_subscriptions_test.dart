@@ -107,7 +107,8 @@ void main() {
         final captured = <Map<String, dynamic>>[];
 
         sdk.subscribe((experiment, result) {
-          captured.add({'key': experiment.key, 'variationID': result.variationID});
+          captured
+              .add({'key': experiment.key, 'variationID': result.variationID});
         });
 
         sdk.run(GBExperiment(key: 'exp-check', variations: [0, 1]));
@@ -121,7 +122,8 @@ void main() {
     // fireSubscriptions — deduplication logic
     // -------------------------------------------------------------------------
     group('fireSubscriptions', () {
-      test('does not re-fire when same experiment produces identical result', () async {
+      test('does not re-fire when same experiment produces identical result',
+          () async {
         final sdk = await buildSdk();
         int callCount = 0;
         sdk.subscribe((_, __) => callCount++);
@@ -132,7 +134,8 @@ void main() {
         expect(callCount, 1);
       });
 
-      test('fires again when forced variationID changes between runs', () async {
+      test('fires again when forced variationID changes between runs',
+          () async {
         final sdk = await buildSdk();
         int callCount = 0;
         sdk.subscribe((_, __) => callCount++);
@@ -145,7 +148,8 @@ void main() {
         expect(callCount, 2);
       });
 
-      test('independent experiments each fire their own subscription event', () async {
+      test('independent experiments each fire their own subscription event',
+          () async {
         final sdk = await buildSdk();
         int callCount = 0;
         sdk.subscribe((_, __) => callCount++);

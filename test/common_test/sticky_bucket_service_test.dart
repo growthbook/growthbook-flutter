@@ -115,7 +115,8 @@ void main() {
         await expectLater(svc.saveAssignments(_doc()), completes);
       });
 
-      test('stores data under prefix + attributeName||attributeValue key', () async {
+      test('stores data under prefix + attributeName||attributeValue key',
+          () async {
         final cache = _InMemoryCache();
         const prefix = 'gbStickyBuckets__';
         final svc = LocalStorageStickyBucketService(localStorage: cache);
@@ -142,7 +143,8 @@ void main() {
         expect(result, isEmpty);
       });
 
-      test('returns one entry when one attribute has a saved document', () async {
+      test('returns one entry when one attribute has a saved document',
+          () async {
         final svc = _makeService();
         await svc.saveAssignments(_doc(name: 'id', value: 'user-1'));
 
@@ -153,7 +155,8 @@ void main() {
         expect(result['id||user-1']!.attributeValue, 'user-1');
       });
 
-      test('returns multiple entries when multiple attributes have saved docs', () async {
+      test('returns multiple entries when multiple attributes have saved docs',
+          () async {
         final svc = _makeService();
         await svc.saveAssignments(_doc(name: 'id', value: 'user-1'));
         await svc.saveAssignments(_doc(name: 'device', value: 'device-42'));
