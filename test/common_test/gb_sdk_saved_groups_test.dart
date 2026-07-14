@@ -8,7 +8,7 @@ void main() {
   group('GrowthBookSDK — saved groups callbacks', () {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage();
 
     Future<GrowthBookSDK> buildSdk({
       CacheRefreshHandler? refreshHandler,

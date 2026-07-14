@@ -4,6 +4,7 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import '../Helper/gb_test_helper.dart';
 
 void main() {
+    TestWidgetsFlutterBinding.ensureInitialized();
   group('GBStickyBucketingFeatureTests', () {
     late List<dynamic> evalConditions;
     late GBStickyBucketingService service;

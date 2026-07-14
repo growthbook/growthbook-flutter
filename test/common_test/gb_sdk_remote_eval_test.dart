@@ -8,7 +8,7 @@ void main() {
   group('GrowthBookSDK — remote eval flow', () {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage();
 
     Future<GrowthBookSDK> buildSdk({
       bool remoteEval = false,

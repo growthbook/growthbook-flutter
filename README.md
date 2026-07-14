@@ -297,31 +297,88 @@ sdk.setAttributes({
 
 ## 🔧 Advanced Features
 
-### Smart Caching Strategy
+### Caching
 
-The SDK implements an intelligent caching system for optimal performance:
+The SDK caches fetched features to disk so they are available immediately on the next launch and when the network is unavailable.
+
+#### Default storage
+
+By default, `FileCacheStorage` stores features under the system temp directory:
+
+```
+<systemTemp>/
+  GrowthBook-Cache/
+    <hashed-api-key>/
+      featuresCache.txt
+```
+
+The cache key is the first 5 characters of the SHA-256 hash of your API key, so each API key gets its own isolated folder. On Flutter Web, `SharedPreferences` is used instead of the filesystem.
+
+#### Custom cache directory
+
+Pass a `cacheDirectory` string to store files in a specific location:
 
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  ttlSeconds: 300, // Cache TTL: 5 minutes
-  backgroundSync: true, // Enable background refresh
+  cacheDirectory: '/path/to/your/cache',
 ).initialize();
 ```
 
-#### **How it works:**
+#### Custom CacheStorage implementation
 
-1. **🚀 Instant Response** - Serve cached features immediately
-2. **🔄 Background Refresh** - Fetch updates in the background  
-3. **⚡ Stale-While-Revalidate** - Show cached data while updating
-4. **📊 Smart Invalidation** - Refresh only when needed
+For full control (in-memory cache, encrypted storage, etc.), implement `CacheStorage` and pass it via `cacheStorage`:
 
-#### **Benefits:**
+```dart
+class MyCacheStorage extends CacheStorage {
+  @override
+  Future<void> saveContent({required String fileName, required Uint8List content}) async {
+    // your storage logic
+  }
 
-- ✅ **Zero loading delays** for feature flags
-- ✅ **Always up-to-date** with background sync
-- ✅ **Reduced API calls** with intelligent caching
-- ✅ **Offline resilience** with cached fallbacks
+  @override
+  Future<Uint8List?> getContent({required String fileName}) async {
+    // your retrieval logic
+  }
+
+  @override
+  Future<void> removeContent({required String fileName}) async {}
+
+  @override
+  Future<void> clearCache() async {}
+}
+
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  cacheStorage: MyCacheStorage(),
+).initialize();
+```
+
+#### Clearing the cache
+
+```dart
+await sdk.clearCache();
+```
+
+`clearCache()` is async — always `await` it to ensure the cache is fully cleared before continuing.
+
+#### Cache key / API key separation
+
+The cache key is derived from the API key via a short SHA-256 hash. If you change your API key, a new cache folder is created automatically and the old folder is left on disk.
+
+#### TTL and background sync
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  ttlSeconds: 300,       // Cache TTL: 5 minutes (default: 60s)
+  backgroundSync: true,  // Enable real-time streaming updates
+).initialize();
+```
+
+#### Migration notes
+
+The `putData` method on `FileCacheStorage` is deprecated — use `saveContent` instead.
 
 ### Sticky Bucketing
 

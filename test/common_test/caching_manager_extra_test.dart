@@ -6,7 +6,7 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 void main() {
   group('CachingManager — additional coverage', () {
-    final manager = CachingManager();
+    final manager = FileCacheStorage();
 
     tearDown(() async {
       await manager.clearCache();

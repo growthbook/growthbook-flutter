@@ -9,7 +9,7 @@ void main() {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage();
 
     Future<GrowthBookSDK> buildSdk({Map<String, dynamic>? attributes}) async {
       return GBSDKBuilderApp(

@@ -18,6 +18,7 @@ void main() {
       const testApiKey = '<SOME KEY>';
       const attr = <String, String>{};
       const testHostURL = '<HOST URL>';
+      CacheStorage cachingManager = FileCacheStorage();
 
       setUp(
         () {
@@ -35,7 +36,7 @@ void main() {
       );
 
       tearDown(() async {
-        await CachingManager().clearCache();
+        await cachingManager.clearCache();
       });
       test(
         'Success feature-view model.',
@@ -43,6 +44,7 @@ void main() {
           featureViewModel = FeatureViewModel(
             encryptionKey: testApiKey,
             delegate: dataSourceMock,
+            manager: cachingManager,
             source: FeatureDataSource(
               client: const MockNetworkClient(),
               context: context,
@@ -57,6 +59,7 @@ void main() {
         featureViewModel = FeatureViewModel(
           encryptionKey: "3tfeoyW0wlo47bDnbWDkxg==",
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,
@@ -70,6 +73,7 @@ void main() {
       test('Remote eval success test', () async {
         featureViewModel = FeatureViewModel(
           encryptionKey: testApiKey,
+          manager: cachingManager,
           delegate: dataSourceMock,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
@@ -96,6 +100,7 @@ void main() {
       test('Remote eval failed test', () async {
         featureViewModel = FeatureViewModel(
           encryptionKey: '',
+          manager: cachingManager,
           delegate: dataSourceMock,
           source: FeatureDataSource(
             client: const MockNetworkClient(
@@ -124,6 +129,7 @@ void main() {
       test('Error test', () async {
         final viewModel = FeatureViewModel(
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(
               error: true,
@@ -140,7 +146,7 @@ void main() {
       test(
         '304 Not Modified should not report error and should refresh TTL',
         () async {
-          await CachingManager().clearCache();
+          await cachingManager.clearCache();
 
           featureViewModel = FeatureViewModel(
             encryptionKey: testApiKey,
@@ -149,6 +155,7 @@ void main() {
               client: const MockNetworkClient(notModified: true),
               context: context,
             ),
+            manager: cachingManager,
             ttlSeconds: 60,
           );
 
@@ -166,6 +173,7 @@ void main() {
         featureViewModel = FeatureViewModel(
           encryptionKey: testApiKey,
           delegate: dataSourceMock,
+          manager: cachingManager,
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,
@@ -188,7 +196,7 @@ void main() {
       test(
         'empty cache should not throw FormatException and should fallback to network',
         () async {
-          CachingManager().putData(
+          cachingManager.saveContent(
             fileName: Constant.featureCache,
             content: Uint8List(0),
           );
@@ -200,6 +208,7 @@ void main() {
               client: const MockNetworkClient(),
               context: context,
             ),
+            manager: cachingManager
           );
 
           await featureViewModel.fetchFeatures(context.getFeaturesURL());
@@ -214,7 +223,7 @@ void main() {
         () async {
           final corruptData = Uint8List.fromList([123, 34]);
 
-          CachingManager().putData(
+          cachingManager.saveContent(
             fileName: Constant.featureCache,
             content: corruptData,
           );
@@ -226,6 +235,7 @@ void main() {
               client: const MockNetworkClient(),
               context: context,
             ),
+            manager: cachingManager
           );
 
           await featureViewModel.fetchFeatures(context.getFeaturesURL());
