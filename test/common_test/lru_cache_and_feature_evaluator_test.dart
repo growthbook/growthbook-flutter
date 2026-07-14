@@ -108,7 +108,8 @@ void main() {
     // Cyclic prerequisite — lines 25 and 67
     // -----------------------------------------------------------------------
     group('cyclic prerequisite', () {
-      test('returns cyclicPrerequisite source and triggers featureUsageCallback',
+      test(
+          'returns cyclicPrerequisite source and triggers featureUsageCallback',
           () {
         // feat-a has parentCondition → feat-b
         // feat-b has parentCondition → feat-a  (creates a cycle)

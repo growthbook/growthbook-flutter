@@ -107,7 +107,10 @@ void main() {
       });
 
       test('null when not present in JSON', () {
-        final json = <String, dynamic>{'key': 'my-experiment', 'variations': []};
+        final json = <String, dynamic>{
+          'key': 'my-experiment',
+          'variations': []
+        };
         final exp = GBExperiment.fromJson(json);
 
         expect(exp.customFields, isNull);

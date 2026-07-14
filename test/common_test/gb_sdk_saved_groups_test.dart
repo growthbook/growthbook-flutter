@@ -36,7 +36,9 @@ void main() {
     group('savedGroupsFetchedSuccessfully', () {
       test('stores saved groups in context', () async {
         final sdk = await buildSdk();
-        final groups = {'admins': ['user-1', 'user-2']};
+        final groups = {
+          'admins': ['user-1', 'user-2']
+        };
 
         sdk.savedGroupsFetchedSuccessfully(
           savedGroups: groups,
@@ -68,14 +70,17 @@ void main() {
         );
 
         sdk.savedGroupsFetchedSuccessfully(
-          savedGroups: {'beta': ['user-42']},
+          savedGroups: {
+            'beta': ['user-42']
+          },
           isRemote: true,
         );
 
         expect(handlerValue, isTrue);
       });
 
-      test('does not crash when refreshHandler is null and isRemote is true', () async {
+      test('does not crash when refreshHandler is null and isRemote is true',
+          () async {
         final sdk = await buildSdk();
 
         expect(
@@ -127,7 +132,8 @@ void main() {
         expect(handlerValue, isFalse);
       });
 
-      test('does not crash when refreshHandler is null and isRemote is true', () async {
+      test('does not crash when refreshHandler is null and isRemote is true',
+          () async {
         final sdk = await buildSdk();
 
         expect(
@@ -141,12 +147,14 @@ void main() {
     // getStickyBucketAssignmentDocs
     // -------------------------------------------------------------------------
     group('getStickyBucketAssignmentDocs', () {
-      test('returns empty map when no sticky bucket service is configured', () async {
+      test('returns empty map when no sticky bucket service is configured',
+          () async {
         final sdk = await buildSdk();
         expect(sdk.getStickyBucketAssignmentDocs(), isEmpty);
       });
 
-      test('returns empty map when stickyBucketAssignmentDocs is null', () async {
+      test('returns empty map when stickyBucketAssignmentDocs is null',
+          () async {
         final sdk = await buildSdk();
         sdk.context.stickyBucketAssignmentDocs = null;
         expect(sdk.getStickyBucketAssignmentDocs(), isEmpty);
