@@ -181,7 +181,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.features = gbFeatures;
     _updateEvaluationContext();
     if (isRemote) {
-      logger.d('Features updated from remote source, triggering refresh handler');
+      logger
+          .d('Features updated from remote source, triggering refresh handler');
       if (_refreshHandler != null) {
         _refreshHandler!(true);
       }
