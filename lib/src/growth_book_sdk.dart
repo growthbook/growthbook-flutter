@@ -117,12 +117,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
-      delegate: this,
-      source: FeatureDataSource(context: _context, client: _baseClient),
-      encryptionKey: _context.encryptionKey ?? "",
-      backgroundSync: _context.backgroundSync,
-      ttlSeconds: ttlSeconds
-    );
+        delegate: this,
+        source: FeatureDataSource(context: _context, client: _baseClient),
+        encryptionKey: _context.encryptionKey ?? "",
+        backgroundSync: _context.backgroundSync,
+        ttlSeconds: ttlSeconds);
     autoRefresh();
   }
 
@@ -254,8 +253,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
-    _context.stickyBucketAssignmentDocs = 
-      _evaluationContext.userContext.stickyBucketAssignmentDocs;
+    // Propagate any newly persisted sticky bucket assignments back to the
+    // shared GBContext so the next _updateEvaluationContext() preserves them.
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
     return result;
   }
 
@@ -286,8 +287,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _evaluationContext,
       experiment,
     );
-    _context.stickyBucketAssignmentDocs = 
-      _evaluationContext.userContext.stickyBucketAssignmentDocs;
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
     return result;
   }
@@ -310,10 +311,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   /// Async version of [setAttributes] that awaits sticky bucket refresh
-  /// before returning.
-  ///
-  /// Use this when you use Sticky Bucketing and need to guarantee that
-  /// assignments are loaded before evaluating experiments:
+  /// before returning. Use this when you rely on Sticky Bucketing and need
+  /// assignments to be loaded before evaluating experiments:
   /// ```dart
   /// await sdk.setAttributesAsync(loginAttributes);
   /// final result = sdk.feature('my-experiment'); // sticky buckets guaranteed
@@ -368,17 +367,24 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (features != null) {
       _context.features = features;
       _updateEvaluationContext();
+      // New features may reference different hash/fallback attributes —
+      // refresh sticky bucket docs so the next eval works against current
+      // identifiers.
+      refreshStickyBucketService(null);
     }
   }
 
   void setForcedVariations(Map<String, dynamic> forcedVariations) {
     _context.forcedVariation = forcedVariations;
     _updateEvaluationContext();
+    // Forced variations are evaluated against sticky bucket assignments —
+    // refresh so docs reflect the updated forced map.
+    refreshStickyBucketService(null);
     refreshForRemoteEval();
   }
 
   @override
-  Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async{
+  Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
     await refreshStickyBucketService(model);
   }
 
@@ -418,8 +424,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
-    _context.stickyBucketAssignmentDocs = 
-      _evaluationContext.userContext.stickyBucketAssignmentDocs;
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
     return result;
   }
 

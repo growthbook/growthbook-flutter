@@ -194,7 +194,8 @@ void main() {
   // GBUtils.getStickyBucketAttributes
   // -------------------------------------------------------------------------
   group('GBUtils.getStickyBucketAttributes', () {
-    test('returns empty map when stickyBucketIdentifierAttributes is empty', () {
+    test('returns empty map when stickyBucketIdentifierAttributes is empty',
+        () {
       final context = _gbContext(stickyBucketIdentifierAttributes: []);
       final result = GBUtils.getStickyBucketAttributes(context, null, {}, {});
       expect(result, isEmpty);
@@ -244,7 +245,8 @@ void main() {
   // GBUtils.getStickyBucketVariation — invalid variation key path
   // -------------------------------------------------------------------------
   group('GBUtils.getStickyBucketVariation', () {
-    test('returns variation -1 when assignment key exists but meta has no match',
+    test(
+        'returns variation -1 when assignment key exists but meta has no match',
         () {
       const expKey = 'my-exp';
       const bucketVersion = 0;

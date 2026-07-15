@@ -24,19 +24,18 @@ class FNV {
   int fnv1a32(String data) {
     int hash = init32;
     for (int i = 0; i < data.length; i++) {
-        int b = data.codeUnitAt(i); // Get the character code (16-bit)
-        hash ^= b; // XOR the hash with the character's value
-        // 32-bit multiplication: (hash * 0x01000193)
-        // JS implementation uses shifts: (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24) + hval
-        // Dart int is 64-bit, so we need to ensure 32-bit wrapping behavior
-        hash = (
-            (hash << 24) +
-            (hash << 8) +
-            (hash << 7) +
-            (hash << 4) +
-            (hash << 1) +
-            hash
-        ).toUnsigned(32); 
+      int b = data.codeUnitAt(i); // Get the character code (16-bit)
+      hash ^= b; // XOR the hash with the character's value
+      // 32-bit multiplication: (hash * 0x01000193)
+      // JS implementation uses shifts: (hval << 1) + (hval << 4) + (hval << 7) + (hval << 8) + (hval << 24) + hval
+      // Dart int is 64-bit, so we need to ensure 32-bit wrapping behavior
+      hash = ((hash << 24) +
+              (hash << 8) +
+              (hash << 7) +
+              (hash << 4) +
+              (hash << 1) +
+              hash)
+          .toUnsigned(32);
     }
     return hash;
   }
@@ -406,9 +405,9 @@ class GBUtils {
       attributes: context.userContext.attributes!,
     );
 
-    String? fallbackKey = fallbackAttributeAndValue[1].isEmpty 
-      ? null 
-      : '${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}';
+    String? fallbackKey = fallbackAttributeAndValue[1].isEmpty
+        ? null
+        : '${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}';
 
     // Add assignments from fallbackKey if not null
     if (fallbackKey != null &&
@@ -435,7 +434,10 @@ class GBUtils {
   }) async {
     if (context.stickyBucketService == null) return;
     var allAttributes = getStickyBucketAttributes(
-      context, data, userAttributes, attributeOverrides,
+      context,
+      data,
+      userAttributes,
+      attributeOverrides,
       experiments: experiments,
     );
     context.stickyBucketAssignmentDocs =
@@ -450,16 +452,23 @@ class GBUtils {
     List<GBExperiment>? experiments,
   }) {
     var attributes = <String, String>{};
-    // Re-derive when fresh feature data arrives so new hash/fallback attributes are picked up.
-    // When data is null (e.g. setAttributes call), preserve any explicitly configured or
-    // previously cached identifiers and only derive if none are present.
+    // Re-derive when fresh feature data arrives so new hash/fallback attributes
+    // are picked up. When data is null (e.g. setAttributes call), preserve any
+    // explicitly configured or previously cached identifiers and only derive
+    // if none are present.
     if (data != null) {
-      context.stickyBucketIdentifierAttributes = deriveStickyBucketIdentifierAttributes(
-        context: context, data: data, experiments: experiments,
+      context.stickyBucketIdentifierAttributes =
+          deriveStickyBucketIdentifierAttributes(
+        context: context,
+        data: data,
+        experiments: experiments,
       );
     } else {
-      context.stickyBucketIdentifierAttributes ??= deriveStickyBucketIdentifierAttributes(
-        context: context, data: data, experiments: experiments,
+      context.stickyBucketIdentifierAttributes ??=
+          deriveStickyBucketIdentifierAttributes(
+        context: context,
+        data: data,
+        experiments: experiments,
       );
     }
     final identifierAttributes = context.stickyBucketIdentifierAttributes!;
@@ -497,7 +506,9 @@ class GBUtils {
       });
     }
 
-    for (var experiment in experiments ?? []) {
+    // Also scan experiments — sticky bucket identifiers must be known before
+    // experiments run, not only when features reference them.
+    for (var experiment in experiments ?? <GBExperiment>[]) {
       attributes.add(experiment.hashAttribute ?? "id");
       if (experiment.fallbackAttribute != null) {
         attributes.add(experiment.fallbackAttribute!);

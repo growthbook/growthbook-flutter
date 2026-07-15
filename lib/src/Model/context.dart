@@ -77,21 +77,20 @@ class GBContext {
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
 
-  String? getFeaturesURL() {
-    if (hostURL != null && apiKey != null) {
-      return Uri.parse(hostURL!)
-          .replace(path: '/api/features/$apiKey')
-          .toString();
-    } else {
-      return null;
-    }
-  }
+  String? getFeaturesURL() => _buildUrl('/api/features/');
 
-  String? getRemoteEvalUrl() {
-    if (hostURL != null && apiKey != null) {
-      return Uri.parse(hostURL!).replace(path: '/api/eval/$apiKey').toString();
-    } else {
-      return null;
+  String? getRemoteEvalUrl() => _buildUrl('/api/eval/');
+
+  String? _buildUrl(String endpoint) {
+    if (hostURL == null || apiKey == null) return null;
+
+    final uri = Uri.parse(hostURL!);
+
+    var basePath = uri.path;
+    while (basePath.endsWith('/')) {
+      basePath = basePath.substring(0, basePath.length - 1);
     }
+
+    return uri.replace(path: '$basePath$endpoint$apiKey').toString();
   }
 }

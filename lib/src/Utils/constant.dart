@@ -64,7 +64,6 @@ class GBError {
   });
 }
 
-
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
 class GBTrackData {
   GBTrackData({
@@ -75,7 +74,6 @@ class GBTrackData {
   final GBExperiment experiment;
 
   final GBExperimentResult experimentResult;
-
 }
 
 class AssignedExperiment {

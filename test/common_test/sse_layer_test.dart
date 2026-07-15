@@ -95,7 +95,8 @@ void main() {
         ['id: 42', 'event: features', 'data: {"key":"val"}'],
       ]);
       final result = await input.transform(const SseEventParser()).toList();
-      expect(result.single, const SseEvent(id: '42', name: 'features', data: '{"key":"val"}'));
+      expect(result.single,
+          const SseEvent(id: '42', name: 'features', data: '{"key":"val"}'));
     });
 
     test('line without colon is stored with empty value', () async {
@@ -141,19 +142,23 @@ void main() {
       final input = Stream.fromIterable([
         'id: 1\nevent: features\ndata: {"status":200}\n\n',
       ]);
-      final result = await input.transform(const SseEventTransformer()).toList();
-      expect(result.single, const SseEvent(
-        id: '1',
-        name: 'features',
-        data: '{"status":200}',
-      ));
+      final result =
+          await input.transform(const SseEventTransformer()).toList();
+      expect(
+          result.single,
+          const SseEvent(
+            id: '1',
+            name: 'features',
+            data: '{"status":200}',
+          ));
     });
 
     test('parses multiple events from a single stream', () async {
       final input = Stream.fromIterable([
         'event: ping\ndata: 1\n\nevent: ping\ndata: 2\n\n',
       ]);
-      final result = await input.transform(const SseEventTransformer()).toList();
+      final result =
+          await input.transform(const SseEventTransformer()).toList();
       expect(result.length, 2);
       expect(result[0].name, 'ping');
       expect(result[1].data, '2');
@@ -161,7 +166,8 @@ void main() {
 
     test('handles empty data field', () async {
       final input = Stream.fromIterable(['event: heartbeat\ndata:\n\n']);
-      final result = await input.transform(const SseEventTransformer()).toList();
+      final result =
+          await input.transform(const SseEventTransformer()).toList();
       expect(result.single.name, 'heartbeat');
       expect(result.single.data, '');
     });
