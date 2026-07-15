@@ -1,7 +1,7 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class CachingLayer {
@@ -54,9 +54,9 @@ class CachingManager extends CachingLayer {
       // Atomic rename — replaces target file safely
       tempFile.renameSync(targetPath);
 
-      log('Content saved successfully to: $fileName');
+      logger.i('Content saved successfully to: $fileName');
     } catch (e) {
-      log('Failed to save content: $e');
+      logger.e('Failed to save content: $e');
       // Clean up temp file if it exists
       try {
         if (tempFile.existsSync()) {
@@ -74,7 +74,7 @@ class CachingManager extends CachingLayer {
       try {
         fileManager.createSync(recursive: true);
       } catch (e) {
-        log('Failed to create directory: $e');
+        logger.e('Failed to create directory: $e');
       }
     }
     String file = fileName.replaceAll('.txt', '');
@@ -102,7 +102,7 @@ class CachingManager extends CachingLayer {
         return await file.readAsBytes();
       }
     } catch (e) {
-      log('Failed to get content: $e');
+      logger.e('Failed to get content: $e');
     }
     return null;
   }
@@ -119,10 +119,10 @@ class CachingManager extends CachingLayer {
       final file = File(filePath);
       if (await file.exists()) {
         await file.delete();
-        log('Cache file removed: $fileName');
+        logger.i('Cache file removed: $fileName');
       }
     } catch (e) {
-      log('Failed to remove content: $e');
+      logger.e('Failed to remove content: $e');
     }
   }
 
@@ -143,10 +143,10 @@ class CachingManager extends CachingLayer {
       try {
         fileManager.deleteSync(recursive: true);
       } catch (e) {
-        log('Failed to clear cache: $e');
+        logger.e('Failed to clear cache: $e');
       }
     } else {
-      log('Cache directory does not exist. Nothing to clear.');
+      logger.w('Cache directory does not exist. Nothing to clear.');
     }
   }
 }
