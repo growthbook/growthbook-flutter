@@ -10,3 +10,4 @@ export 'src/Network/network.dart';
 export 'src/Utils/utils.dart';
 export 'src/growth_book_sdk.dart';
 export 'src/Model/sticky_assignments_document.dart';
+export 'src/Utils/gb_log_level.dart' show GBLogLevel;

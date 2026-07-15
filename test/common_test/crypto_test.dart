@@ -17,8 +17,10 @@ void main() {
       final Uint8List ivBase64 = base64.decode(ivString);
       final Uint8List stringForEncryptBase64 = utf8.encode(stringForEncrypt);
 
-      final Uint8List encryptText = crypto.encrypt(keyBase64, ivBase64, stringForEncryptBase64);
-      final Uint8List decryptText = crypto.decrypt(keyBase64, ivBase64, encryptText);
+      final Uint8List encryptText =
+          crypto.encrypt(keyBase64, ivBase64, stringForEncryptBase64);
+      final Uint8List decryptText =
+          crypto.decrypt(keyBase64, ivBase64, encryptText);
 
       final decryptedString = utf8.decode(decryptText);
       expect(stringForEncrypt, decryptedString);
