@@ -37,7 +37,8 @@ void main() {
       });
 
       test('replaces previous attributes entirely', () async {
-        final sdk = await buildSdk(attributes: {'id': 'user-1', 'plan': 'free'});
+        final sdk =
+            await buildSdk(attributes: {'id': 'user-1', 'plan': 'free'});
         sdk.setAttributes({'id': 'user-2'});
         expect(sdk.context.attributes?.containsKey('plan'), isFalse);
       });

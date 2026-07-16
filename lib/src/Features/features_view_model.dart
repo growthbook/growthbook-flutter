@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -9,6 +8,7 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 import 'gb_features_converter.dart';
 
@@ -51,7 +51,7 @@ class FeatureViewModel {
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
     // If there's already an ongoing request — wait for it to complete
     if (_ongoingFetch != null) {
-      log('Fetch already in progress, waiting for completion.');
+      logger.d('Fetch already in progress, waiting for completion.');
       return _ongoingFetch!.future;
     }
 
@@ -78,9 +78,8 @@ class FeatureViewModel {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
-        final featureMap = receivedData != null
-            ? _fetchCachedFeatures(receivedData)
-            : null;
+        final featureMap =
+            receivedData != null ? _fetchCachedFeatures(receivedData) : null;
 
         if (featureMap != null) {
           delegate.featuresFetchedSuccessfully(
@@ -108,7 +107,7 @@ class FeatureViewModel {
   }
 
   Future<void> _fetchFromNetwork() async {
-    // null = no callback invoked (304 Not Modified), true = success, false = error  
+    // null = no callback invoked (304 Not Modified), true = success, false = error
     bool? success;
     try {
       await source.fetchFeatures(
@@ -126,7 +125,7 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid) 
+    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
     }
@@ -143,7 +142,7 @@ class FeatureViewModel {
         },
         onError: (e, s) {
           success = false;
-          log('Remote Eval Error: $e');
+          logger.e('Remote Eval Error: $e');
           delegate.featuresFetchFailed(
             error: GBError(error: e, stackTrace: s.toString()),
             isRemote: true,
@@ -181,7 +180,7 @@ class FeatureViewModel {
         return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
       }
     } catch (e, s) {
-      log('Failed to parse cached features, clearing corrupt cache: $e');
+      logger.e('Failed to parse cached features, clearing corrupt cache: $e');
       manager.removeContent(fileName: Constant.featureCache);
       handleException(e, s);
       return null;
@@ -192,7 +191,7 @@ class FeatureViewModel {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
-        log("JSON is null.");
+        logger.w('JSON is null.');
         return false;
       } else {
         return handleValidFeatures(data);
@@ -237,11 +236,13 @@ class FeatureViewModel {
       var isHandleEncryptedSavedGroups = true;
 
       if (data.encryptedFeatures != null) {
-        isHandleEncryptedFeatures = handleEncryptedFeatures(data.encryptedFeatures!);
+        isHandleEncryptedFeatures =
+            handleEncryptedFeatures(data.encryptedFeatures!);
       }
 
       if (data.encryptedSavedGroups != null) {
-        isHandleEncryptedSavedGroups = handleEncryptedSavedGroups(data.encryptedSavedGroups!);
+        isHandleEncryptedSavedGroups =
+            handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
       return isHandleEncryptedFeatures && isHandleEncryptedSavedGroups;
     }
@@ -336,7 +337,7 @@ class FeatureViewModel {
   }
 
   void logError(String message) {
-    log("Failed to parse data. $message");
+    logger.e('Failed to parse data. $message');
   }
 
   void cacheFeatures(FeaturedDataModel data) {
