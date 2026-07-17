@@ -11,6 +11,57 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [5.0.0](https://github.com/growthbook/growthbook-flutter/compare/v4.3.0...v5.0.0) (2026-07-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* include .g.dart files in published packages
+
+### Features
+
+* add case-insensitive condition operators ([#163](https://github.com/growthbook/growthbook-flutter/issues/163)) ([01ed23d](https://github.com/growthbook/growthbook-flutter/commit/01ed23d346d34d3a24a81f0df0e0df8694528d32))
+* add configurable logger with log level support ([#161](https://github.com/growthbook/growthbook-flutter/issues/161)) ([ee0d723](https://github.com/growthbook/growthbook-flutter/commit/ee0d72383146677e9ec851f8577913f550295552))
+* add customFields property to GBExperiment ([#150](https://github.com/growthbook/growthbook-flutter/issues/150)) ([8a9baeb](https://github.com/growthbook/growthbook-flutter/commit/8a9baebe70594e80631b12cd334da9f34a2c103a))
+* adjust dependencies for alpha release compatible with Flutter 3… ([1b084c9](https://github.com/growthbook/growthbook-flutter/commit/1b084c9c0c11d5ab2176433b7fa8c29a94dde6b9))
+* adjust dependencies for alpha release compatible with Flutter 3.22.3 ([d97777d](https://github.com/growthbook/growthbook-flutter/commit/d97777dd5fc23154749ca4ef08ba0fd1f47737ac))
+* Implement ETag caching ([#132](https://github.com/growthbook/growthbook-flutter/issues/132)) ([0c86fb5](https://github.com/growthbook/growthbook-flutter/commit/0c86fb5ed93d14a638ae5c997c931e3dcdae5881))
+
+
+### Bug Fixes
+
+* add setup, build_runner to publish workflow ([963503c](https://github.com/growthbook/growthbook-flutter/commit/963503c4a93c7f5d752a469891f67ba950c84fcf))
+* analyzer issues ([226ee7f](https://github.com/growthbook/growthbook-flutter/commit/226ee7f55b9fde8a8a24927e7f3b944197a96710))
+* bug fixes ([b0fe046](https://github.com/growthbook/growthbook-flutter/commit/b0fe046aa6ccb9eebc84988335839c28c02c2ef8))
+* bug fixes for eval & sticky bucketing ([d85d4dd](https://github.com/growthbook/growthbook-flutter/commit/d85d4dd4f629510a5ae89c396753dd967fa924d3))
+* **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd2a6207f5f6b06df0995a242f567eea9b8))
+* detached HEAD ([f8264d9](https://github.com/growthbook/growthbook-flutter/commit/f8264d97ef771d15777f94beb8828484b820e9ff))
+* **encryption:** handle encrypted features in network fetch ([8555361](https://github.com/growthbook/growthbook-flutter/commit/855536142aacee39de2bf61f525464aac99489e6))
+* **encryption:** handle encrypted features in network fetch ([9912837](https://github.com/growthbook/growthbook-flutter/commit/9912837c258949e88406e29459ce4263485b897d))
+* equal to condition for string evaluation ([f1ddec9](https://github.com/growthbook/growthbook-flutter/commit/f1ddec9560698df0cc27887ad7071c525cbf36bb))
+* evalConditionValue ([a9bd601](https://github.com/growthbook/growthbook-flutter/commit/a9bd6017dba0f464b948f56202145179c09d8e01))
+* **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
+* **feature_viewmodel:** implement single-flight for feature fetch ([721b2c4](https://github.com/growthbook/growthbook-flutter/commit/721b2c42e4a46a5bdeabbcc0f40005621f320a10))
+* fix URL construction in GBContext to handle trailing slashes ([#147](https://github.com/growthbook/growthbook-flutter/issues/147)) ([24f9d4f](https://github.com/growthbook/growthbook-flutter/commit/24f9d4fc14f07c44bb2d0bebcba568b433a95648))
+* Fixed Bucketing Regression - Merge pull request [#134](https://github.com/growthbook/growthbook-flutter/issues/134) from growthbook/fix/forced-v1-check ([dc7bf03](https://github.com/growthbook/growthbook-flutter/commit/dc7bf03a27e665fd74af9cb1a7d9557906bee479))
+* growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
+* guard _fetchCachedFeatures against empty/corrupt cache data ([#145](https://github.com/growthbook/growthbook-flutter/issues/145)) ([8adb57e](https://github.com/growthbook/growthbook-flutter/commit/8adb57e0fbd050231b169545173eaeb2f5ab8ceb))
+* Handle HTTP 304 (Not Modified) as success instead of error      ([#143](https://github.com/growthbook/growthbook-flutter/issues/143)) ([585beb7](https://github.com/growthbook/growthbook-flutter/commit/585beb7c2babc95ed70c0fbcf1640fc301b6017d))
+* include .g.dart files in published packages ([f2f64fe](https://github.com/growthbook/growthbook-flutter/commit/f2f64fea1c22c427639bb94580c5f72702a1ace3))
+* include .g.dart files in published packages ([f2f64fe](https://github.com/growthbook/growthbook-flutter/commit/f2f64fea1c22c427639bb94580c5f72702a1ace3))
+* include .g.dart files in published packages ([ef12356](https://github.com/growthbook/growthbook-flutter/commit/ef12356baf41a8da3f9f59abafe02ca4ea67ca7c))
+* make publish dry-run non-blocking in release workflow ([#160](https://github.com/growthbook/growthbook-flutter/issues/160)) ([30f4a59](https://github.com/growthbook/growthbook-flutter/commit/30f4a5924e76cd0d0740edb87bca8e4fc603d381))
+* release template  ([33af84a](https://github.com/growthbook/growthbook-flutter/commit/33af84a6f35a98a9fb85a96ce10b9c2e085b8147))
+* resolve dart analyzer warnings in test files ([c5b0486](https://github.com/growthbook/growthbook-flutter/commit/c5b04861385222bab52c634837677788afdf267e))
+* string base comparison ([36771ef](https://github.com/growthbook/growthbook-flutter/commit/36771ef3f38751e12ec412b610f18bafa11d94ee))
+* string comparision ([cfcb68e](https://github.com/growthbook/growthbook-flutter/commit/cfcb68eb180729d5a439feebe829cbdd873cc000))
+* string evaluation ([aa027b1](https://github.com/growthbook/growthbook-flutter/commit/aa027b15af332acc6d7b236b1ddb1e4d4f979a4a))
+* type conversions ([4324001](https://github.com/growthbook/growthbook-flutter/commit/4324001ad1d1cbf3839eec05cc50ae9d33f3bf88))
+* update dart SDK constraint to &gt;=3.3.0 ([00973d7](https://github.com/growthbook/growthbook-flutter/commit/00973d7d473a1a675e2adc4362ff3b6e71b3ea59))
+* update Flutter version to 3.24.0 ([c34afb5](https://github.com/growthbook/growthbook-flutter/commit/c34afb5698b3c651ff84b32a4426393a4e60f8bf))
+* update Flutter version to 3.27.0 and upgrade build_runner to ^2.4.14 ([cfcc146](https://github.com/growthbook/growthbook-flutter/commit/cfcc146d616359a0bcb67ec393d9b188c8ffdbed))
+* use Uri class for URL construction in GBContext ([#139](https://github.com/growthbook/growthbook-flutter/issues/139)) ([c736f7c](https://github.com/growthbook/growthbook-flutter/commit/c736f7c3ae4482b317f43bb92ed77d206bca0fa0))
+
 ## [4.1.1](https://github.com/growthbook/growthbook-flutter/compare/v4.1.0...v4.1.1) (2025-11-21)
 
 
