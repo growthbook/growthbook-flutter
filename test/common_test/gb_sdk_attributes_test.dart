@@ -161,5 +161,64 @@ void main() {
         expect(() => sdk.setForcedFeatures([]), returnsNormally);
       });
     });
+
+    // -------------------------------------------------------------------------
+    // Sticky bucket refresh triggered by setForcedVariations and
+    // setEncryptedFeatures (regression for Trello "Checking sticky bucket issue")
+    // -------------------------------------------------------------------------
+    group('sticky bucket refresh on additional setters', () {
+      Future<GrowthBookSDK> buildSdkWithStickyBucket(
+          _TrackingStickyBucketService svc) async {
+        final builder = GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: {'id': 'user-1'},
+          client: client,
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        )..setStickyBucketService(svc);
+        return builder.initialize();
+      }
+
+      test('setForcedVariations triggers sticky bucket refresh', () async {
+        final svc = _TrackingStickyBucketService();
+        final sdk = await buildSdkWithStickyBucket(svc);
+
+        final beforeCalls = svc.getAllAssignmentsCalls;
+        sdk.setForcedVariations({'exp-1': 1});
+        // Give the fire-and-forget refresh a chance to run.
+        await Future<void>.delayed(Duration.zero);
+
+        expect(svc.getAllAssignmentsCalls, greaterThan(beforeCalls));
+      });
+
+      test('setEncryptedFeatures triggers sticky bucket refresh', () async {
+        final svc = _TrackingStickyBucketService();
+        final sdk = await buildSdkWithStickyBucket(svc);
+
+        // Known good encrypted-features payload + key (reused from
+        // features_view_model_extra_test.dart).
+        const encryptedFeatures =
+            'vMSg2Bj/IurObDsWVmvkUg==.L6qtQkIzKDoE2Dix6IAKDcVel8PHUnzJ7JjmLjFZFQDqidRIoCxKmvxvUj2kTuHFTQ3/NJ3D6XhxhXXv2+dsXpw5woQf0eAgqrcxHrbtFORs18tRXRZza7zqgzwvcznx';
+        const encryptionKey = 'Ns04T5n9+59rl2x3SlNHtQ==';
+
+        final beforeCalls = svc.getAllAssignmentsCalls;
+        sdk.setEncryptedFeatures(encryptedFeatures, encryptionKey);
+        await Future<void>.delayed(Duration.zero);
+
+        expect(svc.getAllAssignmentsCalls, greaterThan(beforeCalls));
+      });
+    });
   });
+}
+
+class _TrackingStickyBucketService extends InMemoryStickyBucketService {
+  int getAllAssignmentsCalls = 0;
+
+  @override
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) {
+    getAllAssignmentsCalls++;
+    return super.getAllAssignments(attributes);
+  }
 }
