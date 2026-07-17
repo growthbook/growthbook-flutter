@@ -49,7 +49,7 @@ void main() {
           () async {
             await client.listenAndRetry(
               url: 'http://test.local/sse',
-              onSuccess: successCalls.add,
+              onSuccess: (data) async => successCalls.add(data),
               onError: (_, __) {},
             );
             await pumpEventQueue();
@@ -77,7 +77,7 @@ void main() {
           () async {
             await client.listenAndRetry(
               url: 'http://test.local/sse',
-              onSuccess: successCalls.add,
+              onSuccess: (data) async => successCalls.add(data),
               onError: (_, __) {},
             );
             await pumpEventQueue();
@@ -105,7 +105,7 @@ void main() {
           () async {
             await client.listenAndRetry(
               url: 'http://test.local/sse',
-              onSuccess: successCalls.add,
+              onSuccess: (data) async => successCalls.add(data),
               onError: (e, _) => errors.add(e),
             );
             await pumpEventQueue();
@@ -135,7 +135,7 @@ void main() {
           () async {
             await client.listenAndRetry(
               url: 'http://test.local/sse',
-              onSuccess: successCalls.add,
+              onSuccess: (data) async => successCalls.add(data),
               onError: (e, _) => errors.add(e),
             );
             await pumpEventQueue();
@@ -165,7 +165,7 @@ void main() {
           () async {
             await client.listenAndRetry(
               url: 'http://test.local/sse',
-              onSuccess: successCalls.add,
+              onSuccess: (data) async => successCalls.add(data),
               onError: (_, __) {},
             );
             await pumpEventQueue();

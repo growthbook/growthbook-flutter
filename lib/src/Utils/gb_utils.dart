@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
+import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
@@ -404,28 +405,9 @@ class GBUtils {
       attributes: context.userContext.attributes!,
     );
 
-    String? fallbackKey;
-
-    if (fallbackAttributeAndValue[1].isEmpty) {
-      fallbackKey = null;
-    } else {
-      "${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}";
-    }
-
-    String? leftOperand = context
-        .userContext
-        .stickyBucketAssignmentDocs?[
-            "$expFallBackAttribute||${context.userContext.attributes![expFallBackAttribute]}"]
-        ?.attributeValue;
-
-    if (leftOperand != context.userContext.attributes?[expFallBackAttribute]) {
-      context.userContext.stickyBucketAssignmentDocs = {};
-    }
-
-    // Add assignments from stickyBucketAssignmentDocs
-    context.userContext.stickyBucketAssignmentDocs?.forEach((key, doc) {
-      assignments.addAll(doc.assignments);
-    });
+    String? fallbackKey = fallbackAttributeAndValue[1].isEmpty
+        ? null
+        : '${fallbackAttributeAndValue[0]}||${fallbackAttributeAndValue[1]}';
 
     // Add assignments from fallbackKey if not null
     if (fallbackKey != null &&
@@ -446,13 +428,18 @@ class GBUtils {
   static Future<void> refreshStickyBuckets(
     GBContext context,
     FeaturedDataModel? data,
-    Map<String, dynamic> attributes,
-  ) async {
-    if (context.stickyBucketService == null) {
-      return;
-    }
+    Map<String, dynamic> userAttributes,
+    Map<String, dynamic> attributeOverrides, {
+    List<GBExperiment>? experiments,
+  }) async {
     if (context.stickyBucketService == null) return;
-    var allAttributes = getStickyBucketAttributes(context, data, attributes);
+    var allAttributes = getStickyBucketAttributes(
+      context,
+      data,
+      userAttributes,
+      attributeOverrides,
+      experiments: experiments,
+    );
     context.stickyBucketAssignmentDocs =
         await context.stickyBucketService?.getAllAssignments(allAttributes);
   }
@@ -460,21 +447,39 @@ class GBUtils {
   static Map<String, String> getStickyBucketAttributes(
     GBContext context,
     FeaturedDataModel? data,
-    Map<String, dynamic> attributeOverrides,
-  ) {
+    Map<String, dynamic> userAttributes,
+    Map<String, dynamic> attributeOverrides, {
+    List<GBExperiment>? experiments,
+  }) {
     var attributes = <String, String>{};
-    context.stickyBucketIdentifierAttributes = context
-            .stickyBucketIdentifierAttributes ??
-        deriveStickyBucketIdentifierAttributes(context: context, data: data);
+    // Re-derive when fresh feature data arrives so new hash/fallback attributes
+    // are picked up. When data is null (e.g. setAttributes call), preserve any
+    // explicitly configured or previously cached identifiers and only derive
+    // if none are present.
+    if (data != null) {
+      context.stickyBucketIdentifierAttributes =
+          deriveStickyBucketIdentifierAttributes(
+        context: context,
+        data: data,
+        experiments: experiments,
+      );
+    } else {
+      context.stickyBucketIdentifierAttributes ??=
+          deriveStickyBucketIdentifierAttributes(
+        context: context,
+        data: data,
+        experiments: experiments,
+      );
+    }
+    final identifierAttributes = context.stickyBucketIdentifierAttributes!;
 
-    if (context.stickyBucketIdentifierAttributes != null) {
-      for (var attr in context.stickyBucketIdentifierAttributes!) {
-        var hashValue = GBUtils.getHashAttribute(
-            attributes: attributes,
-            attr: attr,
-            attributeOverrides: attributeOverrides);
-        attributes[attr] = hashValue[1];
-      }
+    for (var attr in identifierAttributes) {
+      var hashValue = GBUtils.getHashAttribute(
+        attributes: userAttributes,
+        attr: attr,
+        attributeOverrides: attributeOverrides,
+      );
+      attributes[attr] = hashValue[1];
     }
     return attributes;
   }
@@ -482,22 +487,34 @@ class GBUtils {
   static List<String> deriveStickyBucketIdentifierAttributes({
     required GBContext context,
     required FeaturedDataModel? data,
+    List<GBExperiment>? experiments,
   }) {
     var attributes = <String>{};
+
+    // Scan features
     var features = data?.features ?? context.features;
     for (var id in features.keys) {
       var feature = features[id];
       var rules = feature?.rules;
       rules?.forEach((rule) {
-        var variations = rule.variations;
-        variations?.forEach((variation) {
+        if (rule.variations != null) {
           attributes.add(rule.hashAttribute ?? "id");
           if (rule.fallbackAttribute != null) {
             attributes.add(rule.fallbackAttribute!);
           }
-        });
+        }
       });
     }
+
+    // Also scan experiments — sticky bucket identifiers must be known before
+    // experiments run, not only when features reference them.
+    for (var experiment in experiments ?? <GBExperiment>[]) {
+      attributes.add(experiment.hashAttribute ?? "id");
+      if (experiment.fallbackAttribute != null) {
+        attributes.add(experiment.fallbackAttribute!);
+      }
+    }
+
     return attributes.toList();
   }
 

@@ -1,15 +1,17 @@
+import 'dart:async';
+
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
-typedef FeatureFetchSuccessCallBack = void Function(
+typedef FeatureFetchSuccessCallBack = Future<void> Function(
   FeaturedDataModel featuredDataModel,
 );
 
 abstract class FeaturesFlowDelegate {
   void featuresFetchedSuccessfully(
       {required GBFeatures gbFeatures, required bool isRemote});
-  void featuresAPIModelSuccessfully(FeaturedDataModel model);
+  FutureOr<void> featuresAPIModelSuccessfully(FeaturedDataModel model);
   void featuresFetchFailed({required GBError? error, required bool isRemote});
   void savedGroupsFetchedSuccessfully(
       {required SavedGroupsValues savedGroups, required bool isRemote});
@@ -36,7 +38,7 @@ class FeatureDataSource {
             _getEndpoint(
                 context: context,
                 featureRefreshStrategy: featureRefreshStrategy),
-            (response) => onSuccess(
+            (response) async => onSuccess(
               FeaturedDataModel.fromJson(response),
             ),
             onError,
@@ -45,7 +47,7 @@ class FeatureDataSource {
             _getEndpoint(
                 context: context,
                 featureRefreshStrategy: featureRefreshStrategy),
-            (response) => onSuccess(
+            (response) async => onSuccess(
               FeaturedDataModel.fromJson(response),
             ),
             onError,
@@ -67,7 +69,7 @@ class FeatureDataSource {
     await client.consumePostRequest(
       apiUrl,
       remoteEvalJson,
-      (response) => onSuccess(
+      (response) async => onSuccess(
         FeaturedDataModel.fromJson(response),
       ),
       onError,
