@@ -67,10 +67,22 @@ class DioClient extends BaseClient {
           (sseModel) async {
             log('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
-              lastKnownId = sseModel.id;
-              String jsonData = sseModel.data ?? "";
-              Map<String, dynamic> jsonMap = jsonDecode(jsonData);
-              await onSuccess(jsonMap);
+              final data = sseModel.data;
+              if (data == null || data.isEmpty) return;
+              try {
+                final decoded = jsonDecode(data);
+                if (decoded is! Map<String, dynamic>) {
+                  onError(
+                    FormatException('SSE payload is not a JSON object', data),
+                    StackTrace.current,
+                  );
+                  return;
+                }
+                lastKnownId = sseModel.id;
+                await onSuccess(decoded);
+              } catch (e, s) {
+                onError(e, s);
+              }
             }
           },
           onError: (dynamic e, dynamic s) async {
