@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
@@ -8,7 +9,6 @@ import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 import 'gb_features_converter.dart';
 
@@ -37,8 +37,8 @@ class FeatureViewModel {
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-      (data) {
-        prepareFeaturesData(data);
+      (data) async {
+        await prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
@@ -51,7 +51,7 @@ class FeatureViewModel {
       {bool remoteEval = false, RemoteEvalModel? payload}) async {
     // If there's already an ongoing request — wait for it to complete
     if (_ongoingFetch != null) {
-      logger.d('Fetch already in progress, waiting for completion.');
+      log('Fetch already in progress, waiting for completion.');
       return _ongoingFetch!.future;
     }
 
@@ -111,8 +111,8 @@ class FeatureViewModel {
     bool? success;
     try {
       await source.fetchFeatures(
-        (data) {
-          success = _handleSuccess(data);
+        (data) async {
+          success = await _handleSuccess(data);
         },
         (e, s) {
           success = false;
@@ -142,12 +142,12 @@ class FeatureViewModel {
       await source.fetchRemoteEval(
         apiUrl: apiUrl,
         params: payload,
-        onSuccess: (data) {
-          success = prepareFeaturesData(data);
+        onSuccess: (data) async {
+          success = await prepareFeaturesData(data);
         },
         onError: (e, s) {
           success = false;
-          logger.e('Remote Eval Error: $e');
+          log('Remote Eval Error: $e');
           delegate.featuresFetchFailed(
             error: GBError(error: e, stackTrace: s.toString()),
             isRemote: true,
@@ -162,10 +162,10 @@ class FeatureViewModel {
     }
   }
 
-  bool _handleSuccess(FeaturedDataModel data) {
+  Future<bool> _handleSuccess(FeaturedDataModel data) async {
     // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
     // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
-    return prepareFeaturesData(data);
+    return await prepareFeaturesData(data);
   }
 
   Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
@@ -185,21 +185,21 @@ class FeatureViewModel {
         return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
       }
     } catch (e, s) {
-      logger.e('Failed to parse cached features, clearing corrupt cache: $e');
+      log('Failed to parse cached features, clearing corrupt cache: $e');
       manager.removeContent(fileName: Constant.featureCache);
       handleException(e, s);
       return null;
     }
   }
 
-  bool prepareFeaturesData(FeaturedDataModel data) {
+  Future<bool> prepareFeaturesData(FeaturedDataModel data) async {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
-        logger.w('JSON is null.');
+        log("JSON is null.");
         return false;
       } else {
-        return handleValidFeatures(data);
+        return await handleValidFeatures(data);
       }
     } catch (e, s) {
       handleException(e, s);
@@ -207,10 +207,10 @@ class FeatureViewModel {
     }
   }
 
-  bool handleValidFeatures(FeaturedDataModel data) {
+  Future<bool> handleValidFeatures(FeaturedDataModel data) async {
     if (data.features != null && data.encryptedFeatures == null) {
       // Handle non-encrypted features
-      delegate.featuresAPIModelSuccessfully(data);
+      await delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(
         gbFeatures: data.features!,
         isRemote: true,
@@ -342,7 +342,7 @@ class FeatureViewModel {
   }
 
   void logError(String message) {
-    logger.e('Failed to parse data. $message');
+    log("Failed to parse data. $message");
   }
 
   void cacheFeatures(FeaturedDataModel data) {
