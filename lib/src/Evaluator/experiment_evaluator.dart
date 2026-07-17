@@ -40,18 +40,52 @@ class ExperimentEvaluator {
       // Retrieve the forced variation for the experiment key
       if (context.userContext.forcedVariationsMap != null &&
           context.userContext.forcedVariationsMap?[experiment.key] != null) {
-        int forcedVariationIndex = int.parse(context
-            .userContext.forcedVariationsMap![experiment.key]
-            .toString());
-
-        // Return the experiment result using the forced variation index and indicating that no hash was used
-        return _getExperimentResult(
-          featureId: featureId,
-          context: context,
-          experiment: experiment,
-          variationIndex: forcedVariationIndex,
-          hashUsed: false,
-        );
+        final rawValue =
+            context.userContext.forcedVariationsMap![experiment.key];
+        int? forcedVariationIndex;
+        if (rawValue is int) {
+          forcedVariationIndex = rawValue;
+        } else if (rawValue is double) {
+          if (rawValue.isFinite && rawValue == rawValue.truncateToDouble()) {
+            forcedVariationIndex = rawValue.toInt();
+          } else {
+            logger.d(
+                'Skip forcedVariation: fractional or non-finite double value $rawValue');
+          }
+        } else if (rawValue is String) {
+          final asInt = int.tryParse(rawValue);
+          if (asInt != null) {
+            forcedVariationIndex = asInt;
+          } else {
+            final asDouble = double.tryParse(rawValue);
+            if (asDouble != null &&
+                asDouble.isFinite &&
+                asDouble == asDouble.truncateToDouble()) {
+              forcedVariationIndex = asDouble.toInt();
+            } else {
+              logger.d(
+                  'Skip forcedVariation: non-integer string value "$rawValue"');
+            }
+          }
+        } else {
+          logger.d(
+              'Skip forcedVariation: unsupported value type ${rawValue.runtimeType}');
+        }
+        if (forcedVariationIndex != null) {
+          if (forcedVariationIndex < 0 ||
+              forcedVariationIndex >= experiment.variations.length) {
+            logger.d(
+                'Skip forcedVariation: index $forcedVariationIndex out of bounds (variations: ${experiment.variations.length})');
+          } else {
+            return _getExperimentResult(
+              featureId: featureId,
+              context: context,
+              experiment: experiment,
+              variationIndex: forcedVariationIndex,
+              hashUsed: false,
+            );
+          }
+        }
       }
     }
 
