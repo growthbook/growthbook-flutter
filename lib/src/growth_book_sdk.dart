@@ -179,6 +179,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   @override
+  void featuresNotModified() {
+    if (_refreshHandler != null) {
+      _refreshHandler!(true);
+    }
+  }
+
+  @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {

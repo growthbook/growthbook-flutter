@@ -13,6 +13,7 @@ abstract class FeaturesFlowDelegate {
       {required GBFeatures gbFeatures, required bool isRemote});
   FutureOr<void> featuresAPIModelSuccessfully(FeaturedDataModel model);
   void featuresFetchFailed({required GBError? error, required bool isRemote});
+  void featuresNotModified();
   void savedGroupsFetchedSuccessfully(
       {required SavedGroupsValues savedGroups, required bool isRemote});
   void savedGroupsFetchFailed(
