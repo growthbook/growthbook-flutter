@@ -9,7 +9,6 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.da
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers

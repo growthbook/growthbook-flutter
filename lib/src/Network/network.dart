@@ -1,11 +1,11 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
-import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
-typedef OnSuccess = void Function(Map<String, dynamic> onSuccess);
+typedef OnSuccess = Future<void> Function(Map<String, dynamic> onSuccess);
 typedef OnError = void Function(Object error, StackTrace stackTrace);
 
 abstract class BaseClient {
@@ -49,7 +49,7 @@ class DioClient extends BaseClient {
     required OnError onError,
   }) async {
     try {
-      logger.d('Establishing SSE connection to: $url');
+      log('Establishing SSE connection to: $url');
       final resp = await _dio.get(
         url,
         options: Options(responseType: ResponseType.stream),
@@ -64,22 +64,34 @@ class DioClient extends BaseClient {
             .transform(const Utf8Decoder())
             .transform(const SseEventTransformer())
             .listen(
-          (sseModel) {
-            logger.d('SSE event received: ${sseModel.name}');
+          (sseModel) async {
+            log('SSE event received: ${sseModel.name}');
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
-              lastKnownId = sseModel.id;
-              String jsonData = sseModel.data ?? "";
-              Map<String, dynamic> jsonMap = jsonDecode(jsonData);
-              onSuccess(jsonMap);
+              final data = sseModel.data;
+              if (data == null || data.isEmpty) return;
+              try {
+                final decoded = jsonDecode(data);
+                if (decoded is! Map<String, dynamic>) {
+                  onError(
+                    FormatException('SSE payload is not a JSON object', data),
+                    StackTrace.current,
+                  );
+                  return;
+                }
+                lastKnownId = sseModel.id;
+                await onSuccess(decoded);
+              } catch (e, s) {
+                onError(e, s);
+              }
             }
           },
           onError: (dynamic e, dynamic s) async {
             onError(e, s);
           },
           onDone: () async {
-            logger.i('SSE connection closed with status: $statusCode');
+            log('SSE connection closed with status: $statusCode');
             if (statusCode != null && shouldReconnect(statusCode)) {
-              logger.i('Attempting to reconnect SSE...');
+              log('Attempting to reconnect SSE...');
               await listenAndRetry(
                 url: url,
                 onError: onError,
@@ -90,7 +102,7 @@ class DioClient extends BaseClient {
         );
       }
     } catch (error) {
-      logger.e('SSE connection error: $error');
+      log('SSE connection error: $error');
       onError(error, StackTrace.current);
     }
   }
@@ -132,15 +144,15 @@ class DioClient extends BaseClient {
       }
 
       if (response.statusCode == 304) {
-        logger.d('304 Not Modified — using cached data');
+        log('304 Not Modified — using cached data');
         return;
       }
 
       if (response.data is Map<String, dynamic>) {
-        onSuccess(response.data);
+        await onSuccess(response.data);
       } else if (response.data is String) {
         try {
-          onSuccess(jsonDecode(response.data));
+          await onSuccess(jsonDecode(response.data));
         } catch (e) {
           onError(e, StackTrace.current);
         }
@@ -148,10 +160,10 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      logger.e('DioException: $e');
+      log('DioException: $e');
       onError(e, s);
     } catch (e, s) {
-      logger.e('Unexpected error: $e');
+      log('Unexpected error: $e');
       onError(e, s);
     }
   }
@@ -187,7 +199,7 @@ class DioClient extends BaseClient {
           },
         ),
       );
-      onSuccess(response.data);
+      await onSuccess(response.data);
     } catch (e, s) {
       onError(e, s);
     }

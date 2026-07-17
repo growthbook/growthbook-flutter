@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -157,6 +158,58 @@ void main() {
           // 304 means "cache is still valid" -- not an error
           expect(dataSourceMock.isError, false);
           expect(dataSourceMock.isSuccess, false);
+        },
+      );
+
+      test(
+        '304 Not Modified without cache should NOT call featuresNotModified()',
+        () async {
+          await CachingManager().clearCache();
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: testApiKey,
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+            ttlSeconds: 60,
+          );
+
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          // 304 with no existing cache is meaningless — must not signal success
+          expect(dataSourceMock.isNotModified, false);
+          expect(dataSourceMock.isError, false);
+          expect(dataSourceMock.isSuccess, false);
+        },
+      );
+
+      test(
+        '304 Not Modified with existing cache should call featuresNotModified()',
+        () async {
+          // Pre-populate cache with valid feature data
+          final cacheData = utf8.encode(MockResponse.successResponse);
+          CachingManager().putData(
+            fileName: Constant.featureCache,
+            content: Uint8List.fromList(cacheData),
+          );
+
+          featureViewModel = FeatureViewModel(
+            encryptionKey: '',
+            delegate: dataSourceMock,
+            source: FeatureDataSource(
+              client: const MockNetworkClient(notModified: true),
+              context: context,
+            ),
+          );
+
+          // _expiresAt starts as null → isCacheExpired() == true, so network is always triggered
+          await featureViewModel.fetchFeatures(context.getFeaturesURL());
+
+          // Cache was valid AND server confirmed 304 → featuresNotModified should fire
+          expect(dataSourceMock.isNotModified, true);
+          expect(dataSourceMock.isError, false);
         },
       );
 

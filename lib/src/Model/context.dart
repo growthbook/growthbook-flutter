@@ -1,7 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
-import '../StickyBucketService/sticky_bucket_service.dart';
-
 /// Defines the GrowthBook context.
 class GBContext {
   GBContext({
