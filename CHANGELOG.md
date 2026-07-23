@@ -11,6 +11,13 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [4.3.1](https://github.com/growthbook/growthbook-flutter/compare/v4.3.0...v4.3.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* correct sticky bucketing implementation ([#151](https://github.com/growthbook/growthbook-flutter/issues/151)) ([c6b37c4](https://github.com/growthbook/growthbook-flutter/commit/c6b37c47d54864c48d1861ba207ee0619ec74b78))
+
 ## [4.1.1](https://github.com/growthbook/growthbook-flutter/compare/v4.1.0...v4.1.1) (2025-11-21)
 
 
