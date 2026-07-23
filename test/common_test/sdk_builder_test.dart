@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
@@ -220,5 +222,63 @@ void main() {
 
       expect(countTrackingCallback, equals(1));
     });
+
+    test(
+      'setRefreshHandlerV2 receives GBError on remote refresh failure',
+      () async {
+        const testApiKey = '<API_KEY>';
+        const testHostURL = 'https://example.growthbook.io/';
+        const attr = <String, String>{'test': 'test'};
+
+        bool? capturedSuccess;
+        GBError? capturedError;
+
+        await GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: attr,
+          client: const MockNetworkClient(error: true),
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        ).setRefreshHandlerV2((success, error) {
+          capturedSuccess = success;
+          capturedError = error;
+        }).initialize();
+
+        expect(capturedSuccess, isFalse,
+            reason: 'V2 handler should be called with false on failure');
+        expect(capturedError, isNotNull,
+            reason:
+                'V2 handler should receive the GBError that caused the failure');
+      },
+    );
+
+    test(
+      'setRefreshHandlerV2 receives null error on successful refresh',
+      () async {
+        const testApiKey = '<API_KEY>';
+        const testHostURL = 'https://example.growthbook.io/';
+        const attr = <String, String>{'test': 'test'};
+
+        bool? capturedSuccess;
+        GBError? capturedError;
+
+        await GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: attr,
+          client: const MockNetworkClient(),
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        ).setRefreshHandlerV2((success, error) {
+          capturedSuccess = success;
+          capturedError = error;
+        }).initialize();
+
+        expect(capturedSuccess, isTrue);
+        expect(capturedError, isNull,
+            reason: 'V2 handler should receive null error on success');
+      },
+    );
   });
 }

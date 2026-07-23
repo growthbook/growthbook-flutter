@@ -47,7 +47,9 @@ class GBSDKBuilderApp {
   final String? url;
   final int ttlSeconds;
 
+  // ignore: deprecated_member_use_from_same_package
   CacheRefreshHandler? refreshHandler;
+  CacheRefreshHandlerV2? refreshHandlerV2;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
 
@@ -72,14 +74,28 @@ class GBSDKBuilderApp {
         client: client,
         onInitializationFailure: onInitializationFailure,
         refreshHandler: refreshHandler,
+        refreshHandlerV2: refreshHandlerV2,
         ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     return gb;
   }
 
+  /// Registers a legacy refresh handler that only receives a boolean.
+  ///
+  /// Prefer [setRefreshHandlerV2] which also receives the [GBError] that
+  /// caused a failure.
+  @Deprecated('Use setRefreshHandlerV2 for error-aware refresh callbacks')
+  // ignore: deprecated_member_use_from_same_package
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
+    return this;
+  }
+
+  /// Registers an error-aware refresh handler. Called with
+  /// `(true, null)` on successful refresh and `(false, error)` on failure.
+  GBSDKBuilderApp setRefreshHandlerV2(CacheRefreshHandlerV2 refreshHandlerV2) {
+    this.refreshHandlerV2 = refreshHandlerV2;
     return this;
   }
 
@@ -106,13 +122,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required GBContext context,
     EvaluationContext? evaluationContext,
     BaseClient? client,
+    // ignore: deprecated_member_use_from_same_package
     CacheRefreshHandler? refreshHandler,
+    CacheRefreshHandlerV2? refreshHandlerV2,
     required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
+        _refreshHandlerV2 = refreshHandlerV2,
         _baseClient = client ?? DioClient(),
         _forcedFeatures = [],
         _attributeOverrides = {} {
@@ -135,7 +154,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final OnInitializationFailure? _onInitializationFailure;
 
+  // ignore: deprecated_member_use_from_same_package
   final CacheRefreshHandler? _refreshHandler;
+
+  final CacheRefreshHandlerV2? _refreshHandlerV2;
 
   List<dynamic> _forcedFeatures;
 
@@ -172,26 +194,23 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _updateEvaluationContext();
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
-      if (_refreshHandler != null) {
-        _refreshHandler!(true);
-      }
+      _refreshHandler?.call(true);
+      _refreshHandlerV2?.call(true, null);
     }
   }
 
   @override
   void featuresNotModified() {
-    if (_refreshHandler != null) {
-      _refreshHandler!(true);
-    }
+    _refreshHandler?.call(true);
+    _refreshHandlerV2?.call(true, null);
   }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(false);
-      }
+      _refreshHandler?.call(false);
+      _refreshHandlerV2?.call(false, error);
     }
   }
 
@@ -446,9 +465,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       {required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(false);
-      }
+      _refreshHandler?.call(false);
+      _refreshHandlerV2?.call(false, error);
     }
   }
 
@@ -458,9 +476,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.savedGroups = savedGroups;
     _updateEvaluationContext();
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(true);
-      }
+      _refreshHandler?.call(true);
+      _refreshHandlerV2?.call(true, null);
     }
   }
 }
