@@ -484,6 +484,112 @@ final sdk = await GBSDKBuilderApp(
 // No need to restart the app or refresh manually
 ```
 
+### Tracking Plugins
+
+Plugins observe SDK lifecycle events (feature evaluated, experiment viewed) and can implement custom side effects such as forwarding events to an analytics backend. The SDK ships with `GrowthBookTrackingPlugin`, which batches events and sends them to the GrowthBook ingest endpoint.
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+Future<void> main() async {
+  final sdk = await GBSDKBuilderApp(
+    apiKey: 'sdk-xxx',
+    hostURL: 'https://cdn.growthbook.io',
+    growthBookTrackingCallBack: (_) {},
+  )
+      .addPlugin(GrowthBookTrackingPlugin())
+      .initialize();
+
+  runApp(MyApp(sdk: sdk));
+}
+```
+
+#### Custom configuration
+
+```dart
+final trackingPlugin = GrowthBookTrackingPlugin(
+  config: GrowthBookTrackingPluginConfig(
+    ingestorHost: 'https://ingest.growthbook.io',
+    batchSize: 50,
+    batchTimeout: Duration(seconds: 30),
+  ),
+);
+
+await GBSDKBuilderApp(...)
+    .addPlugin(trackingPlugin)
+    .initialize();
+```
+
+#### Lifecycle — always await `dispose()`
+
+Tracking plugins buffer events in memory to reduce network overhead. **You must call `await sdk.dispose()` when the SDK instance is no longer needed** so buffered events are flushed and any resources (timers, HTTP clients) are released. Without this, queued tracking events will be dropped during app shutdown.
+
+```dart
+class _MyAppState extends State<MyApp> {
+  late final GrowthBookSDK sdk;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSdk();
+  }
+
+  Future<void> _initSdk() async {
+    sdk = await GBSDKBuilderApp(...)
+        .addPlugin(GrowthBookTrackingPlugin())
+        .initialize();
+  }
+
+  @override
+  void dispose() {
+    // Flushes pending tracking events and releases plugin resources
+    sdk.dispose();
+    super.dispose();
+  }
+}
+```
+
+For CLI tools, server processes, or short-lived isolates, wrap SDK usage in a `try`/`finally`:
+
+```dart
+final sdk = await GBSDKBuilderApp(...).addPlugin(GrowthBookTrackingPlugin()).initialize();
+try {
+  // ... SDK usage
+} finally {
+  await sdk.dispose();
+}
+```
+
+#### Custom plugins
+
+Extend `GrowthBookPlugin` to implement your own tracking, logging, or analytics forwarding:
+
+```dart
+class MyAnalyticsPlugin extends GrowthBookPlugin {
+  @override
+  void initialize(String clientKey) {
+    // one-time setup (e.g. start a periodic flush timer)
+  }
+
+  @override
+  void onFeatureEvaluated(String id, GBFeatureResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  Future<void> close() async {
+    // flush any buffered state, release resources
+  }
+}
+```
+
+> ⚠️ Plugin errors are isolated per plugin — a throw in one plugin's callback does not affect other plugins or SDK evaluation. If you need stronger delivery guarantees than best-effort batching, implement retry/requeue with bounded storage inside your plugin's `close()` method.
+
 ---
 
 ## 💡 Examples

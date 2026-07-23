@@ -52,6 +52,7 @@ class GBSDKBuilderApp {
   CacheRefreshHandlerV2? refreshHandlerV2;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+  final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -75,9 +76,11 @@ class GBSDKBuilderApp {
         onInitializationFailure: onInitializationFailure,
         refreshHandler: refreshHandler,
         refreshHandlerV2: refreshHandlerV2,
+        pluginRegistry: PluginRegistry(_plugins),
         ttlSeconds: ttlSeconds);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
+    gb._initializePlugins();
     return gb;
   }
 
@@ -111,6 +114,12 @@ class GBSDKBuilderApp {
     this.featureUsageCallback = featureUsageCallback;
     return this;
   }
+
+  /// Registers a plugin that will receive experiment and feature evaluation events.
+  GBSDKBuilderApp addPlugin(GrowthBookPlugin plugin) {
+    _plugins.add(plugin);
+    return this;
+  }
 }
 
 /// The main export of the libraries is a simple GrowthBook wrapper class that
@@ -125,6 +134,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     // ignore: deprecated_member_use_from_same_package
     CacheRefreshHandler? refreshHandler,
     CacheRefreshHandlerV2? refreshHandlerV2,
+    PluginRegistry? pluginRegistry,
     required int ttlSeconds,
   })  : _context = context,
         _evaluationContext =
@@ -133,6 +143,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _refreshHandler = refreshHandler,
         _refreshHandlerV2 = refreshHandlerV2,
         _baseClient = client ?? DioClient(),
+        _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
@@ -159,6 +170,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final CacheRefreshHandlerV2? _refreshHandlerV2;
 
+  final PluginRegistry _pluginRegistry;
+
   List<dynamic> _forcedFeatures;
 
   Map<String, dynamic> _attributeOverrides;
@@ -183,6 +196,38 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   void _updateEvaluationContext() {
     _evaluationContext =
         GBUtils.initializeEvalContext(_context, _refreshHandler);
+  }
+
+  void _initializePlugins() {
+    _pluginRegistry.initialize(_context.apiKey ?? '');
+  }
+
+  /// Releases resources held by all registered plugins.
+  ///
+  /// **Always await this** when the SDK instance is no longer needed —
+  /// tracking plugins buffer events in memory and rely on `close()` to flush
+  /// them. Without an awaited `dispose()`, queued events are dropped when the
+  /// app terminates.
+  ///
+  /// Typical usage:
+  /// ```dart
+  /// @override
+  /// void dispose() {
+  ///   sdk.dispose();
+  ///   super.dispose();
+  /// }
+  /// ```
+  ///
+  /// For short-lived scripts, wrap in try/finally:
+  /// ```dart
+  /// try {
+  ///   // ... SDK usage
+  /// } finally {
+  ///   await sdk.dispose();
+  /// }
+  /// ```
+  Future<void> dispose() {
+    return _pluginRegistry.close();
   }
 
   @override
@@ -279,6 +324,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
     // Propagate any newly persisted sticky bucket assignments back to the
     // shared GBContext so the next _updateEvaluationContext() preserves them.
     _context.stickyBucketAssignmentDocs =
@@ -316,6 +362,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.stickyBucketAssignmentDocs =
         _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
+    if (result.inExperiment) {
+      _notifyExperimentViewed(experiment, result);
+    }
     return result;
   }
 
@@ -450,9 +499,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
     _context.stickyBucketAssignmentDocs =
         _evaluationContext.userContext.stickyBucketAssignmentDocs;
     return result;
+  }
+
+  void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
+    _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
+  }
+
+  void _notifyExperimentViewed(
+      GBExperiment experiment, GBExperimentResult result) {
+    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
