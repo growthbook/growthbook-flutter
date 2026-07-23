@@ -1,5 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:tuple/tuple.dart';
 
 /// Constant class for GrowthBook
@@ -65,7 +64,6 @@ class GBError {
   });
 }
 
-
 /// Used for remote feature evaluation to trigger the `TrackingCallback`
 class GBTrackData {
   GBTrackData({
@@ -76,7 +74,6 @@ class GBTrackData {
   final GBExperiment experiment;
 
   final GBExperimentResult experimentResult;
-
 }
 
 class AssignedExperiment {

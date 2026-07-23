@@ -100,8 +100,10 @@ final sdk = await GBSDKBuilderApp(
     'email': 'user@example.com',
     'country': 'US',
   },
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Track experiment exposures
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     print('Experiment: ${experiment.key}, Variation: ${result.variationID}');
   },
 ).initialize();
@@ -144,7 +146,10 @@ class MyHomePage extends StatelessWidget {
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
+
     // Google Analytics
     FirebaseAnalytics.instance.logEvent(
       name: 'experiment_viewed',
@@ -198,8 +203,10 @@ final sdk = await GBSDKBuilderApp(
   },
   
   // Analytics Integration
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Send to your analytics platform
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     analytics.track('Experiment Viewed', {
       'experiment_id': experiment.key,
       'variation_id': result.variationID,
@@ -212,6 +219,29 @@ final sdk = await GBSDKBuilderApp(
   encryptionKey: "...",         // For encrypted features
 ).initialize();
 ```
+
+### Configuring Log Level
+
+The SDK logs internal events (feature evaluation skips, cache errors, refresh
+attempts) through a `logger` package instance. Verbosity is controlled by
+`GrowthBookSDK.setLogLevel(...)`, which accepts an SDK-owned `GBLogLevel` enum:
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+void main() {
+  // Configure once at app startup — before initializing the SDK.
+  GrowthBookSDK.setLogLevel(GBLogLevel.debug);
+
+  runApp(const MyApp());
+}
+```
+
+Available levels: `verbose`, `debug`, `info`, `warning` (default), `error`, `off`.
+
+> ⚠️ **Process-global**: log level is shared across all `GrowthBookSDK` instances
+> in the same process. Set it once at app startup rather than per-instance.
+> If you run multiple SDK instances, they will share the same verbosity.
 
 ### Feature Flag Usage
 
@@ -291,6 +321,68 @@ sdk.setAttributes({
 // Target users with conditions
 // Example: Show feature only to premium users in US
 // This is configured in GrowthBook dashboard, not in code
+```
+
+### Condition Operators
+
+The SDK supports the following operators in targeting conditions:
+
+#### Comparison
+
+| Operator | Description |
+|----------|-------------|
+| `$eq` | Equal to |
+| `$ne` | Not equal to |
+| `$lt` | Less than |
+| `$lte` | Less than or equal |
+| `$gt` | Greater than |
+| `$gte` | Greater than or equal |
+
+#### Membership
+
+| Operator | Description |
+|----------|-------------|
+| `$in` | Value is in array |
+| `$nin` | Value is not in array |
+| `$all` | Array contains all values |
+| `$ini` | Value is in array (case-insensitive string comparison) |
+| `$nini` | Value is not in array (case-insensitive string comparison) |
+| `$alli` | Array contains all values (case-insensitive string comparison) |
+
+> For `$ini`, `$nini`, and `$alli`: string values are compared after lowercasing; non-string values (numbers, booleans, null) are compared as-is.
+
+#### Regex
+
+| Operator | Description |
+|----------|-------------|
+| `$regex` | Matches regex (case-sensitive) |
+| `$notRegex` | Does not match regex (case-sensitive) |
+| `$regexi` | Matches regex (case-insensitive) |
+| `$notRegexi` | Does not match regex (case-insensitive) |
+
+#### Other
+
+| Operator | Description |
+|----------|-------------|
+| `$exists` | Attribute exists (`true`) or is absent (`false`) |
+| `$type` | Attribute type matches string (`"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, `"null"`) |
+| `$not` | Negates a condition |
+| `$size` | Array length matches condition |
+| `$elemMatch` | At least one array element matches condition |
+| `$vgt` / `$vlt` / `$vgte` / `$vlte` / `$veq` / `$vne` | Semantic version comparison |
+
+```dart
+// Example: case-insensitive membership
+// Matches users where country is "us", "US", "Us", etc.
+final condition = {
+  'country': {'\$ini': ['US', 'CA', 'GB']}
+};
+
+// Example: case-insensitive regex
+// Matches "Hello", "hello", "HELLO", etc.
+final condition2 = {
+  'greeting': {'\$regexi': '^hello'}
+};
 ```
 
 ---
@@ -391,6 +483,112 @@ final sdk = await GBSDKBuilderApp(
 // Features automatically update when changed in GrowthBook
 // No need to restart the app or refresh manually
 ```
+
+### Tracking Plugins
+
+Plugins observe SDK lifecycle events (feature evaluated, experiment viewed) and can implement custom side effects such as forwarding events to an analytics backend. The SDK ships with `GrowthBookTrackingPlugin`, which batches events and sends them to the GrowthBook ingest endpoint.
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+Future<void> main() async {
+  final sdk = await GBSDKBuilderApp(
+    apiKey: 'sdk-xxx',
+    hostURL: 'https://cdn.growthbook.io',
+    growthBookTrackingCallBack: (_) {},
+  )
+      .addPlugin(GrowthBookTrackingPlugin())
+      .initialize();
+
+  runApp(MyApp(sdk: sdk));
+}
+```
+
+#### Custom configuration
+
+```dart
+final trackingPlugin = GrowthBookTrackingPlugin(
+  config: GrowthBookTrackingPluginConfig(
+    ingestorHost: 'https://ingest.growthbook.io',
+    batchSize: 50,
+    batchTimeout: Duration(seconds: 30),
+  ),
+);
+
+await GBSDKBuilderApp(...)
+    .addPlugin(trackingPlugin)
+    .initialize();
+```
+
+#### Lifecycle — always await `dispose()`
+
+Tracking plugins buffer events in memory to reduce network overhead. **You must call `await sdk.dispose()` when the SDK instance is no longer needed** so buffered events are flushed and any resources (timers, HTTP clients) are released. Without this, queued tracking events will be dropped during app shutdown.
+
+```dart
+class _MyAppState extends State<MyApp> {
+  late final GrowthBookSDK sdk;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSdk();
+  }
+
+  Future<void> _initSdk() async {
+    sdk = await GBSDKBuilderApp(...)
+        .addPlugin(GrowthBookTrackingPlugin())
+        .initialize();
+  }
+
+  @override
+  void dispose() {
+    // Flushes pending tracking events and releases plugin resources
+    sdk.dispose();
+    super.dispose();
+  }
+}
+```
+
+For CLI tools, server processes, or short-lived isolates, wrap SDK usage in a `try`/`finally`:
+
+```dart
+final sdk = await GBSDKBuilderApp(...).addPlugin(GrowthBookTrackingPlugin()).initialize();
+try {
+  // ... SDK usage
+} finally {
+  await sdk.dispose();
+}
+```
+
+#### Custom plugins
+
+Extend `GrowthBookPlugin` to implement your own tracking, logging, or analytics forwarding:
+
+```dart
+class MyAnalyticsPlugin extends GrowthBookPlugin {
+  @override
+  void initialize(String clientKey) {
+    // one-time setup (e.g. start a periodic flush timer)
+  }
+
+  @override
+  void onFeatureEvaluated(String id, GBFeatureResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  Future<void> close() async {
+    // flush any buffered state, release resources
+  }
+}
+```
+
+> ⚠️ Plugin errors are isolated per plugin — a throw in one plugin's callback does not affect other plugins or SDK evaluation. If you need stronger delivery guarantees than best-effort batching, implement retry/requeue with bounded storage inside your plugin's `close()` method.
 
 ---
 

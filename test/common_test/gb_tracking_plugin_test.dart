@@ -168,7 +168,6 @@ void main() {
       expect(() => sdk.run(_makeExp()), returnsNormally);
       expect(() => sdk.dispose(), returnsNormally);
     });
-
   });
 
   // -------------------------------------------------------------------------
@@ -189,7 +188,8 @@ void main() {
       Duration batchTimeout = const Duration(seconds: 60),
     }) =>
         GrowthBookTrackingPlugin(
-          config: GrowthBookTrackingPluginConfig(batchSize: batchSize, batchTimeout: batchTimeout),
+          config: GrowthBookTrackingPluginConfig(
+              batchSize: batchSize, batchTimeout: batchTimeout),
           dio: dio,
         );
 
@@ -255,7 +255,8 @@ void main() {
       dio.httpClientAdapter = adapter;
 
       final plugin = GrowthBookTrackingPlugin(
-        config: const GrowthBookTrackingPluginConfig(batchTimeout: Duration(milliseconds: 100)),
+        config: const GrowthBookTrackingPluginConfig(
+            batchTimeout: Duration(milliseconds: 100)),
         dio: dio,
       );
       plugin.initialize('sdk-test');
@@ -390,8 +391,8 @@ class _CrashingPlugin extends GrowthBookPlugin {
           Map<String, dynamic>? attributes) =>
       throw Exception('crash');
   @override
-  void onFeatureEvaluated(String key, GBFeatureResult r,
-          Map<String, dynamic>? attributes) =>
+  void onFeatureEvaluated(
+          String key, GBFeatureResult r, Map<String, dynamic>? attributes) =>
       throw Exception('crash');
   @override
   Future<void> close() => throw Exception('crash');

@@ -33,7 +33,8 @@ class GrowthBookTrackingPluginConfig {
 /// If initialized with an empty `clientKey` the plugin degrades to a no-op.
 class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   GrowthBookTrackingPlugin({
-    GrowthBookTrackingPluginConfig config = const GrowthBookTrackingPluginConfig(),
+    GrowthBookTrackingPluginConfig config =
+        const GrowthBookTrackingPluginConfig(),
     Dio? dio,
   })  : _config = config,
         _dio = dio ?? Dio();
@@ -68,7 +69,8 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBExperimentViewedEvent.from(experiment, result, _mergedAttributes(attributes)));
+    _enqueue(GBExperimentViewedEvent.from(
+        experiment, result, _mergedAttributes(attributes)));
   }
 
   @override
@@ -78,10 +80,12 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBFeatureEvaluatedEvent.from(featureKey, result, _mergedAttributes(attributes)));
+    _enqueue(GBFeatureEvaluatedEvent.from(
+        featureKey, result, _mergedAttributes(attributes)));
   }
 
-  static Map<String, dynamic> _mergedAttributes(Map<String, dynamic>? userAttributes) {
+  static Map<String, dynamic> _mergedAttributes(
+      Map<String, dynamic>? userAttributes) {
     return {
       'sdk_language': 'dart',
       'sdk_version': _sdkVersion,

@@ -60,19 +60,49 @@ class LocalStorageStickyBucketService extends StickyBucketService {
   }
 
   @override
-Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
-    Map<String, String> attributes) async {
-  final docs = <StickyAttributeKey, StickyAssignmentsDocument>{};
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) async {
+    final docs = <StickyAttributeKey, StickyAssignmentsDocument>{};
 
-  for (final entry in attributes.entries) {
-    final doc = await getAssignments(entry.key, entry.value);
-    if (doc != null) {
-      final docKey = '${doc.attributeName}||${doc.attributeValue}';
-      docs[docKey] = doc;
+    for (final entry in attributes.entries) {
+      final doc = await getAssignments(entry.key, entry.value);
+      if (doc != null) {
+        final docKey = '${doc.attributeName}||${doc.attributeValue}';
+        docs[docKey] = doc;
+      }
     }
-  }
 
-  return docs;
+    return docs;
+  }
 }
 
+/// In-memory implementation of [StickyBucketService] — keeps assignments
+/// in a process-local map. Useful for tests and runtime environments
+/// without persistent storage.
+class InMemoryStickyBucketService extends StickyBucketService {
+  final Map<String, StickyAssignmentsDocument> _store = {};
+
+  @override
+  Future<Map<StickyAttributeKey, StickyAssignmentsDocument>> getAllAssignments(
+      Map<String, String> attributes) async {
+    final docs = <String, StickyAssignmentsDocument>{};
+    for (final entry in attributes.entries) {
+      final doc = await getAssignments(entry.key, entry.value);
+      if (doc != null) {
+        docs['${doc.attributeName}||${doc.attributeValue}'] = doc;
+      }
+    }
+    return docs;
+  }
+
+  @override
+  Future<StickyAssignmentsDocument?> getAssignments(
+      String attributeName, String attributeValue) async {
+    return _store['$attributeName||$attributeValue'];
+  }
+
+  @override
+  Future<void> saveAssignments(StickyAssignmentsDocument doc) async {
+    _store['${doc.attributeName}||${doc.attributeValue}'] = doc;
+  }
 }

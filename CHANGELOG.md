@@ -1,3 +1,23 @@
+## [4.3.0](https://github.com/growthbook/growthbook-flutter/compare/v4.2.5...v4.3.0) (2026-07-15)
+
+
+### Features
+
+* add case-insensitive condition operators ([#163](https://github.com/growthbook/growthbook-flutter/issues/163)) ([01ed23d](https://github.com/growthbook/growthbook-flutter/commit/01ed23d))
+* add configurable logger with log level support ([#161](https://github.com/growthbook/growthbook-flutter/issues/161)) ([ee0d723](https://github.com/growthbook/growthbook-flutter/commit/ee0d723))
+
+
+### Bug Fixes
+
+* **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
+
+## [4.3.1](https://github.com/growthbook/growthbook-flutter/compare/v4.3.0...v4.3.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* correct sticky bucketing implementation ([#151](https://github.com/growthbook/growthbook-flutter/issues/151)) ([c6b37c4](https://github.com/growthbook/growthbook-flutter/commit/c6b37c47d54864c48d1861ba207ee0619ec74b78))
+
 ## [4.1.1](https://github.com/growthbook/growthbook-flutter/compare/v4.1.0...v4.1.1) (2025-11-21)
 
 
@@ -5,6 +25,14 @@
 
 * **feature_viewmodel:** implement single-flight for feature fetch ([5bbeb13](https://github.com/growthbook/growthbook-flutter/commit/5bbeb137cd3c8ec69b6f1b7526f1eaef769def4a))
 * growthbook feth/refresh logic update ([ff76f2a](https://github.com/growthbook/growthbook-flutter/commit/ff76f2aeec4a39b02d444fde34b1eead427eb986))
+
+## [4.2.5](https://github.com/growthbook/growthbook-flutter/compare/v4.2.4...v4.2.5) (2026-06-12)
+
+
+### Bug Fixes
+
+* fix URL construction in GBContext to handle trailing slashes ([#147](https://github.com/growthbook/growthbook-flutter/issues/147)) ([24f9d4f](https://github.com/growthbook/growthbook-flutter/commit/24f9d4fc14f07c44bb2d0bebcba568b433a95648))
+* resolve dart analyzer warnings in test files ([c5b0486](https://github.com/growthbook/growthbook-flutter/commit/c5b04861385222bab52c634837677788afdf267e))
 
 ## [4.2.4](https://github.com/growthbook/growthbook-flutter/compare/v4.2.3...v4.2.4) (2026-03-05)
 

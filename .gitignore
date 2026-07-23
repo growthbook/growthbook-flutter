@@ -49,3 +49,6 @@ app.*.map.json
 
 # Generated files
 # **/*.g.dart
+
+# Test coverage
+coverage/
