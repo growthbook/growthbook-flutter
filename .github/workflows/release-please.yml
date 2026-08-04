@@ -20,16 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
-        
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.0'
           channel: 'stable'
-          
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -58,4 +58,44 @@ jobs:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 
+  # Tags created by release-please via GITHUB_TOKEN do not trigger the
+  # `push: tags:` event in publish.yml (GitHub's guard against workflow
+  # recursion). Publishing from this job avoids that gap and keeps the
+  # entire release lifecycle in one workflow context.
+  publish:
+    needs: validate-and-release
+    if: needs.validate-and-release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC auth against pub.dev
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.validate-and-release.outputs.tag_name }}
 
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate required files
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Verify generated files exist
+        run: |
+          if [ ! -f "lib/src/Model/experiment.g.dart" ]; then
+            echo "Error: experiment.g.dart not generated"
+            exit 1
+          fi
+          echo "Generated files verified successfully"
+
+      - name: Setup Dart with OIDC
+        uses: dart-lang/setup-dart@v1
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
