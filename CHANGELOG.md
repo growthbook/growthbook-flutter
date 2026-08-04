@@ -11,6 +11,14 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [4.4.0](https://github.com/growthbook/growthbook-flutter/compare/v4.3.1...v4.4.0) (2026-08-04)
+
+
+### Features
+
+* implement tracking plugins for Flutter SDK ([#148](https://github.com/growthbook/growthbook-flutter/issues/148)) ([082d259](https://github.com/growthbook/growthbook-flutter/commit/082d2590d6e8b2536d260d7fbccc236f1cf55f63))
+* pass GBError to refresh handler ([#109](https://github.com/growthbook/growthbook-flutter/issues/109)) ([9307ed4](https://github.com/growthbook/growthbook-flutter/commit/9307ed42e4214df962f52d4692ffef829d6d3e41))
+
 ## [4.3.1](https://github.com/growthbook/growthbook-flutter/compare/v4.3.0...v4.3.1) (2026-07-17)
 
 

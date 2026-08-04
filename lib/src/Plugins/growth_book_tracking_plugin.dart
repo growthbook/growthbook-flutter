@@ -39,7 +39,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   })  : _config = config,
         _dio = dio ?? Dio();
 
-  static const String _sdkVersion = '4.2.4'; // x-release-please-version
+  static const String _sdkVersion = '4.4.0'; // x-release-please-version
 
   final GrowthBookTrackingPluginConfig _config;
   final Dio _dio;
