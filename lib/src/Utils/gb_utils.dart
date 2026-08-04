@@ -708,7 +708,9 @@ class GBUtils {
   }
 
   static EvaluationContext initializeEvalContext(
-      GBContext gbContext, GBCacheRefreshHandler? refreshHandler) {
+      GBContext gbContext,
+      // ignore: deprecated_member_use_from_same_package
+      GBCacheRefreshHandler? refreshHandler) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,

@@ -18,7 +18,20 @@ class Constant {
   static String eventsPath = "sub";
 }
 
+/// Handler for cache refresh notifications (legacy, error-unaware).
+///
+/// Prefer [CacheRefreshHandlerV2], which also receives the [GBError]
+/// that caused the failure. This signature is kept for backwards
+/// compatibility and will be removed in a future major release.
+@Deprecated('Use CacheRefreshHandlerV2 for error-aware refresh callbacks')
 typedef CacheRefreshHandler = void Function(bool);
+
+/// Handler for cache refresh notifications with error context.
+///
+/// Called with `(true, null)` on successful refresh (fresh data or
+/// 304 Not Modified), and `(false, error)` on failure so consumers
+/// can distinguish network errors from parse/decryption errors.
+typedef CacheRefreshHandlerV2 = void Function(bool, GBError?);
 
 /// Triple Tuple for GrowthBook Namespaces
 /// It has ID, StartRange & EndRange
@@ -36,6 +49,7 @@ typedef GBCondition = Map<String, dynamic>;
 
 /// Handler for Refresh Cache Request
 /// It updates back whether cache was refreshed or not
+@Deprecated('Use CacheRefreshHandlerV2 for error-aware refresh callbacks')
 typedef GBCacheRefreshHandler = void Function(bool);
 
 typedef GBStickyBucketingService = LocalStorageStickyBucketService;
