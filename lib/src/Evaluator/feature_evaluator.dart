@@ -164,14 +164,21 @@ class FeatureEvaluator {
           onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
-          if (rule.variations == null) {
+          // Prefer contextualVariations when the payload provides them, even
+          // if the rule has no explicit `contextualBanditRef`. This gives
+          // graceful degradation: SDKs without bandit support see
+          // `variations == null` and skip; SDKs with support pick up the
+          // bandit variations here.
+          final effectiveVariations =
+              rule.contextualVariations ?? rule.variations;
+          if (effectiveVariations == null) {
             // If not, skip this rule
             continue;
           } else {
             // Convert the rule to an Experiment object
             GBExperiment exp = GBExperiment(
               key: rule.key ?? featureKey,
-              variations: rule.variations!,
+              variations: effectiveVariations,
               namespace: rule.namespace,
               hashAttribute: rule.hashAttribute,
               fallbackAttribute: rule.fallbackAttribute,
@@ -189,8 +196,25 @@ class FeatureEvaluator {
               name: rule.name,
               phase: rule.phase,
             );
+
+            // If this rule points at a contextual-bandit definition, resolve
+            // the per-user leaf and override the experiment's weights before
+            // bucketing.
+            if (rule.contextualBanditRef != null) {
+              _buildContextualBanditExperiment(
+                  exp, rule.contextualBanditRef!, context);
+            }
+
             GBExperimentResult result = ExperimentEvaluator()
                 .evaluateExperiment(context, exp, featureId: featureKey);
+
+            // Keep the bandit selection only when the user was actually
+            // hash-bucketed into the experiment. If they were force-assigned
+            // or filtered out, the selection is meaningless for tracking.
+            if (exp.contextualBandit != null &&
+                !((result.hashUsed ?? false) && result.inExperiment)) {
+              exp.contextualBandit = null;
+            }
 
             // Check if the result is in the experiment and not a passthrough
             if (result.inExperiment && !(result.passthrough ?? false)) {
@@ -254,6 +278,91 @@ class FeatureEvaluator {
       // If any exception occurs during the merge, return an empty map (equivalent to an empty JSON object)
       return {};
     }
+  }
+
+  /// Applies a contextual-bandit definition to [experiment] before bucketing:
+  /// selects the leaf whose condition matches the user, overrides the
+  /// experiment's weights, and records the selection on
+  /// [GBExperiment.contextualBandit].
+  ///
+  /// If the reference is missing from the payload the experiment is left
+  /// untouched (aggregate weights apply). If a definition is present but no
+  /// leaf matches, a fallback marker ([kContextualBanditFallbackLeafId]) is
+  /// recorded and the experiment's existing or equal weights are used.
+  void _buildContextualBanditExperiment(
+    GBExperiment experiment,
+    String contextualBanditRef,
+    EvaluationContext context,
+  ) {
+    final contextualBandits = context.globalContext.contextualBandits;
+    final definitionJson = contextualBandits?[contextualBanditRef];
+    if (definitionJson == null) {
+      logger.d(
+          'Contextual bandit ref not found in payload, using aggregate weights: '
+          '$contextualBanditRef');
+      return;
+    }
+
+    ContextualBanditDefinition definition;
+    try {
+      definition = ContextualBanditDefinition.fromJson(
+        definitionJson is Map<String, dynamic>
+            ? definitionJson
+            : Map<String, dynamic>.from(definitionJson as Map),
+      );
+    } catch (e) {
+      logger.d(
+          'Contextual bandit definition failed to parse, using aggregate weights: '
+          '$contextualBanditRef ($e)');
+      return;
+    }
+
+    ContextualBanditContext? leaf;
+    final contexts = definition.contexts;
+    if (contexts != null && contexts.isNotEmpty) {
+      try {
+        leaf = _selectContextualBanditLeaf(contexts, context);
+      } catch (e) {
+        logger.d(
+            'Contextual bandit leaf selection failed, using fallback weights: '
+            '$contextualBanditRef ($e)');
+      }
+    }
+
+    if (leaf != null) {
+      experiment.weights = leaf.weights;
+      experiment.contextualBandit = ContextualBandit(
+        leafId: leaf.leafId,
+        variationWeights: leaf.weights,
+        banditVersion: definition.banditVersion,
+      );
+      return;
+    }
+
+    final variationCount = experiment.variations.length;
+    final fallbackWeights =
+        experiment.weights ?? GBUtils.getEqualWeights(variationCount);
+    experiment.contextualBandit = ContextualBandit(
+      leafId: kContextualBanditFallbackLeafId,
+      variationWeights: fallbackWeights,
+      banditVersion: definition.banditVersion,
+    );
+  }
+
+  ContextualBanditContext? _selectContextualBanditLeaf(
+    List<ContextualBanditContext> contexts,
+    EvaluationContext context,
+  ) {
+    final attributes = context.userContext.attributes ?? <String, dynamic>{};
+    final savedGroups = context.globalContext.savedGroups;
+    for (final leaf in contexts) {
+      final condition = leaf.condition ?? <String, dynamic>{};
+      if (GBConditionEvaluator()
+          .isEvalCondition(attributes, condition, savedGroups)) {
+        return leaf;
+      }
+    }
+    return null;
   }
 }
 

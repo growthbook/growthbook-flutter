@@ -729,6 +729,7 @@ class GBUtils {
       features: gbContext.features,
       savedGroups: gbContext.savedGroups,
     );
+    globalContext.contextualBandits = gbContext.contextualBandits;
 
     var userContext = UserContext(
       attributes: gbContext.attributes,

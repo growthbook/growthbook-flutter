@@ -441,7 +441,33 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   @override
   Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
+    _applyContextualBandits(model);
     await refreshStickyBucketService(model);
+  }
+
+  /// Extract the contextual-bandit payload from the feature response and stash
+  /// it on the context so [FeatureEvaluator] can resolve refs later.
+  ///
+  /// Plaintext `contextualBandits` wins over `encryptedContextualBandits`. If
+  /// only the encrypted form is present, we decrypt with the current key. A
+  /// null/malformed payload is treated as "no bandits" — evaluators fall back
+  /// to aggregate weights.
+  void _applyContextualBandits(FeaturedDataModel model) {
+    if (model.contextualBandits != null) {
+      _context.contextualBandits = model.contextualBandits;
+      _updateEvaluationContext();
+      return;
+    }
+    final encrypted = model.encryptedContextualBandits;
+    if (encrypted == null || encrypted.isEmpty) return;
+    final key = _context.encryptionKey;
+    if (key == null || key.isEmpty) return;
+    final decrypted =
+        Crypto().getContextualBanditsFromEncrypted(encrypted, key);
+    if (decrypted != null) {
+      _context.contextualBandits = decrypted;
+      _updateEvaluationContext();
+    }
   }
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
