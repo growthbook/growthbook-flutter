@@ -5,7 +5,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
@@ -38,8 +37,8 @@ class FeatureViewModel {
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
-      (data) {
-        prepareFeaturesData(data);
+      (data) async {
+        await prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
@@ -79,9 +78,8 @@ class FeatureViewModel {
         final receivedData =
             await manager.getContent(fileName: Constant.featureCache);
 
-        final featureMap = receivedData != null
-            ? _fetchCachedFeatures(receivedData)
-            : null;
+        final featureMap =
+            receivedData != null ? _fetchCachedFeatures(receivedData) : null;
 
         if (featureMap != null) {
           delegate.featuresFetchedSuccessfully(
@@ -92,7 +90,7 @@ class FeatureViewModel {
 
         // If cache is missing, corrupt, or expired, fetch fresh data from network
         if (featureMap == null || isCacheExpired()) {
-          await _fetchFromNetwork();
+          await _fetchFromNetwork(hasCachedFeatures: featureMap != null);
         }
       }
 
@@ -108,13 +106,13 @@ class FeatureViewModel {
     }
   }
 
-  Future<void> _fetchFromNetwork() async {
-    // null = no callback invoked (304 Not Modified), true = success, false = error  
+  Future<void> _fetchFromNetwork({bool hasCachedFeatures = false}) async {
+    // null = no callback invoked (304 Not Modified), true = success, false = error
     bool? success;
     try {
       await source.fetchFeatures(
-        (data) {
-          success = _handleSuccess(data);
+        (data) async {
+          success = await _handleSuccess(data);
         },
         (e, s) {
           success = false;
@@ -127,9 +125,14 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid) 
+    // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
+    }
+    // Only notify delegate of 304 if there was a valid cached payload to confirm.
+    // Without an existing cache, 304 is meaningless — callers must not treat it as success.
+    if (success == null && hasCachedFeatures) {
+      delegate.featuresNotModified();
     }
   }
 
@@ -139,8 +142,8 @@ class FeatureViewModel {
       await source.fetchRemoteEval(
         apiUrl: apiUrl,
         params: payload,
-        onSuccess: (data) {
-          success = prepareFeaturesData(data);
+        onSuccess: (data) async {
+          success = await prepareFeaturesData(data);
         },
         onError: (e, s) {
           success = false;
@@ -159,10 +162,10 @@ class FeatureViewModel {
     }
   }
 
-  bool _handleSuccess(FeaturedDataModel data) {
+  Future<bool> _handleSuccess(FeaturedDataModel data) async {
     // Use prepareFeaturesData to handle both encrypted and non-encrypted responses.
     // When encryption is enabled, the API returns data.encryptedFeatures (not data.features).
-    return prepareFeaturesData(data);
+    return await prepareFeaturesData(data);
   }
 
   Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
@@ -189,14 +192,14 @@ class FeatureViewModel {
     }
   }
 
-  bool prepareFeaturesData(FeaturedDataModel data) {
+  Future<bool> prepareFeaturesData(FeaturedDataModel data) async {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
         return false;
       } else {
-        return handleValidFeatures(data);
+        return await handleValidFeatures(data);
       }
     } catch (e, s) {
       handleException(e, s);
@@ -204,10 +207,10 @@ class FeatureViewModel {
     }
   }
 
-  bool handleValidFeatures(FeaturedDataModel data) {
+  Future<bool> handleValidFeatures(FeaturedDataModel data) async {
     if (data.features != null && data.encryptedFeatures == null) {
       // Handle non-encrypted features
-      delegate.featuresAPIModelSuccessfully(data);
+      await delegate.featuresAPIModelSuccessfully(data);
       delegate.featuresFetchedSuccessfully(
         gbFeatures: data.features!,
         isRemote: true,
@@ -238,11 +241,13 @@ class FeatureViewModel {
       var isHandleEncryptedSavedGroups = true;
 
       if (data.encryptedFeatures != null) {
-        isHandleEncryptedFeatures = handleEncryptedFeatures(data.encryptedFeatures!);
+        isHandleEncryptedFeatures =
+            handleEncryptedFeatures(data.encryptedFeatures!);
       }
 
       if (data.encryptedSavedGroups != null) {
-        isHandleEncryptedSavedGroups = handleEncryptedSavedGroups(data.encryptedSavedGroups!);
+        isHandleEncryptedSavedGroups =
+            handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
       return isHandleEncryptedFeatures && isHandleEncryptedSavedGroups;
     }

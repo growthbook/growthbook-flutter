@@ -2,14 +2,12 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/gb_parent_condition.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -115,7 +113,8 @@ void main() {
     // Cyclic prerequisite — lines 25 and 67
     // -----------------------------------------------------------------------
     group('cyclic prerequisite', () {
-      test('returns cyclicPrerequisite source and triggers featureUsageCallback',
+      test(
+          'returns cyclicPrerequisite source and triggers featureUsageCallback',
           () {
         // feat-a has parentCondition → feat-b
         // feat-b has parentCondition → feat-a  (creates a cycle)

@@ -66,5 +66,4 @@ class GBExperimentResult {
       _$GBExperimentResultFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBExperimentResultToJson(this);
-
 }

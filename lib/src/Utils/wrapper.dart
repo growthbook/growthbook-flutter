@@ -11,7 +11,8 @@ class Tuple2Wrapper {
 
   Tuple2Wrapper(this.tuple);
 
-  factory Tuple2Wrapper.fromJson(Map<String, dynamic> json) => _$Tuple2WrapperFromJson(json);
+  factory Tuple2Wrapper.fromJson(Map<String, dynamic> json) =>
+      _$Tuple2WrapperFromJson(json);
 
   Map<String, dynamic> toJson() => _$Tuple2WrapperToJson(this);
 }

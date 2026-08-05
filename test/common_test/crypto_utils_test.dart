@@ -74,7 +74,8 @@ void main() {
   // Crypto.decrypt — invalid size guard
   // -------------------------------------------------------------------------
   group('Crypto.decrypt', () {
-    test('throws CryptoError when cypherText length is not a multiple of 16', () {
+    test('throws CryptoError when cypherText length is not a multiple of 16',
+        () {
       final crypto = Crypto();
       final badCipher = Uint8List(15); // not multiple of 16
       expect(

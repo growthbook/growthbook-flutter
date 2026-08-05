@@ -68,6 +68,63 @@ void main() {
         expect(restored.fallbackAttribute, 'device');
         expect(restored.weights, [0.5, 0.5]);
       });
+
+      test('round-trips customFields', () {
+        final exp = GBExperiment(
+          key: 'exp-cf',
+          customFields: {'cfl_abc123': 'My custom field', 'cfl_def456': 42},
+        );
+
+        final json = exp.toJson();
+        final restored = GBExperiment.fromJson(json);
+
+        expect(restored.customFields, isNotNull);
+        expect(restored.customFields!['cfl_abc123'], 'My custom field');
+        expect(restored.customFields!['cfl_def456'], 42);
+      });
+
+      test('customFields is null when absent', () {
+        final exp = GBExperiment(key: 'exp-no-cf');
+        final json = exp.toJson();
+        final restored = GBExperiment.fromJson(json);
+
+        expect(restored.customFields, isNull);
+      });
+    });
+
+    group('customFields', () {
+      test('parsed from JSON map', () {
+        final json = <String, dynamic>{
+          'key': 'my-experiment',
+          'variations': ['control', 'variant'],
+          'customFields': {'cfl_abc123': 'My custom field', 'cfl_def456': 42},
+        };
+        final exp = GBExperiment.fromJson(json);
+
+        expect(exp.customFields, isNotNull);
+        expect(exp.customFields!['cfl_abc123'], 'My custom field');
+        expect(exp.customFields!['cfl_def456'], 42);
+      });
+
+      test('null when not present in JSON', () {
+        final json = <String, dynamic>{
+          'key': 'my-experiment',
+          'variations': []
+        };
+        final exp = GBExperiment.fromJson(json);
+
+        expect(exp.customFields, isNull);
+      });
+
+      test('set via constructor', () {
+        final exp = GBExperiment(
+          key: 'my-experiment',
+          customFields: {'cfl_xyz': 'hello'},
+        );
+
+        expect(exp.customFields, isNotNull);
+        expect(exp.customFields!['cfl_xyz'], 'hello');
+      });
     });
 
     // -------------------------------------------------------------------------
@@ -96,6 +153,14 @@ void main() {
         expect(str, contains('user'));
         expect(str, contains('device'));
         expect(str, contains('false'));
+      });
+
+      test('contains customFields when set', () {
+        final exp = GBExperiment(
+          key: 'exp-str',
+          customFields: {'cfl_test': 'value'},
+        );
+        expect(exp.toString(), contains('cfl_test'));
       });
 
       test('does not throw with all-null optional fields', () {

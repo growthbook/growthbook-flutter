@@ -1,14 +1,15 @@
-import 'dart:developer';
-
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 import 'experiment_helper.dart';
 import '../MultiUserMode/Model/evaluation_context.dart';
 import '../Utils/gb_variation_meta.dart';
+import '../Utils/logger.dart';
 
 class ExperimentEvaluator {
   // Takes Context and Experiment and returns ExperimentResult
-  GBExperimentResult evaluateExperiment(EvaluationContext context, GBExperiment experiment, {String? featureId}) {
+  GBExperimentResult evaluateExperiment(
+      EvaluationContext context, GBExperiment experiment,
+      {String? featureId}) {
     // Check if experiment.variations has fewer than 2 variations
     if (experiment.variations.length < 2 || context.options.enabled != true) {
       // Return an ExperimentResult indicating not in experiment and variationId 0
@@ -22,7 +23,8 @@ class ExperimentEvaluator {
     }
 
     // Query string overrides
-    int? override = GBUtils.getQueryStringOverride(experiment.key, context.options.url, experiment.variations.length);
+    int? override = GBUtils.getQueryStringOverride(
+        experiment.key, context.options.url, experiment.variations.length);
     if (override != null) {
       return _getExperimentResult(
         featureId: featureId,
@@ -38,16 +40,52 @@ class ExperimentEvaluator {
       // Retrieve the forced variation for the experiment key
       if (context.userContext.forcedVariationsMap != null &&
           context.userContext.forcedVariationsMap?[experiment.key] != null) {
-        int forcedVariationIndex = int.parse(context.userContext.forcedVariationsMap![experiment.key].toString());
-
-        // Return the experiment result using the forced variation index and indicating that no hash was used
-        return _getExperimentResult(
-          featureId: featureId,
-          context: context,
-          experiment: experiment,
-          variationIndex: forcedVariationIndex,
-          hashUsed: false,
-        );
+        final rawValue =
+            context.userContext.forcedVariationsMap![experiment.key];
+        int? forcedVariationIndex;
+        if (rawValue is int) {
+          forcedVariationIndex = rawValue;
+        } else if (rawValue is double) {
+          if (rawValue.isFinite && rawValue == rawValue.truncateToDouble()) {
+            forcedVariationIndex = rawValue.toInt();
+          } else {
+            logger.d(
+                'Skip forcedVariation: fractional or non-finite double value $rawValue');
+          }
+        } else if (rawValue is String) {
+          final asInt = int.tryParse(rawValue);
+          if (asInt != null) {
+            forcedVariationIndex = asInt;
+          } else {
+            final asDouble = double.tryParse(rawValue);
+            if (asDouble != null &&
+                asDouble.isFinite &&
+                asDouble == asDouble.truncateToDouble()) {
+              forcedVariationIndex = asDouble.toInt();
+            } else {
+              logger.d(
+                  'Skip forcedVariation: non-integer string value "$rawValue"');
+            }
+          }
+        } else {
+          logger.d(
+              'Skip forcedVariation: unsupported value type ${rawValue.runtimeType}');
+        }
+        if (forcedVariationIndex != null) {
+          if (forcedVariationIndex < 0 ||
+              forcedVariationIndex >= experiment.variations.length) {
+            logger.d(
+                'Skip forcedVariation: index $forcedVariationIndex out of bounds (variations: ${experiment.variations.length})');
+          } else {
+            return _getExperimentResult(
+              featureId: featureId,
+              context: context,
+              experiment: experiment,
+              variationIndex: forcedVariationIndex,
+              hashUsed: false,
+            );
+          }
+        }
       }
     }
 
@@ -63,7 +101,8 @@ class ExperimentEvaluator {
 
     final hashAttributeAndValue = GBUtils.getHashAttribute(
       attr: experiment.hashAttribute,
-      fallback: (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true))
+      fallback: (context.options.stickyBucketService != null &&
+              (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
       attributes: context.userContext.attributes ?? {},
@@ -73,7 +112,7 @@ class ExperimentEvaluator {
     final hashValue = hashAttributeAndValue[1];
 
     if (hashValue.isEmpty || hashValue == "null") {
-      log('Skip because missing hashAttribute');
+      logger.d('Skip because missing hashAttribute');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -87,7 +126,8 @@ class ExperimentEvaluator {
     bool foundStickyBucket = false;
     bool stickyBucketVersionIsBlocked = false;
 
-    if (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true)) {
+    if (context.options.stickyBucketService != null &&
+        (experiment.disableStickyBucketing != true)) {
       final stickyBucketResult = GBUtils.getStickyBucketVariation(
         context: context,
         experimentKey: experiment.key,
@@ -99,13 +139,15 @@ class ExperimentEvaluator {
       );
       foundStickyBucket = stickyBucketResult.variation >= 0;
       assigned = stickyBucketResult.variation;
-      stickyBucketVersionIsBlocked = stickyBucketResult.versionIsBlocked ?? false;
+      stickyBucketVersionIsBlocked =
+          stickyBucketResult.versionIsBlocked ?? false;
     }
 
     if (!foundStickyBucket) {
       if (experiment.filters != null) {
-        if (GBUtils.isFilteredOut(experiment.filters!, context.userContext.attributes ?? {})) {
-          log('Skip because of filters');
+        if (GBUtils.isFilteredOut(
+            experiment.filters!, context.userContext.attributes ?? {})) {
+          logger.d('Skip because of filters');
           return _getExperimentResult(
             featureId: featureId,
             context: context,
@@ -118,7 +160,7 @@ class ExperimentEvaluator {
         final namespace = GBUtils.getGBNameSpace(experiment.namespace ?? []);
         if (namespace != null) {
           if (!GBUtils.inNamespace(hashValue, namespace)) {
-            log('Skip because of namespace');
+            logger.d('Skip because of namespace');
             return _getExperimentResult(
               featureId: featureId,
               context: context,
@@ -132,7 +174,9 @@ class ExperimentEvaluator {
 
       if (experiment.condition != null &&
           !GBConditionEvaluator().isEvalCondition(
-              context.userContext.attributes!, experiment.condition!, context.globalContext.savedGroups)) {
+              context.userContext.attributes!,
+              experiment.condition!,
+              context.globalContext.savedGroups)) {
         return _getExperimentResult(
           featureId: featureId,
           context: context,
@@ -143,14 +187,17 @@ class ExperimentEvaluator {
       }
 
       if (experiment.parentConditions != null) {
-        final evaluatedFeatures = context.stackContext.evaluatedFeatures.toSet();
+        final evaluatedFeatures =
+            context.stackContext.evaluatedFeatures.toSet();
 
         for (final parentCondition in experiment.parentConditions!) {
           context.stackContext.evaluatedFeatures = evaluatedFeatures.toSet();
 
-          final parentResult = FeatureEvaluator().evaluateFeature(context, parentCondition.id);
+          final parentResult =
+              FeatureEvaluator().evaluateFeature(context, parentCondition.id);
 
-          if (parentResult.source?.name == GBFeatureSource.cyclicPrerequisite.name) {
+          if (parentResult.source?.name ==
+              GBFeatureSource.cyclicPrerequisite.name) {
             return _getExperimentResult(
               featureId: featureId,
               context: context,
@@ -168,7 +215,7 @@ class ExperimentEvaluator {
           );
 
           if (!evalCondition) {
-            log("Feature blocked by prerequisite");
+            logger.d('Feature blocked by prerequisite');
             final value = _getExperimentResult(
               featureId: featureId,
               context: context,
@@ -189,7 +236,7 @@ class ExperimentEvaluator {
     );
 
     if (hash == null) {
-      log('Skip because of invalid hash version');
+      logger.d('Skip because of invalid hash version');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -210,7 +257,7 @@ class ExperimentEvaluator {
     }
 
     if (stickyBucketVersionIsBlocked) {
-      log('Skip because sticky bucket version is blocked');
+      logger.d('Skip because sticky bucket version is blocked');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -223,7 +270,7 @@ class ExperimentEvaluator {
     }
 
     if (assigned < 0) {
-      log('Skip because of coverage');
+      logger.d('Skip because of coverage');
       return _getExperimentResult(
         featureId: featureId,
         context: context,
@@ -263,25 +310,30 @@ class ExperimentEvaluator {
       stickyBucketUsed: foundStickyBucket,
     );
 
-    if (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true)) {
+    if (context.options.stickyBucketService != null &&
+        (experiment.disableStickyBucketing != true)) {
       final stickyBucketDoc = GBUtils.generateStickyBucketAssignmentDoc(
         context: context,
         attributeName: hashAttribute,
         attributeValue: hashValue,
         newAssignments: {
-          GBUtils.getStickyBucketExperimentKey(experiment.key, experiment.bucketVersion ?? 0): result.key
+          GBUtils.getStickyBucketExperimentKey(
+              experiment.key, experiment.bucketVersion ?? 0): result.key
         },
       );
 
       if (stickyBucketDoc.hasChanged) {
         context.userContext.stickyBucketAssignmentDocs ??= {};
-        context.userContext.stickyBucketAssignmentDocs![stickyBucketDoc.key] = stickyBucketDoc.doc;
-        context.options.stickyBucketService?.saveAssignments(stickyBucketDoc.doc);
+        context.userContext.stickyBucketAssignmentDocs![stickyBucketDoc.key] =
+            stickyBucketDoc.doc;
+        context.options.stickyBucketService
+            ?.saveAssignments(stickyBucketDoc.doc);
       }
     }
 
     if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-      context.options.trackingCallBackWithUser?.call(GBTrackData(experiment: experiment, experimentResult: result));
+      context.options.trackingCallBackWithUser
+          ?.call(GBTrackData(experiment: experiment, experimentResult: result));
     }
 
     return result;
@@ -301,14 +353,16 @@ class ExperimentEvaluator {
     int targetVariationIndex = variationIndex;
 
     // Check whether variationIndex lies within bounds of variations size
-    if (targetVariationIndex < 0 || targetVariationIndex >= experiment.variations.length) {
+    if (targetVariationIndex < 0 ||
+        targetVariationIndex >= experiment.variations.length) {
       // Set to 0
       targetVariationIndex = 0;
       inExperiment = false;
     }
     final hashResult = GBUtils.getHashAttribute(
       attr: experiment.hashAttribute,
-      fallback: (context.options.stickyBucketService != null && (experiment.disableStickyBucketing != true))
+      fallback: (context.options.stickyBucketService != null &&
+              (experiment.disableStickyBucketing != true))
           ? experiment.fallbackAttribute
           : null,
       attributes: context.userContext.attributes ?? {},
@@ -319,13 +373,16 @@ class ExperimentEvaluator {
 
     // Retrieve experiment metadata
     List<GBVariationMeta> experimentMeta = experiment.meta ?? [];
-    GBVariationMeta? meta =
-        (experimentMeta.length > targetVariationIndex) ? experimentMeta[targetVariationIndex] : null;
+    GBVariationMeta? meta = (experimentMeta.length > targetVariationIndex)
+        ? experimentMeta[targetVariationIndex]
+        : null;
 
     return GBExperimentResult(
       inExperiment: inExperiment,
       variationID: targetVariationIndex,
-      value: (experiment.variations.length > targetVariationIndex) ? experiment.variations[targetVariationIndex] : {},
+      value: (experiment.variations.length > targetVariationIndex)
+          ? experiment.variations[targetVariationIndex]
+          : {},
       hashAttribute: hashAttribute,
       hashValue: hashValue,
       key: meta?.key ?? '$targetVariationIndex',

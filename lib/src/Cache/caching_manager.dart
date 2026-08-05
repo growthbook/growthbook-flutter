@@ -1,11 +1,15 @@
 import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pointycastle/digests/sha256.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Storage backend for GrowthBook's on-device cache. Implement this to plug in
+/// a custom store (in-memory, encrypted, remote-backed, etc.) via
+/// `GBSDKBuilderApp(cacheStorage: MyStorage())`.
 abstract class CacheStorage {
   Future<void> saveContent({
     required String fileName,
@@ -16,31 +20,54 @@ abstract class CacheStorage {
   Future<void> clearCache();
 }
 
+/// Default `CacheStorage` implementation.
+///
+/// Non-web platforms write bytes to files under
+/// `<cacheDir>/GrowthBook-Cache/<hashed-api-key>/<name>.txt`. On web, entries
+/// are stored in `SharedPreferences` under the same
+/// `GrowthBook-Cache/<hashed-api-key>/<name>` key shape.
+///
+/// The cache directory defaults to the platform's application cache directory
+/// via `path_provider`, which persists across app launches on iOS, Android,
+/// macOS, and Windows. Pass an explicit `cacheDirectory` to override.
 class FileCacheStorage extends CacheStorage {
-  final _key = 'GrowthBook-Cache';
-  final String _cacheDirectory;
+  static const _rootKey = 'GrowthBook-Cache';
 
-  String _cacheKey = '';
+  final String? _cacheDirectoryOverride;
+  final String _cacheKey;
+
+  String? _resolvedCacheDirectory;
 
   FileCacheStorage({String? apiKey, String? cacheDirectory})
-      : _cacheDirectory =
-            kIsWeb ? '' : (cacheDirectory ?? Directory.systemTemp.path) {
-    if (apiKey != null) {
-      setCacheKey(apiKey);
-    }
-  }
+      : _cacheDirectoryOverride = kIsWeb ? '' : cacheDirectory,
+        _cacheKey = apiKey != null ? _sha256Hash(apiKey) : '';
 
-  void setCacheKey(String key) {
-    _cacheKey = _sha256Hash(key);
-  }
-
-  String _sha256Hash(String input) {
+  static String _sha256Hash(String input) {
     final inputBytes = utf8.encode(input);
     final digest = SHA256Digest().process(Uint8List.fromList(inputBytes));
+    return digest.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
 
-    final hashString =
-        digest.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    return hashString.substring(0, 5);
+  /// Web key/prefix for this instance. Also used as the filesystem sub-path
+  /// segment `<_rootKey>/<_cacheKey>` for the file-based backend so both
+  /// backends share the same namespace shape.
+  String get _instancePrefix => '$_rootKey/$_cacheKey';
+
+  Future<String> _resolveCacheDirectory() async {
+    final override = _cacheDirectoryOverride;
+    if (override != null && override.isNotEmpty) return override;
+    final cached = _resolvedCacheDirectory;
+    if (cached != null) return cached;
+    try {
+      final dir = await getApplicationCacheDirectory();
+      _resolvedCacheDirectory = dir.path;
+    } catch (e) {
+      // path_provider not available (e.g. unit tests without a Flutter test
+      // binding). Fall back to system temp so callers still get a usable dir.
+      logger.w('path_provider unavailable, using system temp: $e');
+      _resolvedCacheDirectory = Directory.systemTemp.path;
+    }
+    return _resolvedCacheDirectory!;
   }
 
   Future<Uint8List?> getData({required String fileName}) {
@@ -48,11 +75,11 @@ class FileCacheStorage extends CacheStorage {
   }
 
   @Deprecated('Use saveContent instead')
-  void putData({
+  Future<void> putData({
     required String fileName,
     required Uint8List content,
   }) {
-    saveContent(fileName: fileName, content: content);
+    return saveContent(fileName: fileName, content: content);
   }
 
   @override
@@ -62,8 +89,8 @@ class FileCacheStorage extends CacheStorage {
   }) async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
-      final mapedContent = content.map((value) => value.toString());
-      prefs.setStringList('$_key/$_cacheKey/$fileName', mapedContent.toList());
+      final mapedContent = content.map((value) => value.toString()).toList();
+      await prefs.setStringList('$_instancePrefix/$fileName', mapedContent);
       return;
     }
 
@@ -71,16 +98,11 @@ class FileCacheStorage extends CacheStorage {
     final tempFile = File('$targetPath.tmp');
 
     try {
-      // Write to temp file first
       tempFile.writeAsBytesSync(content, flush: true);
-
-      // Atomic rename — replaces target file safely
       tempFile.renameSync(targetPath);
-
-      log('Content saved successfully to: $fileName');
+      logger.i('Content saved successfully to: $fileName');
     } catch (e) {
-      log('Failed to save content: $e');
-      // Clean up temp file if it exists
+      logger.e('Failed to save content: $e');
       try {
         if (tempFile.existsSync()) {
           tempFile.deleteSync();
@@ -90,18 +112,17 @@ class FileCacheStorage extends CacheStorage {
   }
 
   Future<String> getTargetFile(String fileName) async {
-    final cacheDirectoryPath = _cacheDirectory;
-    String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
-    final fileManager = Directory(targetFolderPath);
-    if (!fileManager.existsSync()) {
+    final cacheDirectoryPath = await _resolveCacheDirectory();
+    final targetFolderPath = '$cacheDirectoryPath/$_instancePrefix';
+    final directory = Directory(targetFolderPath);
+    if (!directory.existsSync()) {
       try {
-        fileManager.createSync(recursive: true);
+        directory.createSync(recursive: true);
       } catch (e) {
-        log('Failed to create directory: $e');
+        logger.e('Failed to create directory: $e');
       }
     }
-    String file = fileName.replaceAll('.txt', '');
-
+    final file = fileName.replaceAll('.txt', '');
     return '$targetFolderPath/$file.txt';
   }
 
@@ -109,21 +130,20 @@ class FileCacheStorage extends CacheStorage {
   Future<Uint8List?> getContent({required String fileName}) async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
-      final result = prefs.getStringList('$_key/$_cacheKey/$fileName');
+      final result = prefs.getStringList('$_instancePrefix/$fileName');
       final mapedResult = result?.map((value) => int.parse(value)).toList();
       if (mapedResult != null) return Uint8List.fromList(mapedResult);
-
       return null;
     }
 
     try {
       final filePath = await getTargetFile(fileName);
-      File file = File(filePath);
+      final file = File(filePath);
       if (await file.exists()) {
         return await file.readAsBytes();
       }
     } catch (e) {
-      log('Failed to get content: $e');
+      logger.e('Failed to get content: $e');
     }
     return null;
   }
@@ -132,7 +152,7 @@ class FileCacheStorage extends CacheStorage {
   Future<void> removeContent({required String fileName}) async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('$_key/$fileName');
+      await prefs.remove('$_instancePrefix/$fileName');
       return;
     }
 
@@ -141,10 +161,10 @@ class FileCacheStorage extends CacheStorage {
       final file = File(filePath);
       if (await file.exists()) {
         await file.delete();
-        log('Cache file removed: $fileName');
+        logger.i('Cache file removed: $fileName');
       }
     } catch (e) {
-      log('Failed to remove content: $e');
+      logger.e('Failed to remove content: $e');
     }
   }
 
@@ -152,25 +172,28 @@ class FileCacheStorage extends CacheStorage {
   Future<void> clearCache() async {
     if (kIsWeb) {
       final prefs = await SharedPreferences.getInstance();
-      final keys = prefs.getKeys().where((value) => value.contains(_key));
-      for (String key in keys) {
-        prefs.remove(key);
-      }
+      // Scope to this instance's namespace only — otherwise clearing one SDK
+      // instance would wipe caches for every other API key on the same origin.
+      final scopedKeys = prefs
+          .getKeys()
+          .where((k) => k.startsWith('$_instancePrefix/'))
+          .toList();
+      await Future.wait(scopedKeys.map(prefs.remove));
       return;
     }
 
-    final cacheDirectoryPath = _cacheDirectory;
-    String targetFolderPath = '$cacheDirectoryPath/$_key/$_cacheKey';
-    final fileManager = Directory(targetFolderPath);
+    final cacheDirectoryPath = await _resolveCacheDirectory();
+    final targetFolderPath = '$cacheDirectoryPath/$_instancePrefix';
+    final directory = Directory(targetFolderPath);
 
-    if (fileManager.existsSync()) {
+    if (directory.existsSync()) {
       try {
-        fileManager.deleteSync(recursive: true);
+        directory.deleteSync(recursive: true);
       } catch (e) {
-        log('Failed to clear cache: $e');
+        logger.e('Failed to clear cache: $e');
       }
     } else {
-      log('Cache directory does not exist. Nothing to clear.');
+      logger.w('Cache directory does not exist. Nothing to clear.');
     }
   }
 }

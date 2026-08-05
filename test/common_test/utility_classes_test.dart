@@ -2,12 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
@@ -202,9 +200,10 @@ void main() {
   // GBUtils.getStickyBucketAttributes
   // -------------------------------------------------------------------------
   group('GBUtils.getStickyBucketAttributes', () {
-    test('returns empty map when stickyBucketIdentifierAttributes is empty', () {
+    test('returns empty map when stickyBucketIdentifierAttributes is empty',
+        () {
       final context = _gbContext(stickyBucketIdentifierAttributes: []);
-      final result = GBUtils.getStickyBucketAttributes(context, null, {});
+      final result = GBUtils.getStickyBucketAttributes(context, null, {}, {});
       expect(result, isEmpty);
     });
 
@@ -216,6 +215,7 @@ void main() {
         context,
         null,
         {'id': 'user-42'},
+        {},
       );
       expect(result.containsKey('id'), isTrue);
     });
@@ -228,7 +228,7 @@ void main() {
     test('does nothing when stickyBucketService is null', () async {
       final context = _gbContext();
       await expectLater(
-        GBUtils.refreshStickyBuckets(context, null, {}),
+        GBUtils.refreshStickyBuckets(context, null, {}, {}),
         completes,
       );
     });
@@ -241,7 +241,7 @@ void main() {
         stickyBucketService: svc,
         stickyBucketIdentifierAttributes: ['id'],
       );
-      await GBUtils.refreshStickyBuckets(context, null, {'id': 'user-1'});
+      await GBUtils.refreshStickyBuckets(context, null, {'id': 'user-1'}, {});
       // No crash — docs map is assigned (may be empty since nothing was saved)
       expect(context.stickyBucketAssignmentDocs, isNotNull);
     });
@@ -251,7 +251,8 @@ void main() {
   // GBUtils.getStickyBucketVariation — invalid variation key path
   // -------------------------------------------------------------------------
   group('GBUtils.getStickyBucketVariation', () {
-    test('returns variation -1 when assignment key exists but meta has no match',
+    test(
+        'returns variation -1 when assignment key exists but meta has no match',
         () {
       const expKey = 'my-exp';
       const bucketVersion = 0;

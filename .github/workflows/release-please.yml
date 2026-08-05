@@ -32,19 +32,25 @@ jobs:
           
       - name: Install dependencies
         run: flutter pub get
-        
-      - name: Run build_runner
-        run: dart run build_runner build --delete-conflicting-outputs
-        
-      - name: Analyze code
-        run: dart analyze --fatal-infos
-        
-      - name: Run tests
-        run: flutter test
-        
+
+      # Run dry-run BEFORE build_runner regenerates .g.dart files. Otherwise
+      # any drift between the committed generated files and the freshly built
+      # ones is reported as "checked-in file is modified in git" (exit 65),
+      # blocking the real Release Please step even though the package is
+      # otherwise valid. Running dry-run against the clean checkout keeps
+      # full publish validation active while avoiding the false positive.
       - name: Check publish warnings
         run: dart pub publish --dry-run
-        
+
+      - name: Run build_runner
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze code
+        run: dart analyze --fatal-infos
+
+      - name: Run tests
+        run: flutter test
+
       - name: Release Please
         id: release
         uses: googleapis/release-please-action@v4

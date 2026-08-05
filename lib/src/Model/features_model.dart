@@ -19,10 +19,11 @@ class FeaturedDataModel {
   final String? encryptedFeatures;
 
   final SavedGroupsValues? savedGroups;
-  
+
   final String? encryptedSavedGroups;
 
-  factory FeaturedDataModel.fromJson(Map<String, dynamic> json) => _$FeaturedDataModelFromJson(json);
+  factory FeaturedDataModel.fromJson(Map<String, dynamic> json) =>
+      _$FeaturedDataModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$FeaturedDataModelToJson(this);
 }

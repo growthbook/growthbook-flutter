@@ -93,14 +93,18 @@ void main() {
     // -----------------------------------------------------------------------
     group('consumeGetRequest', () {
       test('calls onSuccess with decoded map on 200 JSON response', () async {
-        final c = _clientWith((_) async =>
-            ResponseBody.fromString('{"status":200,"features":{}}', 200,
-                headers: {'content-type': ['application/json']}));
+        final c = _clientWith((_) async => ResponseBody.fromString(
+                '{"status":200,"features":{}}', 200,
+                headers: {
+                  'content-type': ['application/json']
+                }));
 
         Map<String, dynamic>? received;
         await c.consumeGetRequest(
           'http://test.com/data',
-          (data) => received = data,
+          (data) async {
+            received = data;
+          },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -108,16 +112,19 @@ void main() {
         expect(received!['status'], 200);
       });
 
-      test('calls onSuccess when response.data is a plain JSON string', () async {
+      test('calls onSuccess when response.data is a plain JSON string',
+          () async {
         final c = DioClient();
         c.client.options.responseType = ResponseType.plain;
-        c.client.httpClientAdapter = _MockAdapter((_) async =>
-            ResponseBody.fromString('{"key":"value"}', 200));
+        c.client.httpClientAdapter = _MockAdapter(
+            (_) async => ResponseBody.fromString('{"key":"value"}', 200));
 
         Map<String, dynamic>? received;
         await c.consumeGetRequest(
           'http://test.com/data',
-          (data) => received = data,
+          (data) async {
+            received = data;
+          },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -143,9 +150,10 @@ void main() {
 
       test('calls onError when response format is unexpected', () async {
         // A JSON array is neither Map nor String → unexpected format
-        final c = _clientWith((_) async =>
-            ResponseBody.fromString('[1,2,3]', 200,
-                headers: {'content-type': ['application/json']}));
+        final c = _clientWith(
+            (_) async => ResponseBody.fromString('[1,2,3]', 200, headers: {
+                  'content-type': ['application/json']
+                }));
 
         Object? capturedError;
         await c.consumeGetRequest(
@@ -159,17 +167,19 @@ void main() {
 
       test('returns without calling callbacks on 304 Not Modified', () async {
         final c = DioClient();
-        c.client.httpClientAdapter = _MockAdapter((_) async =>
-            ResponseBody.fromString('', 304));
-        c.client.options.validateStatus = (s) =>
-            s != null && (s >= 200 && s < 300 || s == 304);
+        c.client.httpClientAdapter =
+            _MockAdapter((_) async => ResponseBody.fromString('', 304));
+        c.client.options.validateStatus =
+            (s) => s != null && (s >= 200 && s < 300 || s == 304);
 
         bool successCalled = false;
         bool errorCalled = false;
 
         await c.consumeGetRequest(
           'http://test.com/data',
-          (_) => successCalled = true,
+          (_) async {
+            successCalled = true;
+          },
           (e, s) => errorCalled = true,
         );
 
@@ -194,19 +204,19 @@ void main() {
         c.client.httpClientAdapter = _MockAdapter((options) async {
           callCount++;
           if (callCount == 1) {
-            return ResponseBody.fromString('{"features":{}}', 200,
-                headers: {
-                  'content-type': ['application/json'],
-                  'etag': ['"abc123"'],
-                });
+            return ResponseBody.fromString('{"features":{}}', 200, headers: {
+              'content-type': ['application/json'],
+              'etag': ['"abc123"'],
+            });
           }
           secondRequestOptions = options;
-          return ResponseBody.fromString('{"features":{}}', 200,
-              headers: {'content-type': ['application/json']});
+          return ResponseBody.fromString('{"features":{}}', 200, headers: {
+            'content-type': ['application/json']
+          });
         });
 
-        await c.consumeGetRequest(featuresUrl, (_) {}, (e, s) {});
-        await c.consumeGetRequest(featuresUrl, (_) {}, (e, s) {});
+        await c.consumeGetRequest(featuresUrl, (_) async {}, (e, s) {});
+        await c.consumeGetRequest(featuresUrl, (_) async {}, (e, s) {});
 
         expect(secondRequestOptions?.headers['If-None-Match'], '"abc123"');
       });
@@ -217,11 +227,12 @@ void main() {
         RequestOptions? capturedOptions;
         final c = _clientWith((options) async {
           capturedOptions = options;
-          return ResponseBody.fromString('{"data":1}', 200,
-              headers: {'content-type': ['application/json']});
+          return ResponseBody.fromString('{"data":1}', 200, headers: {
+            'content-type': ['application/json']
+          });
         });
 
-        await c.consumeGetRequest(nonFeaturesUrl, (_) {}, (e, s) {});
+        await c.consumeGetRequest(nonFeaturesUrl, (_) async {}, (e, s) {});
 
         expect(capturedOptions?.headers.containsKey('If-None-Match'), isFalse);
         expect(capturedOptions?.headers.containsKey('Cache-Control'), isFalse);
@@ -270,14 +281,18 @@ void main() {
         final c = _clientWith((_) async => ResponseBody.fromString(
               '{"result":"ok"}',
               200,
-              headers: {'content-type': ['application/json']},
+              headers: {
+                'content-type': ['application/json']
+              },
             ));
 
         Map<String, dynamic>? received;
         await c.consumePostRequest(
           'http://test.com/api',
           {'key': 'value'},
-          (data) => received = data,
+          (data) async {
+            received = data;
+          },
           (e, s) => fail('onError should not be called: $e'),
         );
 
@@ -316,14 +331,15 @@ void main() {
 
         final c = DioClient();
         c.client.httpClientAdapter = _OnceThenErrorAdapter(
-          ResponseBody.fromString(ssePayload, 200,
-              headers: {'content-type': ['text/event-stream']}),
+          ResponseBody.fromString(ssePayload, 200, headers: {
+            'content-type': ['text/event-stream']
+          }),
         );
 
         final completer = Completer<Map<String, dynamic>>();
         await c.consumeSseConnections(
           'http://test.com/sse',
-          (data) {
+          (data) async {
             if (!completer.isCompleted) completer.complete(data);
           },
           (e, s) {
@@ -347,7 +363,7 @@ void main() {
         Object? capturedError;
         await c.consumeSseConnections(
           'http://test.com/sse',
-          (_) {},
+          (_) async {},
           (e, s) => capturedError = e,
         );
 

@@ -100,8 +100,10 @@ final sdk = await GBSDKBuilderApp(
     'email': 'user@example.com',
     'country': 'US',
   },
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Track experiment exposures
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     print('Experiment: ${experiment.key}, Variation: ${result.variationID}');
   },
 ).initialize();
@@ -144,7 +146,10 @@ class MyHomePage extends StatelessWidget {
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
+
     // Google Analytics
     FirebaseAnalytics.instance.logEvent(
       name: 'experiment_viewed',
@@ -198,8 +203,10 @@ final sdk = await GBSDKBuilderApp(
   },
   
   // Analytics Integration
-  growthBookTrackingCallBack: (experiment, result) {
+  growthBookTrackingCallBack: (trackData) {
     // Send to your analytics platform
+    final experiment = trackData.experiment;
+    final result = trackData.experimentResult;
     analytics.track('Experiment Viewed', {
       'experiment_id': experiment.key,
       'variation_id': result.variationID,
@@ -212,6 +219,29 @@ final sdk = await GBSDKBuilderApp(
   encryptionKey: "...",         // For encrypted features
 ).initialize();
 ```
+
+### Configuring Log Level
+
+The SDK logs internal events (feature evaluation skips, cache errors, refresh
+attempts) through a `logger` package instance. Verbosity is controlled by
+`GrowthBookSDK.setLogLevel(...)`, which accepts an SDK-owned `GBLogLevel` enum:
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+void main() {
+  // Configure once at app startup — before initializing the SDK.
+  GrowthBookSDK.setLogLevel(GBLogLevel.debug);
+
+  runApp(const MyApp());
+}
+```
+
+Available levels: `verbose`, `debug`, `info`, `warning` (default), `error`, `off`.
+
+> ⚠️ **Process-global**: log level is shared across all `GrowthBookSDK` instances
+> in the same process. Set it once at app startup rather than per-instance.
+> If you run multiple SDK instances, they will share the same verbosity.
 
 ### Feature Flag Usage
 
@@ -293,6 +323,68 @@ sdk.setAttributes({
 // This is configured in GrowthBook dashboard, not in code
 ```
 
+### Condition Operators
+
+The SDK supports the following operators in targeting conditions:
+
+#### Comparison
+
+| Operator | Description |
+|----------|-------------|
+| `$eq` | Equal to |
+| `$ne` | Not equal to |
+| `$lt` | Less than |
+| `$lte` | Less than or equal |
+| `$gt` | Greater than |
+| `$gte` | Greater than or equal |
+
+#### Membership
+
+| Operator | Description |
+|----------|-------------|
+| `$in` | Value is in array |
+| `$nin` | Value is not in array |
+| `$all` | Array contains all values |
+| `$ini` | Value is in array (case-insensitive string comparison) |
+| `$nini` | Value is not in array (case-insensitive string comparison) |
+| `$alli` | Array contains all values (case-insensitive string comparison) |
+
+> For `$ini`, `$nini`, and `$alli`: string values are compared after lowercasing; non-string values (numbers, booleans, null) are compared as-is.
+
+#### Regex
+
+| Operator | Description |
+|----------|-------------|
+| `$regex` | Matches regex (case-sensitive) |
+| `$notRegex` | Does not match regex (case-sensitive) |
+| `$regexi` | Matches regex (case-insensitive) |
+| `$notRegexi` | Does not match regex (case-insensitive) |
+
+#### Other
+
+| Operator | Description |
+|----------|-------------|
+| `$exists` | Attribute exists (`true`) or is absent (`false`) |
+| `$type` | Attribute type matches string (`"string"`, `"number"`, `"boolean"`, `"array"`, `"object"`, `"null"`) |
+| `$not` | Negates a condition |
+| `$size` | Array length matches condition |
+| `$elemMatch` | At least one array element matches condition |
+| `$vgt` / `$vlt` / `$vgte` / `$vlte` / `$veq` / `$vne` | Semantic version comparison |
+
+```dart
+// Example: case-insensitive membership
+// Matches users where country is "us", "US", "Us", etc.
+final condition = {
+  'country': {'\$ini': ['US', 'CA', 'GB']}
+};
+
+// Example: case-insensitive regex
+// Matches "Hello", "hello", "HELLO", etc.
+final condition2 = {
+  'greeting': {'\$regexi': '^hello'}
+};
+```
+
 ---
 
 ## 🔧 Advanced Features
@@ -303,54 +395,75 @@ The SDK caches fetched features to disk so they are available immediately on the
 
 #### Default storage
 
-By default, `FileCacheStorage` stores features under the system temp directory:
+By default, `FileCacheStorage` writes to the platform's application cache directory (obtained from `path_provider`), which persists across app launches on iOS, Android, macOS, and Windows:
 
 ```
-<systemTemp>/
+<applicationCacheDirectory>/
   GrowthBook-Cache/
-    <hashed-api-key>/
+    <sha256(apiKey)>/
       featuresCache.txt
 ```
 
-The cache key is the first 5 characters of the SHA-256 hash of your API key, so each API key gets its own isolated folder. On Flutter Web, `SharedPreferences` is used instead of the filesystem.
+Each API key gets its own isolated folder — the full SHA-256 hash of the key is used as the namespace, so instances with different API keys never share cache entries. On Flutter Web, `SharedPreferences` is used instead of the filesystem with the same namespace shape (`GrowthBook-Cache/<sha256(apiKey)>/<name>`).
+
+If `path_provider` is unavailable (for example in unit tests without a Flutter binding), the SDK falls back to the system temp directory and logs a warning.
 
 #### Custom cache directory
 
-Pass a `cacheDirectory` string to store files in a specific location:
+Pass a `cacheDirectory` string to override the default location:
 
 ```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
 final sdk = await GBSDKBuilderApp(
-  apiKey: "your_api_key",
-  cacheDirectory: '/path/to/your/cache',
+  apiKey: 'your_api_key',
+  hostURL: 'https://cdn.growthbook.io/',
+  growthBookTrackingCallBack: (trackData) {},
+  cacheDirectory: '/absolute/path/to/your/cache',
 ).initialize();
 ```
 
 #### Custom CacheStorage implementation
 
-For full control (in-memory cache, encrypted storage, etc.), implement `CacheStorage` and pass it via `cacheStorage`:
+For full control (in-memory cache, encrypted storage, remote-backed, etc.), implement `CacheStorage` and pass it via `cacheStorage`:
 
 ```dart
-class MyCacheStorage extends CacheStorage {
+import 'dart:typed_data';
+
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+class InMemoryCacheStorage extends CacheStorage {
+  final Map<String, Uint8List> _entries = {};
+
   @override
-  Future<void> saveContent({required String fileName, required Uint8List content}) async {
-    // your storage logic
+  Future<void> saveContent({
+    required String fileName,
+    required Uint8List content,
+  }) async {
+    _entries[fileName] = content;
   }
 
   @override
   Future<Uint8List?> getContent({required String fileName}) async {
-    // your retrieval logic
+    return _entries[fileName];
   }
 
   @override
-  Future<void> removeContent({required String fileName}) async {}
+  Future<void> removeContent({required String fileName}) async {
+    _entries.remove(fileName);
+  }
 
   @override
-  Future<void> clearCache() async {}
+  Future<void> clearCache() async {
+    _entries.clear();
+  }
 }
 
 final sdk = await GBSDKBuilderApp(
-  apiKey: "your_api_key",
-  cacheStorage: MyCacheStorage(),
+  apiKey: 'your_api_key',
+  hostURL: 'https://cdn.growthbook.io/',
+  growthBookTrackingCallBack: (trackData) {},
+  cacheStorage: InMemoryCacheStorage(),
 ).initialize();
 ```
 
@@ -360,11 +473,11 @@ final sdk = await GBSDKBuilderApp(
 await sdk.clearCache();
 ```
 
-`clearCache()` is async — always `await` it to ensure the cache is fully cleared before continuing.
+`clearCache()` is async — always `await` it to ensure the cache is fully cleared before continuing. It is scoped to this SDK instance's namespace, so instances configured with different API keys do not clear each other's caches.
 
 #### Cache key / API key separation
 
-The cache key is derived from the API key via a short SHA-256 hash. If you change your API key, a new cache folder is created automatically and the old folder is left on disk.
+The cache key is the full SHA-256 hash of the API key. If you change your API key, a new cache folder is created automatically and the old folder is left on disk — call `clearCache()` before switching keys if you want to free the old space.
 
 #### TTL and background sync
 
@@ -448,6 +561,112 @@ final sdk = await GBSDKBuilderApp(
 // Features automatically update when changed in GrowthBook
 // No need to restart the app or refresh manually
 ```
+
+### Tracking Plugins
+
+Plugins observe SDK lifecycle events (feature evaluated, experiment viewed) and can implement custom side effects such as forwarding events to an analytics backend. The SDK ships with `GrowthBookTrackingPlugin`, which batches events and sends them to the GrowthBook ingest endpoint.
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+Future<void> main() async {
+  final sdk = await GBSDKBuilderApp(
+    apiKey: 'sdk-xxx',
+    hostURL: 'https://cdn.growthbook.io',
+    growthBookTrackingCallBack: (_) {},
+  )
+      .addPlugin(GrowthBookTrackingPlugin())
+      .initialize();
+
+  runApp(MyApp(sdk: sdk));
+}
+```
+
+#### Custom configuration
+
+```dart
+final trackingPlugin = GrowthBookTrackingPlugin(
+  config: GrowthBookTrackingPluginConfig(
+    ingestorHost: 'https://ingest.growthbook.io',
+    batchSize: 50,
+    batchTimeout: Duration(seconds: 30),
+  ),
+);
+
+await GBSDKBuilderApp(...)
+    .addPlugin(trackingPlugin)
+    .initialize();
+```
+
+#### Lifecycle — always await `dispose()`
+
+Tracking plugins buffer events in memory to reduce network overhead. **You must call `await sdk.dispose()` when the SDK instance is no longer needed** so buffered events are flushed and any resources (timers, HTTP clients) are released. Without this, queued tracking events will be dropped during app shutdown.
+
+```dart
+class _MyAppState extends State<MyApp> {
+  late final GrowthBookSDK sdk;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSdk();
+  }
+
+  Future<void> _initSdk() async {
+    sdk = await GBSDKBuilderApp(...)
+        .addPlugin(GrowthBookTrackingPlugin())
+        .initialize();
+  }
+
+  @override
+  void dispose() {
+    // Flushes pending tracking events and releases plugin resources
+    sdk.dispose();
+    super.dispose();
+  }
+}
+```
+
+For CLI tools, server processes, or short-lived isolates, wrap SDK usage in a `try`/`finally`:
+
+```dart
+final sdk = await GBSDKBuilderApp(...).addPlugin(GrowthBookTrackingPlugin()).initialize();
+try {
+  // ... SDK usage
+} finally {
+  await sdk.dispose();
+}
+```
+
+#### Custom plugins
+
+Extend `GrowthBookPlugin` to implement your own tracking, logging, or analytics forwarding:
+
+```dart
+class MyAnalyticsPlugin extends GrowthBookPlugin {
+  @override
+  void initialize(String clientKey) {
+    // one-time setup (e.g. start a periodic flush timer)
+  }
+
+  @override
+  void onFeatureEvaluated(String id, GBFeatureResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  void onExperimentViewed(GBExperiment experiment, GBExperimentResult result, Map<String, dynamic>? attributes) {
+    // forward to your analytics
+  }
+
+  @override
+  Future<void> close() async {
+    // flush any buffered state, release resources
+  }
+}
+```
+
+> ⚠️ Plugin errors are isolated per plugin — a throw in one plugin's callback does not affect other plugins or SDK evaluation. If you need stronger delivery guarantees than best-effort batching, implement retry/requeue with bounded storage inside your plugin's `close()` method.
 
 ---
 

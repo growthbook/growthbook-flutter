@@ -15,7 +15,8 @@ class StickyAssignmentsDocument extends Equatable {
   final String attributeName;
   final String attributeValue;
 
-  factory StickyAssignmentsDocument.fromJson(Map<String, dynamic> value) => _$StickyAssignmentsDocumentFromJson(value);
+  factory StickyAssignmentsDocument.fromJson(Map<String, dynamic> value) =>
+      _$StickyAssignmentsDocumentFromJson(value);
 
   Map<String, dynamic> toJson() => _$StickyAssignmentsDocumentToJson(this);
 
@@ -28,4 +29,3 @@ typedef StickyAssignments = Map<StickyExperimentKey, String>;
 typedef StickyExperimentKey = String; // `${experimentId}__{version}`
 
 typedef StickyAttributeKey = String; // `${attributeName}||${attributeValue}`
-

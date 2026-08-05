@@ -77,7 +77,8 @@ void main() {
   group('GBVariationMeta', () {
     group('toJson / fromJson', () {
       test('round-trips all fields', () {
-        final meta = GBVariationMeta(key: 'v1', name: 'Control', passthrough: true);
+        final meta =
+            GBVariationMeta(key: 'v1', name: 'Control', passthrough: true);
         final json = meta.toJson();
         final restored = GBVariationMeta.fromJson(json);
 
@@ -89,7 +90,8 @@ void main() {
 
     group('toString', () {
       test('contains all field values', () {
-        final meta = GBVariationMeta(key: 'v2', name: 'Treatment', passthrough: false);
+        final meta =
+            GBVariationMeta(key: 'v2', name: 'Treatment', passthrough: false);
         final str = meta.toString();
         expect(str, contains('v2'));
         expect(str, contains('Treatment'));

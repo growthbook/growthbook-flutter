@@ -15,7 +15,8 @@ class RemoteEvalModel {
   final List<dynamic>? forcedFeatures;
   final Map<String, dynamic>? forcedVariations;
 
-  factory RemoteEvalModel.fromJson(Map<String, dynamic> json) => _$RemoteEvalModelFromJson(json);
+  factory RemoteEvalModel.fromJson(Map<String, dynamic> json) =>
+      _$RemoteEvalModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$RemoteEvalModelToJson(this);
 }

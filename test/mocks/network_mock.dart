@@ -9,14 +9,15 @@ class MockNetworkClient implements BaseClient {
   const MockNetworkClient({this.error = false, this.notModified = false});
 
   @override
-  Future<void> consumeGetRequest(String url, OnSuccess onSuccess, OnError onError) async {
+  Future<void> consumeGetRequest(
+      String url, OnSuccess onSuccess, OnError onError) async {
     if (notModified) {
       // Simulate 304 Not Modified: neither callback is called
       return;
     }
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(
@@ -32,11 +33,11 @@ class MockNetworkClient implements BaseClient {
   }
 
   @override
-  Future<void> consumePostRequest(
-      String baseUrl, Map<String, dynamic> params, OnSuccess onSuccess, OnError onError) async {
+  Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
+      OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(
@@ -52,10 +53,11 @@ class MockNetworkClient implements BaseClient {
   }
 
   @override
-  Future<void> consumeSseConnections(String url, OnSuccess onSuccess, OnError onError) async {
+  Future<void> consumeSseConnections(
+      String url, OnSuccess onSuccess, OnError onError) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
-      onSuccess(pseudoResponse);
+      await onSuccess(pseudoResponse);
     } else {
       onError(
         DioException(

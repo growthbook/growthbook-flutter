@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:pointycastle/export.dart';
@@ -17,7 +19,8 @@ class DecryptionUtils {
       Uint8List encryptionKeyData = base64Decode(encryptionKey);
       Uint8List cipherTextData = base64Decode(cipherTextString);
 
-      Uint8List decryptedData = await AESCryptor.decrypt(cipherTextData, encryptionKeyData, ivData);
+      Uint8List decryptedData =
+          await AESCryptor.decrypt(cipherTextData, encryptionKeyData, ivData);
 
       String decryptedString = utf8.decode(decryptedData);
       return decryptedString;
@@ -33,16 +36,19 @@ class DecryptionUtils {
 }
 
 class AESCryptor {
-  static Future<Uint8List> decrypt(Uint8List data, Uint8List key, Uint8List iv) async {
+  static Future<Uint8List> decrypt(
+      Uint8List data, Uint8List key, Uint8List iv) async {
     try {
       final keyParameter = KeyParameter(key);
       final params = ParametersWithIV(keyParameter, iv);
 
-      PaddedBlockCipherParameters<CipherParameters?, CipherParameters?> paddingParams =
-          PaddedBlockCipherParameters<CipherParameters?, CipherParameters?>(params, null);
+      PaddedBlockCipherParameters<CipherParameters?, CipherParameters?>
+          paddingParams =
+          PaddedBlockCipherParameters<CipherParameters?, CipherParameters?>(
+              params, null);
 
-      // ignore: deprecated_member_use
-      final cipher = PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESFastEngine()));
+      final cipher = PaddedBlockCipherImpl(
+          PKCS7Padding(), CBCBlockCipher(AESFastEngine()));
       cipher.init(false, paddingParams);
 
       final decryptedData = cipher.process(Uint8List.fromList(data));

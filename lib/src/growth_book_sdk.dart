@@ -6,10 +6,8 @@ import 'dart:typed_data';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
-import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 typedef VoidCallback = void Function();
 
@@ -55,10 +53,13 @@ class GBSDKBuilderApp {
   final String? url;
   final int ttlSeconds;
 
+  // ignore: deprecated_member_use_from_same_package
   CacheRefreshHandler? refreshHandler;
+  CacheRefreshHandlerV2? refreshHandlerV2;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
   CacheStorage cachingManager;
+  final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -80,8 +81,10 @@ class GBSDKBuilderApp {
         context: gbContext,
         client: client,
         onInitializationFailure: onInitializationFailure,
-      cachingManager: cachingManager,
+        cachingManager: cachingManager,
         refreshHandler: refreshHandler,
+        refreshHandlerV2: refreshHandlerV2,
+        pluginRegistry: PluginRegistry(_plugins),
         ttlSeconds: ttlSeconds);
     if (gbFeatures.isNotEmpty) {
       await cachingManager.saveContent(
@@ -90,9 +93,16 @@ class GBSDKBuilderApp {
     }
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
+    gb._initializePlugins();
     return gb;
   }
 
+  /// Registers a legacy refresh handler that only receives a boolean.
+  ///
+  /// Prefer [setRefreshHandlerV2] which also receives the [GBError] that
+  /// caused a failure.
+  @Deprecated('Use setRefreshHandlerV2 for error-aware refresh callbacks')
+  // ignore: deprecated_member_use_from_same_package
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
     return this;
@@ -100,6 +110,13 @@ class GBSDKBuilderApp {
 
   GBSDKBuilderApp setCachingManager(CacheStorage cachingManager) {
     this.cachingManager = cachingManager;
+    return this;
+  }
+
+  /// Registers an error-aware refresh handler. Called with
+  /// `(true, null)` on successful refresh and `(false, error)` on failure.
+  GBSDKBuilderApp setRefreshHandlerV2(CacheRefreshHandlerV2 refreshHandlerV2) {
+    this.refreshHandlerV2 = refreshHandlerV2;
     return this;
   }
 
@@ -115,27 +132,38 @@ class GBSDKBuilderApp {
     this.featureUsageCallback = featureUsageCallback;
     return this;
   }
+
+  /// Registers a plugin that will receive experiment and feature evaluation events.
+  GBSDKBuilderApp addPlugin(GrowthBookPlugin plugin) {
+    _plugins.add(plugin);
+    return this;
+  }
 }
 
 /// The main export of the libraries is a simple GrowthBook wrapper class that
 /// takes a Context object in the constructor.
 /// It exposes two main methods: feature and run.
 class GrowthBookSDK extends FeaturesFlowDelegate {
-  GrowthBookSDK._(
-      {OnInitializationFailure? onInitializationFailure,
-      required GBContext context,
-      EvaluationContext? evaluationContext,
-      BaseClient? client,
-      CacheRefreshHandler? refreshHandler,
+  GrowthBookSDK._({
+    OnInitializationFailure? onInitializationFailure,
+    required GBContext context,
+    EvaluationContext? evaluationContext,
+    BaseClient? client,
+    // ignore: deprecated_member_use_from_same_package
+    CacheRefreshHandler? refreshHandler,
+    CacheRefreshHandlerV2? refreshHandlerV2,
+    PluginRegistry? pluginRegistry,
     required int ttlSeconds,
-      required CacheStorage cachingManager})
-: _context = context,
+    required CacheStorage cachingManager,
+  })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
+        _refreshHandlerV2 = refreshHandlerV2,
         _cachingManager = cachingManager,
         _baseClient = client ?? DioClient(),
+        _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
     _featureViewModel = FeatureViewModel(
@@ -160,7 +188,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final OnInitializationFailure? _onInitializationFailure;
 
+  // ignore: deprecated_member_use_from_same_package
   final CacheRefreshHandler? _refreshHandler;
+
+  final CacheRefreshHandlerV2? _refreshHandlerV2;
+
+  final PluginRegistry _pluginRegistry;
 
   List<dynamic> _forcedFeatures;
 
@@ -188,6 +221,38 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         GBUtils.initializeEvalContext(_context, _refreshHandler);
   }
 
+  void _initializePlugins() {
+    _pluginRegistry.initialize(_context.apiKey ?? '');
+  }
+
+  /// Releases resources held by all registered plugins.
+  ///
+  /// **Always await this** when the SDK instance is no longer needed —
+  /// tracking plugins buffer events in memory and rely on `close()` to flush
+  /// them. Without an awaited `dispose()`, queued events are dropped when the
+  /// app terminates.
+  ///
+  /// Typical usage:
+  /// ```dart
+  /// @override
+  /// void dispose() {
+  ///   sdk.dispose();
+  ///   super.dispose();
+  /// }
+  /// ```
+  ///
+  /// For short-lived scripts, wrap in try/finally:
+  /// ```dart
+  /// try {
+  ///   // ... SDK usage
+  /// } finally {
+  ///   await sdk.dispose();
+  /// }
+  /// ```
+  Future<void> dispose() {
+    return _pluginRegistry.close();
+  }
+
   @override
   void featuresFetchedSuccessfully({
     required GBFeatures gbFeatures,
@@ -197,19 +262,23 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _updateEvaluationContext();
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
-      if (_refreshHandler != null) {
-        _refreshHandler!(true);
-      }
+      _refreshHandler?.call(true);
+      _refreshHandlerV2?.call(true, null);
     }
+  }
+
+  @override
+  void featuresNotModified() {
+    _refreshHandler?.call(true);
+    _refreshHandlerV2?.call(true, null);
   }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(false);
-      }
+      _refreshHandler?.call(false);
+      _refreshHandlerV2?.call(false, error);
     }
   }
 
@@ -281,7 +350,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   GBFeatureResult feature(String id) {
     _triggerBackgroundRefreshIfNeeded();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
+    // Propagate any newly persisted sticky bucket assignments back to the
+    // shared GBContext so the next _updateEvaluationContext() preserves them.
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
+    return result;
   }
 
   void _triggerBackgroundRefreshIfNeeded() {
@@ -311,7 +386,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _evaluationContext,
       experiment,
     );
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
+    if (result.inExperiment) {
+      _notifyExperimentViewed(experiment, result);
+    }
     return result;
   }
 
@@ -320,21 +400,54 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     return _context.stickyBucketAssignmentDocs ?? {};
   }
 
-  /// Replaces the Map of user attributes that are used to assign variations
+  /// Replaces the Map of user attributes that are used to assign variations.
+  ///
+  /// Sticky bucket refresh runs in the background (fire-and-forget).
+  /// If you use Sticky Bucketing and need to guarantee that assignments are
+  /// loaded before evaluating experiments (e.g. after login or user switch),
+  /// use [setAttributesAsync] instead.
   void setAttributes(Map<String, dynamic> attributes) {
     _context.attributes = attributes;
     _updateEvaluationContext();
     refreshStickyBucketService(null);
   }
 
+  /// Async version of [setAttributes] that awaits sticky bucket refresh
+  /// before returning. Use this when you rely on Sticky Bucketing and need
+  /// assignments to be loaded before evaluating experiments:
+  /// ```dart
+  /// await sdk.setAttributesAsync(loginAttributes);
+  /// final result = sdk.feature('my-experiment'); // sticky buckets guaranteed
+  /// ```
+  Future<void> setAttributesAsync(Map<String, dynamic> attributes) async {
+    _context.attributes = attributes;
+    _updateEvaluationContext();
+    await refreshStickyBucketService(null);
+  }
+
   /// Gets the current attribute overrides
   Map<String, dynamic> get attributeOverrides => _attributeOverrides;
 
+  /// Replaces attribute overrides used during experiment evaluation.
+  ///
+  /// Sticky bucket refresh runs in the background (fire-and-forget).
+  /// If you use Sticky Bucketing, use [setAttributeOverridesAsync] instead.
   void setAttributeOverrides(dynamic overrides) {
     _attributeOverrides = jsonDecode(overrides) as Map<String, dynamic>;
     _updateEvaluationContext();
     if (context.stickyBucketService != null) {
       refreshStickyBucketService(null);
+    }
+    refreshForRemoteEval();
+  }
+
+  /// Async version of [setAttributeOverrides] that awaits sticky bucket
+  /// refresh before returning.
+  Future<void> setAttributeOverridesAsync(dynamic overrides) async {
+    _attributeOverrides = jsonDecode(overrides) as Map<String, dynamic>;
+    _updateEvaluationContext();
+    if (context.stickyBucketService != null) {
+      await refreshStickyBucketService(null);
     }
     refreshForRemoteEval();
   }
@@ -356,24 +469,36 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (features != null) {
       _context.features = features;
       _updateEvaluationContext();
+      // New features may reference different hash/fallback attributes —
+      // refresh sticky bucket docs so the next eval works against current
+      // identifiers.
+      refreshStickyBucketService(null);
     }
   }
 
   void setForcedVariations(Map<String, dynamic> forcedVariations) {
     _context.forcedVariation = forcedVariations;
     _updateEvaluationContext();
+    // Forced variations are evaluated against sticky bucket assignments —
+    // refresh so docs reflect the updated forced map.
+    refreshStickyBucketService(null);
     refreshForRemoteEval();
   }
 
   @override
-  void featuresAPIModelSuccessfully(FeaturedDataModel model) {
-    refreshStickyBucketService(model);
+  Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
+    await refreshStickyBucketService(model);
   }
 
   Future<void> refreshStickyBucketService(FeaturedDataModel? data) async {
     if (context.stickyBucketService != null) {
       await GBUtils.refreshStickyBuckets(
-          _context, data, _evaluationContext.userContext.attributes ?? {});
+        _context,
+        data,
+        _evaluationContext.userContext.attributes ?? {},
+        _attributeOverrides,
+        experiments: _evaluationContext.globalContext.experiments,
+      );
       _updateEvaluationContext();
     }
   }
@@ -400,7 +525,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
     _evaluationContext.stackContext.evaluatedFeatures.clear();
-    return FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+    _notifyFeatureEvaluated(id, result);
+    _context.stickyBucketAssignmentDocs =
+        _evaluationContext.userContext.stickyBucketAssignmentDocs;
+    return result;
+  }
+
+  void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
+    _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
+  }
+
+  void _notifyExperimentViewed(
+      GBExperiment experiment, GBExperimentResult result) {
+    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
@@ -413,9 +551,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       {required GBError? error, required bool isRemote}) {
     _onInitializationFailure?.call(error);
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(false);
-      }
+      _refreshHandler?.call(false);
+      _refreshHandlerV2?.call(false, error);
     }
   }
 
@@ -425,9 +562,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.savedGroups = savedGroups;
     _updateEvaluationContext();
     if (isRemote) {
-      if (_refreshHandler != null) {
-        _refreshHandler!(true);
-      }
+      _refreshHandler?.call(true);
+      _refreshHandlerV2?.call(true, null);
     }
   }
 }

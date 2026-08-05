@@ -40,7 +40,7 @@ class GBTrack {
   });
 
   final GBExperiment? experiment;
-  
+
   final GBExperimentResult? result;
 
   factory GBTrack.fromJson(Map<String, dynamic> value) =>

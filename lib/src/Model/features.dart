@@ -21,7 +21,8 @@ class GBFeature {
   ///  The default value (should use null if not specified)
   dynamic defaultValue;
 
-  factory GBFeature.fromJson(Map<String, dynamic> value) => _$GBFeatureFromJson(value);
+  factory GBFeature.fromJson(Map<String, dynamic> value) =>
+      _$GBFeatureFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureToJson(this);
 }
@@ -128,7 +129,8 @@ class GBFeatureRule {
   // GBTrack? tracks;
   List<GBTrack>? tracks;
 
-  factory GBFeatureRule.fromJson(Map<String, dynamic> value) => _$GBFeatureRuleFromJson(value);
+  factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
+      _$GBFeatureRuleFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureRuleToJson(this);
 
@@ -188,15 +190,14 @@ enum GBFeatureSource {
 /// Result for Feature
 @JsonSerializable()
 class GBFeatureResult {
-  GBFeatureResult({
-    this.value,
-    this.on = false,
-    this.off = true,
-    this.source,
-    this.experiment,
-    this.experimentResult,
-    this.ruleId = ""
-  });
+  GBFeatureResult(
+      {this.value,
+      this.on = false,
+      this.off = true,
+      this.source,
+      this.experiment,
+      this.experimentResult,
+      this.ruleId = ""});
 
   /// The assigned value of the feature
   dynamic value;
@@ -218,7 +219,8 @@ class GBFeatureResult {
   GBExperimentResult? experimentResult;
   String? ruleId = "";
 
-  factory GBFeatureResult.fromJson(Map<String, dynamic> value) => _$GBFeatureResultFromJson(value);
+  factory GBFeatureResult.fromJson(Map<String, dynamic> value) =>
+      _$GBFeatureResultFromJson(value);
 
   Map<String, dynamic> toJson() => _$GBFeatureResultToJson(this);
 }
