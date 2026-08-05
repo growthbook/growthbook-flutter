@@ -8,7 +8,6 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 
-
 typedef VoidCallback = void Function();
 
 typedef OnInitializationFailure = void Function(GBError? error);

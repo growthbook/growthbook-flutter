@@ -29,7 +29,7 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'getApplicationSupportDirectory') {
-          return '/tmp'; 
+          return '/tmp';
         }
         return null;
       });

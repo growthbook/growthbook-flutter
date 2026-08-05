@@ -256,14 +256,13 @@ void main() {
           );
 
           featureViewModel = FeatureViewModel(
-            encryptionKey: testApiKey,
-            delegate: dataSourceMock,
-            source: FeatureDataSource(
-              client: const MockNetworkClient(),
-              context: context,
-            ),
-            manager: cachingManager
-          );
+              encryptionKey: testApiKey,
+              delegate: dataSourceMock,
+              source: FeatureDataSource(
+                client: const MockNetworkClient(),
+                context: context,
+              ),
+              manager: cachingManager);
 
           await featureViewModel.fetchFeatures(context.getFeaturesURL());
 
@@ -283,14 +282,13 @@ void main() {
           );
 
           featureViewModel = FeatureViewModel(
-            encryptionKey: testApiKey,
-            delegate: dataSourceMock,
-            source: FeatureDataSource(
-              client: const MockNetworkClient(),
-              context: context,
-            ),
-            manager: cachingManager
-          );
+              encryptionKey: testApiKey,
+              delegate: dataSourceMock,
+              source: FeatureDataSource(
+                client: const MockNetworkClient(),
+                context: context,
+              ),
+              manager: cachingManager);
 
           await featureViewModel.fetchFeatures(context.getFeaturesURL());
 

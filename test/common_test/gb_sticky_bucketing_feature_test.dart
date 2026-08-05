@@ -16,7 +16,7 @@ bool _docsEqual(
 }
 
 void main() {
-    TestWidgetsFlutterBinding.ensureInitialized();
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('GBStickyBucketingFeatureTests', () {
     late List<dynamic> evalConditions;
 

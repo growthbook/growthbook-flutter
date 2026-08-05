@@ -52,8 +52,7 @@ void main() {
       expect(await a.getContent(fileName: fileName), isNull,
           reason: "a's cache was cleared, so its content should be gone");
       final fromB = await b.getContent(fileName: fileName);
-      expect(fromB, isNotNull,
-          reason: "b's cache must survive a.clearCache()");
+      expect(fromB, isNotNull, reason: "b's cache must survive a.clearCache()");
       expect(utf8.decode(fromB!), '{"from":"b"}');
     });
 
@@ -67,8 +66,7 @@ void main() {
 
       await a.removeContent(fileName: fileName);
       expect(await a.getContent(fileName: fileName), isNull,
-          reason:
-              'removeContent must target the same location as saveContent, '
+          reason: 'removeContent must target the same location as saveContent, '
               'otherwise corrupted entries cannot be evicted');
     });
 
