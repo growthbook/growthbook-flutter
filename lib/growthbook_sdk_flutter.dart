@@ -5,6 +5,7 @@ export 'src/Features/feature_data_source.dart';
 export 'src/Model/features_model.dart';
 export 'src/Features/features_view_model.dart';
 export 'src/Helper/state_helper.dart';
+export 'src/Model/contextual_bandit.dart';
 export 'src/Model/model.dart';
 export 'src/Network/network.dart';
 export 'src/Plugins/growth_book_plugin.dart';
