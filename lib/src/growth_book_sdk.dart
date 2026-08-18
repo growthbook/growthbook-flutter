@@ -54,7 +54,18 @@ class GBSDKBuilderApp {
   GBFeatureUsageCallback? featureUsageCallback;
   final List<GrowthBookPlugin> _plugins = [];
 
+  /// Cloud hosts that serve the CDN feature payload but not the remote
+  /// evaluation endpoint (`POST /api/eval/:clientKey`). Matched exactly rather
+  /// than by substring so a self-hosted proxy on a `*.growthbook.io` subdomain
+  /// is not rejected.
+  static const _cloudHostsWithoutRemoteEval = {
+    'cdn.growthbook.io',
+    'api.growthbook.io',
+  };
+
   Future<GrowthBookSDK> initialize() async {
+    _assertRemoteEvalConfiguration();
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
@@ -82,6 +93,55 @@ class GBSDKBuilderApp {
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
     return gb;
+  }
+
+  /// Rejects `remoteEval` combinations that this SDK cannot honour.
+  ///
+  /// Each of these currently fails silently rather than loudly, which is worse
+  /// than not starting: the caller believes evaluation is happening remotely
+  /// while it is not.
+  void _assertRemoteEvalConfiguration() {
+    if (!remoteEval) return;
+
+    if (apiKey.isEmpty) {
+      throw ArgumentError('remoteEval requires a non-empty apiKey');
+    }
+
+    // The remote-eval response carries already-evaluated plaintext features, so
+    // it is cached through the unencrypted path — but the cache is read back
+    // with the encrypted parser whenever an encryptionKey is set, which
+    // misreads the stored payload.
+    if (encryptionKey != null) {
+      throw ArgumentError('remoteEval is incompatible with encryptionKey');
+    }
+
+    // With remote evaluation the backend owns bucket persistence, so a
+    // client-side service would be writing assignments nobody reads.
+    if (stickyBucketService != null) {
+      throw ArgumentError(
+        'remoteEval is incompatible with stickyBucketService: bucket '
+        'persistence is handled by the evaluation backend',
+      );
+    }
+
+    // autoRefresh() opens the streaming connection without consulting
+    // remoteEval, and the stream delivers the full unevaluated payload. Applying
+    // it would put every targeting rule back on the device, which is the exact
+    // exposure remote evaluation exists to prevent.
+    if (backgroundSync) {
+      throw ArgumentError(
+        'remoteEval is incompatible with backgroundSync: the feature stream '
+        'delivers an unevaluated payload',
+      );
+    }
+
+    final host = Uri.tryParse(hostURL)?.host.toLowerCase();
+    if (host != null && _cloudHostsWithoutRemoteEval.contains(host)) {
+      throw ArgumentError(
+        'remoteEval requires an evaluation endpoint (GrowthBook Proxy, edge '
+        'worker, or custom endpoint); $host does not serve one',
+      );
+    }
   }
 
   /// Registers a legacy refresh handler that only receives a boolean.
@@ -456,6 +516,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     // refresh so docs reflect the updated forced map.
     refreshStickyBucketService(null);
     refreshForRemoteEval();
+  }
+
+  /// Updates the URL used for URL-targeting rules and forced feature values.
+  ///
+  /// Await this under remote evaluation: the URL is part of the evaluation
+  /// input, so the backend has to re-evaluate before the new value is visible
+  /// to [feature] or [evalFeature].
+  Future<void> setUrl(String url) async {
+    _context.url = url;
+    _updateEvaluationContext();
+    if (_context.remoteEval) {
+      await refreshForRemoteEval();
+    }
   }
 
   @override
