@@ -91,9 +91,10 @@ void main() {
   // FeatureURLBuilder — SERVER_SENT_REMOTE_FEATURE_EVAL branch
   // -------------------------------------------------------------------------
   group('FeatureURLBuilder', () {
+    const builder = FeatureURLBuilder(apiHost: 'https://example.com/');
+
     test('builds URL for SERVER_SENT_REMOTE_FEATURE_EVAL strategy', () {
-      final url = FeatureURLBuilder.buildUrl(
-        'https://example.com/',
+      final url = builder.buildUrl(
         'my-key',
         featureRefreshStrategy:
             FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL,
@@ -103,13 +104,58 @@ void main() {
     });
 
     test('builds URL for SERVER_SENT_EVENTS strategy', () {
-      final url = FeatureURLBuilder.buildUrl(
-        'https://example.com/',
+      final url = builder.buildUrl(
         'my-key',
         featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
       );
       expect(url, contains('sub'));
       expect(url, endsWith('my-key'));
+    });
+
+    test('builds URL for the features endpoint', () {
+      expect(builder.buildUrl('my-key'),
+          'https://example.com/api/features/my-key');
+    });
+
+    test('keeps a path on the host instead of replacing it', () {
+      const hosted = FeatureURLBuilder(apiHost: 'https://example.com/gb/');
+      expect(hosted.buildUrl('my-key'),
+          'https://example.com/gb/api/features/my-key');
+    });
+
+    test('returns null without a host or a client key', () {
+      expect(const FeatureURLBuilder(apiHost: null).buildUrl('my-key'), isNull);
+      expect(builder.buildUrl(null), isNull);
+    });
+
+    test('streams from streamingHost when it is set', () {
+      const split = FeatureURLBuilder(
+        apiHost: 'https://cdn.example.com',
+        streamingHost: 'https://proxy.example.com',
+      );
+
+      expect(
+        split.buildUrl('my-key',
+            featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS),
+        'https://proxy.example.com/sub/my-key',
+      );
+      // Everything else stays on the API host.
+      expect(split.buildUrl('my-key'),
+          'https://cdn.example.com/api/features/my-key');
+      expect(
+        split.buildUrl('my-key',
+            featureRefreshStrategy:
+                FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL),
+        'https://cdn.example.com/api/eval/my-key',
+      );
+    });
+
+    test('streams from the API host when streamingHost is not set', () {
+      expect(
+        builder.buildUrl('my-key',
+            featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS),
+        'https://example.com/sub/my-key',
+      );
     });
   });
 

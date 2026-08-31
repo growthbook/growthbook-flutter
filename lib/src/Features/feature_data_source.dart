@@ -81,7 +81,12 @@ class FeatureDataSource {
       {required GBContext context,
       FeatureRefreshStrategy featureRefreshStrategy =
           FeatureRefreshStrategy.STALE_WHILE_REVALIDATE}) {
-    return FeatureURLBuilder.buildUrl(context.hostURL, context.apiKey,
-        featureRefreshStrategy: featureRefreshStrategy);
+    final url =
+        featureRefreshStrategy == FeatureRefreshStrategy.SERVER_SENT_EVENTS
+            ? context.getStreamingURL()
+            : context.getFeaturesURL();
+    // A missing host or client key is a configuration error the SDK cannot
+    // recover from here; the empty URL surfaces it as a request failure.
+    return url ?? '';
   }
 }
