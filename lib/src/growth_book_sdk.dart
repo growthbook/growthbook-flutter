@@ -29,11 +29,31 @@ class GBSDKBuilderApp {
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url,
+      this.streamingHost,
+      this.apiHostRequestHeaders,
+      this.streamingHostRequestHeaders});
 
   final String apiKey;
   final String? encryptionKey;
   final String hostURL;
+
+  /// Host serving the streaming (server-sent events) endpoint when it differs
+  /// from [hostURL] — for example streaming through a GrowthBook Proxy while
+  /// features are served from a CDN. Defaults to [hostURL].
+  final String? streamingHost;
+
+  /// Headers added to every features request and remote-evaluation request, for
+  /// deployments behind an authenticated gateway or proxy.
+  ///
+  /// The SDK manages `User-Agent`, `If-None-Match` and `Cache-Control` itself;
+  /// supplying any of them throws an [ArgumentError] rather than silently
+  /// breaking conditional requests.
+  final Map<String, String>? apiHostRequestHeaders;
+
+  /// Headers added to the streaming connection, including its reconnects.
+  /// Same reserved names as [apiHostRequestHeaders].
+  final Map<String, String>? streamingHostRequestHeaders;
   final bool enable;
   final bool qaMode;
   final Map<String, dynamic>? attributes;
@@ -55,10 +75,21 @@ class GBSDKBuilderApp {
   final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
+    _validateHostAndHeaders();
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
         hostURL: hostURL,
+        streamingHost: streamingHost,
+        // Copied so later edits to the caller's maps cannot change the headers
+        // requests are already being sent with.
+        apiHostRequestHeaders: apiHostRequestHeaders == null
+            ? null
+            : Map<String, String>.from(apiHostRequestHeaders!),
+        streamingHostRequestHeaders: streamingHostRequestHeaders == null
+            ? null
+            : Map<String, String>.from(streamingHostRequestHeaders!),
         enabled: enable,
         qaMode: qaMode,
         attributes: attributes,
@@ -82,6 +113,53 @@ class GBSDKBuilderApp {
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
     return gb;
+  }
+
+  /// Header names the SDK sets itself. Letting a caller supply them would
+  /// silently break conditional requests (ETag revalidation) or the cache
+  /// directives, so they are rejected instead of merged.
+  static const _reservedHeaderNames = <String>{
+    'user-agent',
+    'if-none-match',
+    'cache-control',
+  };
+
+  /// Rejects a malformed [streamingHost] and reserved header names before any
+  /// request is built, so misconfiguration surfaces at startup rather than as a
+  /// failed fetch later.
+  void _validateHostAndHeaders() {
+    final host = streamingHost;
+    if (host != null) {
+      final uri = Uri.tryParse(host);
+      final isHttpUrl = uri != null &&
+          (uri.scheme == 'http' || uri.scheme == 'https') &&
+          uri.hasAuthority;
+      if (!isHttpUrl) {
+        throw ArgumentError.value(
+          host,
+          'streamingHost',
+          'must be an absolute http or https URL',
+        );
+      }
+    }
+
+    _rejectReservedHeaders(apiHostRequestHeaders, 'apiHostRequestHeaders');
+    _rejectReservedHeaders(
+        streamingHostRequestHeaders, 'streamingHostRequestHeaders');
+  }
+
+  void _rejectReservedHeaders(Map<String, String>? headers, String field) {
+    if (headers == null) return;
+
+    for (final name in headers.keys) {
+      if (_reservedHeaderNames.contains(name.toLowerCase())) {
+        throw ArgumentError.value(
+          name,
+          field,
+          'is managed by the SDK and cannot be overridden',
+        );
+      }
+    }
   }
 
   /// Registers a legacy refresh handler that only receives a boolean.

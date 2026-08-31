@@ -43,6 +43,7 @@ class FeatureDataSource {
               FeaturedDataModel.fromJson(response),
             ),
             onError,
+            headers: context.streamingHostRequestHeaders,
           )
         : await client.consumeGetRequest(
             _getEndpoint(
@@ -52,6 +53,7 @@ class FeatureDataSource {
               FeaturedDataModel.fromJson(response),
             ),
             onError,
+            headers: context.apiHostRequestHeaders,
           );
   }
 
@@ -74,6 +76,9 @@ class FeatureDataSource {
         FeaturedDataModel.fromJson(response),
       ),
       onError,
+      // Remote evaluation runs against the API host, so it carries the same
+      // headers as the features request.
+      headers: context.apiHostRequestHeaders,
     );
   }
 
