@@ -69,6 +69,163 @@ void main() {
     });
 
     // -------------------------------------------------------------------------
+    // updateAttributes — shallow merge (parity with the JS/TS updateAttributes)
+    // -------------------------------------------------------------------------
+    group('updateAttributes', () {
+      test('merges new attributes into the existing ones', () async {
+        final sdk =
+            await buildSdk(attributes: {'id': 'user-1', 'country': 'UA'});
+        sdk.updateAttributes({'plan': 'pro'});
+        expect(sdk.context.attributes,
+            {'id': 'user-1', 'country': 'UA', 'plan': 'pro'});
+      });
+
+      test('overwrites existing keys and preserves untouched ones', () async {
+        final sdk =
+            await buildSdk(attributes: {'id': 'user-1', 'country': 'UA'});
+        sdk.updateAttributes({'country': 'FR'});
+        expect(sdk.context.attributes, {'id': 'user-1', 'country': 'FR'});
+      });
+
+      test('merges instead of replacing (unlike setAttributes)', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+        sdk.setAttributes({'plan': 'pro'});
+        sdk.updateAttributes({'id': 'user-2'});
+        expect(sdk.context.attributes, {'plan': 'pro', 'id': 'user-2'});
+      });
+
+      test('empty map is a no-op', () async {
+        final sdk =
+            await buildSdk(attributes: {'id': 'user-1', 'country': 'UA'});
+        sdk.updateAttributes({});
+        expect(sdk.context.attributes, {'id': 'user-1', 'country': 'UA'});
+      });
+
+      test('stores a null value without removing the key', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1', 'plan': 'pro'});
+        sdk.updateAttributes({'plan': null});
+        expect(sdk.context.attributes, {'id': 'user-1', 'plan': null});
+        expect(sdk.context.attributes?.containsKey('plan'), isTrue);
+      });
+
+      test('merge is shallow — a nested Map replaces the previous value',
+          () async {
+        final sdk = await buildSdk(attributes: {
+          'account': {'age': 90, 'plan': 'pro'},
+        });
+        sdk.updateAttributes({
+          'account': {'age': 10},
+        });
+        expect(sdk.context.attributes, {
+          'account': {'age': 10},
+        });
+      });
+
+      test('merged attributes affect experiment bucketing', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+
+        // Only users with role == 'tester' pass the condition.
+        final experiment = GBExperiment(
+          key: 'attr-exp',
+          variations: [0, 1],
+          condition: {'role': 'tester'},
+        );
+
+        expect(sdk.run(experiment).inExperiment, isFalse);
+
+        // The id must survive the merge, otherwise there is nothing to hash on.
+        sdk.updateAttributes({'role': 'tester'});
+        expect(sdk.context.attributes?['id'], 'user-1');
+        expect(sdk.run(experiment).inExperiment, isTrue);
+      });
+
+      test('does not mutate the Map passed in by the caller', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+        final incoming = <String, dynamic>{'plan': 'pro'};
+        sdk.updateAttributes(incoming);
+        expect(incoming, {'plan': 'pro'});
+      });
+
+      test('repeated updates accumulate', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+        sdk.updateAttributes({'plan': 'pro'});
+        sdk.updateAttributes({'country': 'UA'});
+        sdk.updateAttributes({'plan': 'enterprise'});
+        expect(sdk.context.attributes,
+            {'id': 'user-1', 'plan': 'enterprise', 'country': 'UA'});
+      });
+
+      test('concurrent evaluations never observe a partially merged state',
+          () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+        sdk.context.features = {
+          'flag': GBFeature(
+            defaultValue: false,
+            rules: [
+              GBFeatureRule(
+                condition: {'id': 'user-1', 'plan': 'pro', 'country': 'UA'},
+                force: true,
+              ),
+            ],
+          ),
+        };
+
+        // Interleave updates with evaluations: an evaluation must always see
+        // either the pre-merge attributes or the fully merged ones.
+        final observed = <Map<String, dynamic>>[];
+        final evaluated = <bool>[];
+        await Future.wait([
+          for (var i = 0; i < 20; i++)
+            Future<void>(() {
+              sdk.updateAttributes({'plan': 'pro', 'country': 'UA'});
+              observed.add({...?sdk.context.attributes});
+            }),
+          for (var i = 0; i < 20; i++)
+            Future<void>(() => evaluated.add(sdk.isOn('flag'))),
+        ]);
+
+        for (final attributes in observed) {
+          expect(attributes, {
+            'id': 'user-1',
+            'plan': 'pro',
+            'country': 'UA',
+          });
+        }
+        // The last evaluations run after every merge, so the rule must match.
+        expect(evaluated.last, isTrue);
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // updateAttributesAsync
+    // -------------------------------------------------------------------------
+    group('updateAttributesAsync', () {
+      test('merges the same way as updateAttributes', () async {
+        final sdk = await buildSdk(attributes: {'id': 'user-1'});
+        await sdk.updateAttributesAsync({'plan': 'pro'});
+        expect(sdk.context.attributes, {'id': 'user-1', 'plan': 'pro'});
+      });
+
+      test('awaits the sticky bucket refresh before returning', () async {
+        final svc = _TrackingStickyBucketService();
+        final builder = GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: {'id': 'user-1'},
+          client: client,
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        )..setStickyBucketService(svc);
+        final sdk = await builder.initialize();
+
+        final beforeCalls = svc.getAllAssignmentsCalls;
+        // No artificial delay — the refresh must already have happened.
+        await sdk.updateAttributesAsync({'id': 'user-2'});
+        expect(svc.getAllAssignmentsCalls, greaterThan(beforeCalls));
+      });
+    });
+
+    // -------------------------------------------------------------------------
     // setAttributeOverrides
     // -------------------------------------------------------------------------
     group('setAttributeOverrides', () {

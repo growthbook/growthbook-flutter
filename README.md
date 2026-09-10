@@ -310,18 +310,39 @@ if (purchaseCompleted) {
 
 ### User Attributes & Targeting
 
+There are two APIs for changing attributes at runtime, with different semantics:
+
+- `setAttributes` **replaces** the whole attribute map — anything not included is dropped.
+- `updateAttributes` **merges** into the existing map — new keys are added, existing keys are
+  overwritten and untouched keys are preserved (parity with the JS/TS SDK's `updateAttributes()`).
+
 ```dart
-// Update user attributes dynamically
+// Replace all attributes
 sdk.setAttributes({
   'plan': 'enterprise',
   'feature_flags_enabled': true,
   'last_login': DateTime.now().toIso8601String(),
 });
 
+// Merge in a single attribute — everything set above is preserved
+sdk.updateAttributes({'plan': 'pro'});
+
+// Async variants await the sticky bucket refresh (and, in remote-eval mode,
+// the refetch) before returning
+await sdk.setAttributesAsync({'id': '123'});
+await sdk.updateAttributesAsync({'plan': 'pro'});
+
 // Target users with conditions
 // Example: Show feature only to premium users in US
 // This is configured in GrowthBook dashboard, not in code
 ```
+
+The merge is shallow: a nested Map or List replaces the previous value of that key instead of being
+merged recursively. A `null` value is stored as `null` — it does not remove the key. An empty Map is
+a no-op.
+
+In remote-eval mode both methods invalidate the cached evaluation response and trigger a fresh
+remote request, since attributes are part of the evaluation payload.
 
 ### Condition Operators
 
@@ -469,6 +490,26 @@ final sdk = await GBSDKBuilderApp(
 // Features are evaluated server-side
 // Sensitive targeting rules never reach the client
 ```
+
+Because the server evaluates for a specific context, the SDK re-evaluates whenever that context
+changes: `setAttributes`, `updateAttributes`, `setAttributeOverrides`, `setForcedVariations` and
+`setForcedFeatures` each send a fresh request with the current evaluation inputs. The `...Async`
+variants await that request, so features are up to date when the call returns:
+
+```dart
+await sdk.updateAttributesAsync({'plan': 'pro'}); // features already re-evaluated
+final showBanner = sdk.isOn('pro-banner');
+```
+
+Notes on the flow:
+
+- Requests are not coalesced — every change gets its own evaluation, and a response that has been
+  superseded by a newer one is discarded, so overlapping changes cannot bring back an evaluation of
+  attributes the user no longer has.
+- Cached features are only served before the first evaluation of a session. They were evaluated for
+  earlier inputs, so they are never replayed as the answer to a change.
+- With `backgroundSync: true`, a streamed change triggers a fresh remote evaluation rather than
+  applying the streamed payload, which is unevaluated and not personalized.
 
 ### Real-time Updates
 
