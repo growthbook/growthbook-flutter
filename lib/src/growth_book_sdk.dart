@@ -178,6 +178,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   List<ExperimentRunCallback> subscriptions = [];
 
+  /// Listeners registered through [addFeatureRefreshListener], each wrapped in
+  /// its own registration so that removing one never removes another
+  /// registration of the same function.
+  final List<_FeatureRefreshRegistration> _featureRefreshListeners = [];
+
   Map<String, AssignedExperiment> assigned = {};
 
   /// The complete data regarding features & attributes etc.
@@ -227,6 +232,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// }
   /// ```
   Future<void> dispose() {
+    _featureRefreshListeners.clear();
     return _pluginRegistry.close();
   }
 
@@ -242,12 +248,24 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _refreshHandler?.call(true);
       _refreshHandlerV2?.call(true, null);
     }
+    // Unlike the refresh handlers, listeners are told about cached definitions
+    // too: those are what evaluation starts the session with.
+    _notifyFeatureRefresh(
+      success: true,
+      source: isRemote
+          ? GBFeatureRefreshSource.network
+          : GBFeatureRefreshSource.cache,
+    );
   }
 
   @override
   void featuresNotModified() {
     _refreshHandler?.call(true);
     _refreshHandlerV2?.call(true, null);
+    _notifyFeatureRefresh(
+      success: true,
+      source: GBFeatureRefreshSource.notModified,
+    );
   }
 
   @override
@@ -257,6 +275,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _refreshHandler?.call(false);
       _refreshHandlerV2?.call(false, error);
     }
+    _notifyFeatureRefresh(
+      success: false,
+      source: isRemote
+          ? GBFeatureRefreshSource.network
+          : GBFeatureRefreshSource.cache,
+      error: error,
+    );
   }
 
   Future<void> autoRefresh() async {
@@ -318,6 +343,72 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   void clearSubscriptions() {
     subscriptions.clear();
+  }
+
+  /// Registers [listener] to be called after every feature refresh attempt, and
+  /// returns a function that removes it again.
+  ///
+  /// Unlike the single refresh handler passed to the builder, any number of
+  /// listeners can be registered, at any point in the SDK's life, and each one
+  /// is removed on its own:
+  /// ```dart
+  /// final stopListening = sdk.addFeatureRefreshListener((event) {
+  ///   if (event.success) setState(() {});
+  /// });
+  /// // later
+  /// stopListening();
+  /// ```
+  ///
+  /// Listeners also hear about definitions loaded from the cache, which the
+  /// refresh handler does not report. A listener that throws is logged and
+  /// skipped; it stops neither the other listeners nor the refresh itself.
+  /// Calling the returned function more than once is harmless: it removes its
+  /// own registration and nothing else, so registering the same function again
+  /// later is unaffected by a stale handle.
+  VoidCallback addFeatureRefreshListener(GBFeatureRefreshListener listener) {
+    final registration = _FeatureRefreshRegistration(listener);
+    _featureRefreshListeners.add(registration);
+    return () {
+      _featureRefreshListeners.remove(registration);
+    };
+  }
+
+  /// Removes every listener registered through [addFeatureRefreshListener].
+  void clearFeatureRefreshListeners() {
+    _featureRefreshListeners.clear();
+  }
+
+  void _notifyFeatureRefresh({
+    required bool success,
+    required GBFeatureRefreshSource source,
+    GBError? error,
+  }) {
+    if (_featureRefreshListeners.isEmpty) return;
+
+    final event = GBFeatureRefreshEvent(
+      success: success,
+      source: source,
+      features: _context.features,
+      error: error,
+    );
+
+    // Iterate over a snapshot: a listener is free to add or remove listeners,
+    // including itself, while it is being called.
+    for (final registration
+        in List<_FeatureRefreshRegistration>.of(_featureRefreshListeners)) {
+      try {
+        registration.listener(event);
+      } catch (e, s) {
+        // One listener's failure is its own; the refresh and the remaining
+        // listeners carry on. The error and its stack are logged because
+        // neither carries the feature definitions the event holds.
+        log(
+          'Feature refresh listener threw',
+          error: e,
+          stackTrace: s,
+        );
+      }
+    }
   }
 
   GBFeatureResult feature(String id) {
@@ -539,4 +630,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       _refreshHandlerV2?.call(true, null);
     }
   }
+}
+
+/// One registration of a [GBFeatureRefreshListener].
+///
+/// Identity, not the listener itself, is what a registration is removed by:
+/// the same function can be registered several times, and each registration
+/// has to be removable on its own.
+class _FeatureRefreshRegistration {
+  _FeatureRefreshRegistration(this.listener);
+
+  final GBFeatureRefreshListener listener;
 }
