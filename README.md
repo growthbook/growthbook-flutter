@@ -217,6 +217,7 @@ final sdk = await GBSDKBuilderApp(
   // Advanced Features
   remoteEval: false,            // Server-side evaluation
   encryptionKey: "...",         // For encrypted features
+  pollingInterval: const Duration(minutes: 5), // see "Polling"
 ).initialize();
 ```
 
@@ -483,6 +484,47 @@ final sdk = await GBSDKBuilderApp(
 // Features automatically update when changed in GrowthBook
 // No need to restart the app or refresh manually
 ```
+
+### Polling
+
+Streaming is the cheaper way to stay current, but it is not always available: a proxy or firewall
+that blocks SSE leaves a `backgroundSync` client with no updates at all, and on mobile a stream does
+not survive the app being backgrounded. Polling refreshes on a timer instead.
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  hostURL: "https://growthbook.io",
+  pollingInterval: const Duration(minutes: 5),
+  growthBookTrackingCallBack: (_) {},
+).initialize();
+
+class _AppState extends State<App> with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      sdk.startPolling();
+    } else {
+      sdk.stopPolling();
+    }
+  }
+}
+```
+
+Nothing starts on its own — tie `startPolling()` / `stopPolling()` to the app lifecycle so the timer
+does not spend battery on requests the system will suspend anyway.
+
+Notes:
+
+- Polling is refused while `backgroundSync` is on, so enabling both is safe: the stream wins and
+  `startPolling()` returns `false`.
+- Each round ignores `ttlSeconds`. A refresh skips the network while the cache is fresh, so an
+  interval shorter than the TTL would otherwise issue no requests at all.
+- A failing host is backed off exponentially with jitter, capped at five minutes, so a recovered host
+  is still noticed and many devices that fail together do not return as one burst. One outage never
+  stops the loop.
+- A non-positive `pollingInterval` throws an `ArgumentError` from `initialize()` rather than being
+  clamped, so a typo is reported instead of silently reinterpreted.
 
 ### Tracking Plugins
 
