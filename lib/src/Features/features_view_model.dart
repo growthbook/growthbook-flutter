@@ -34,6 +34,10 @@ class FeatureViewModel {
 
   Completer<void>? _ongoingFetch;
 
+  /// Outcome of the round currently running, read by [fetchFeatures] on the way
+  /// out. False once any network attempt in that round failed.
+  bool _lastRoundSucceeded = true;
+
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
       featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
@@ -47,16 +51,30 @@ class FeatureViewModel {
     );
   }
 
-  Future<void> fetchFeatures(String? apiUrl,
-      {bool remoteEval = false, RemoteEvalModel? payload}) async {
+  /// Loads features, from cache when it can and from the network when it must.
+  ///
+  /// Returns whether the round ended with usable definitions: false only when a
+  /// network round failed. A caller driving its own schedule - the polling loop -
+  /// needs its own outcome, which the delegate cannot give it because the same
+  /// callbacks serve initialization, streaming and manual refreshes.
+  ///
+  /// [force] skips the cache-freshness check so the round always reaches the
+  /// network. Without it a caller polling faster than [ttlSeconds] would issue
+  /// no requests at all.
+  Future<bool> fetchFeatures(String? apiUrl,
+      {bool remoteEval = false,
+      RemoteEvalModel? payload,
+      bool force = false}) async {
     // If there's already an ongoing request — wait for it to complete
     if (_ongoingFetch != null) {
       log('Fetch already in progress, waiting for completion.');
-      return _ongoingFetch!.future;
+      await _ongoingFetch!.future;
+      return _lastRoundSucceeded;
     }
 
     final completer = Completer<void>();
     _ongoingFetch = completer;
+    _lastRoundSucceeded = true;
 
     try {
       if (remoteEval && apiUrl != null) {
@@ -89,13 +107,14 @@ class FeatureViewModel {
         }
 
         // If cache is missing, corrupt, or expired, fetch fresh data from network
-        if (featureMap == null || isCacheExpired()) {
+        if (force || featureMap == null || isCacheExpired()) {
           await _fetchFromNetwork(hasCachedFeatures: featureMap != null);
         }
       }
 
       completer.complete();
     } catch (e, s) {
+      _lastRoundSucceeded = false;
       completer.completeError(e, s);
       delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
@@ -104,6 +123,7 @@ class FeatureViewModel {
     } finally {
       _ongoingFetch = null;
     }
+    return _lastRoundSucceeded;
   }
 
   Future<void> _fetchFromNetwork({bool hasCachedFeatures = false}) async {
@@ -125,6 +145,7 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
+    if (success == false) _lastRoundSucceeded = false;
     // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
@@ -147,6 +168,7 @@ class FeatureViewModel {
         },
         onError: (e, s) {
           success = false;
+          _lastRoundSucceeded = false;
           log('Remote Eval Error: $e');
           delegate.featuresFetchFailed(
             error: GBError(error: e, stackTrace: s.toString()),
