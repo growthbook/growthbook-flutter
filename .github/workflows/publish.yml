@@ -1,15 +1,17 @@
 name: Publish to pub.dev
 
+# pub.dev derives the OIDC claims it validates (`ref`, `ref_type`) from the ref
+# that triggered the run, not from the ref this workflow checks out. Both
+# entry points below therefore have to be started *at the release tag*:
+#   - `push: tags:` fires for manually pushed tags;
+#   - `workflow_dispatch` must be dispatched with `--ref <tag>` (see
+#     release-please.yml) and enabled as an allowed event in the pub.dev
+#     automated-publishing settings.
 on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to publish (e.g. v4.4.0)'
-        required: true
-        type: string
 
 jobs:
   setup-and-publish:
@@ -17,10 +19,23 @@ jobs:
     permissions:
       id-token: write  # Required for authentication using OIDC
     steps:
+      # Fail fast instead of burning a build and getting rejected by pub.dev
+      # with "publishing is only allowed from 'tag' refType".
+      - name: Verify the run was triggered from a tag
+        env:
+          REF: ${{ github.ref }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [ "$REF_TYPE" != "tag" ]; then
+            echo "Error: this workflow must be triggered from a tag, got $REF_TYPE '$REF'."
+            echo "Dispatch it with: gh workflow run publish.yml --ref <tag>"
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.ref }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
