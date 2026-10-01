@@ -798,6 +798,24 @@ We welcome contributions! Here's how to get started:
 - Uses automated releases via **release-please**
 - Follow conventional commits: `feat:`, `fix:`, `docs:`, etc.
 - Automatic version bumping and changelog generation
+- Once a release PR is merged, `release-please.yml` dispatches `publish.yml` at the new
+  tag, and that run publishes to pub.dev over OIDC
+
+**Publishing requirements:**
+
+- pub.dev automated publishing must allow the `workflow_dispatch` event for `publish.yml`
+  (pub.dev → package admin → automated publishing), in addition to the configured tag pattern
+- `publish.yml` only runs from a tag ref — pub.dev validates the `ref`/`ref_type` claims of the
+  run's OIDC token, so a run started from a branch is rejected no matter which ref it checks out
+- Tags created before this setup landed have a `publish.yml` without `workflow_dispatch` and
+  cannot be dispatched. To release one of them, re-push the tag so the `push: tags:` trigger
+  fires (note that deleting a tag turns its GitHub Release into a draft, which has to be
+  re-published afterwards):
+
+  ```bash
+  git push --delete origin v4.3.1
+  git push origin v4.3.1
+  ```
 
 ---
 
