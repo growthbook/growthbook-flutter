@@ -471,6 +471,52 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshForRemoteEval();
   }
 
+  /// Replaces the callback that receives experiment exposures.
+  ///
+  /// [GBSDKBuilderApp] takes a tracking callback at construction, but the
+  /// analytics sink often does not exist yet at that point: it appears after a
+  /// tracking-consent prompt, after login, or once a third-party SDK finishes
+  /// starting. Without this the only bridge is a closure over a mutable holder
+  /// that every caller has to build themselves.
+  ///
+  /// The next evaluation reports to the new sink. Exposures already reported
+  /// stay with the callback that received them — there is no deferred buffer to
+  /// replay, unlike the JavaScript SDK's `fireDeferredTrackingCalls()`. Install
+  /// the real sink before the first [feature] or [run] call if you need every
+  /// exposure: an exposure is marked as tracked the first time it is seen, so
+  /// one swallowed by a placeholder callback is not re-reported later.
+  ///
+  /// Read `sdk.context.trackingCallBack` to wrap the current sink rather than
+  /// replace it:
+  /// ```dart
+  /// final previous = sdk.context.trackingCallBack;
+  /// sdk.setTrackingCallback((data) {
+  ///   previous?.call(data);
+  ///   analytics.track(data);
+  /// });
+  /// ```
+  void setTrackingCallback(TrackingCallBack trackingCallBack) {
+    _context.trackingCallBack = trackingCallBack;
+    _updateEvaluationContext();
+  }
+
+  /// Replaces the callback invoked every time a feature is evaluated.
+  ///
+  /// Same motivation as [setTrackingCallback]: `GBSDKBuilderApp` only accepts
+  /// this callback before `initialize()`, which a container-managed or
+  /// consent-gated setup cannot satisfy. The next evaluation reports to the new
+  /// sink; evaluations that already ran are not replayed.
+  ///
+  /// Plugins registered with `GBSDKBuilderApp.addPlugin` keep receiving
+  /// `onFeatureEvaluated` independently — this setter does not affect them.
+  ///
+  /// Read `sdk.context.featureUsageCallback` to wrap the current sink rather
+  /// than replace it.
+  void setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback) {
+    _context.featureUsageCallback = featureUsageCallback;
+    _updateEvaluationContext();
+  }
+
   /// The setForcedFeatures method updates forced features
   void setForcedFeatures(List<dynamic> forcedFeatures) {
     _forcedFeatures = forcedFeatures;
