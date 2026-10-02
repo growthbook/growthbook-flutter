@@ -1,5 +1,6 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/callback_invoker.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 /// Feature Evaluator Class
@@ -10,10 +11,6 @@ class FeatureEvaluator {
   /// Takes context and feature key and returns the calculated feature result against that key.
   GBFeatureResult evaluateFeature(
       EvaluationContext context, String featureKey) {
-    /// This callback serves for listening for feature usage events
-    final onFeatureUsageCallbackWithUser =
-        context.options.featureUsageCallbackWithUser;
-
     // Check if the feature has been evaluated already and return early if it has
 
     if (context.stackContext.evaluatedFeatures.contains(featureKey)) {
@@ -22,7 +19,7 @@ class FeatureEvaluator {
         source: GBFeatureSource.cyclicPrerequisite,
       );
 
-      onFeatureUsageCallbackWithUser?.call(
+      context.options.notifyFeatureUsage(
           featureKey, featureResultWhenCircularDependencyDetected);
 
       return featureResultWhenCircularDependencyDetected;
@@ -41,7 +38,7 @@ class FeatureEvaluator {
         source: GBFeatureSource.unknownFeature,
       );
 
-      onFeatureUsageCallbackWithUser?.call(featureKey, emptyFeatureResult);
+      context.options.notifyFeatureUsage(featureKey, emptyFeatureResult);
       return emptyFeatureResult;
     }
 
@@ -66,7 +63,7 @@ class FeatureEvaluator {
                 source: GBFeatureSource.cyclicPrerequisite,
               );
 
-              onFeatureUsageCallbackWithUser?.call(
+              context.options.notifyFeatureUsage(
                   featureKey, featureResultWhenCircularDependencyDetected);
 
               return featureResultWhenCircularDependencyDetected;
@@ -92,7 +89,7 @@ class FeatureEvaluator {
                   source: GBFeatureSource.prerequisite,
                 );
 
-                onFeatureUsageCallbackWithUser?.call(
+                context.options.notifyFeatureUsage(
                     featureKey, featureResultWhenBlockedByPrerequisite);
 
                 return featureResultWhenBlockedByPrerequisite;
@@ -152,7 +149,7 @@ class FeatureEvaluator {
                     result.inExperiment &&
                     !context.options.experimentHelper
                         .isTracked(experiment, result)) {
-                  context.options.trackingCallBackWithUser?.call(GBTrackData(
+                  context.options.notifyExperimentViewed(GBTrackData(
                       experiment: experiment, experimentResult: result));
                   context.options.pluginRegistry?.onExperimentViewed(
                       experiment, result, context.userContext.attributes);
@@ -165,7 +162,7 @@ class FeatureEvaluator {
               value: rule.force!,
               source: GBFeatureSource.force,
               ruleId: rule.id);
-          onFeatureUsageCallbackWithUser?.call(featureKey, forcedFeatureResult);
+          context.options.notifyFeatureUsage(featureKey, forcedFeatureResult);
           return forcedFeatureResult;
         } else {
           if (rule.variations == null) {
@@ -205,7 +202,7 @@ class FeatureEvaluator {
                   experiment: exp,
                   result: result,
                   ruleId: rule.id);
-              onFeatureUsageCallbackWithUser?.call(
+              context.options.notifyFeatureUsage(
                   featureKey, experimentFeatureResult);
               return experimentFeatureResult;
             }
@@ -216,7 +213,7 @@ class FeatureEvaluator {
     final defaultFeatureResult = prepareResult(
         value: targetFeature.defaultValue,
         source: GBFeatureSource.defaultValue);
-    onFeatureUsageCallbackWithUser?.call(featureKey, defaultFeatureResult);
+    context.options.notifyFeatureUsage(featureKey, defaultFeatureResult);
     return defaultFeatureResult;
   }
 

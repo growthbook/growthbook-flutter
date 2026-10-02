@@ -1,6 +1,7 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 import '../MultiUserMode/Model/evaluation_context.dart';
+import '../Utils/callback_invoker.dart';
 import '../Utils/gb_variation_meta.dart';
 import '../Utils/logger.dart';
 
@@ -332,8 +333,8 @@ class ExperimentEvaluator {
 
     if (result.inExperiment &&
         !context.options.experimentHelper.isTracked(experiment, result)) {
-      context.options.trackingCallBackWithUser
-          ?.call(GBTrackData(experiment: experiment, experimentResult: result));
+      context.options.notifyExperimentViewed(
+          GBTrackData(experiment: experiment, experimentResult: result));
       context.options.pluginRegistry?.onExperimentViewed(
           experiment, result, context.userContext.attributes);
     }

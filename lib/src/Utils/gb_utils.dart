@@ -740,7 +740,7 @@ class GBUtils {
       stickyBucketIdentifierAttributes:
           gbContext.stickyBucketIdentifierAttributes,
       stickyBucketService: gbContext.stickyBucketService,
-      trackingCallBackWithUser: gbContext.trackingCallBack!,
+      trackingCallBackWithUser: gbContext.trackingCallBack,
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
       featureRefreshCallback: refreshHandler,
       url: gbContext.url,
