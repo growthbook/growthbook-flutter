@@ -497,7 +497,11 @@ class GBUtils {
       var feature = features[id];
       var rules = feature?.rules;
       rules?.forEach((rule) {
-        if (rule.variations != null) {
+        // Include bandit rules — their variations ship under
+        // `contextualVariations` so the plain `variations` check misses them
+        // and their hash/fallback attributes would be dropped from the
+        // sticky-bucket identifier set.
+        if (rule.variations != null || rule.contextualVariations != null) {
           attributes.add(rule.hashAttribute ?? "id");
           if (rule.fallbackAttribute != null) {
             attributes.add(rule.fallbackAttribute!);
@@ -731,6 +735,7 @@ class GBUtils {
       features: gbContext.features,
       savedGroups: gbContext.savedGroups,
     );
+    globalContext.contextualBandits = gbContext.contextualBandits;
 
     var userContext = UserContext(
       attributes: gbContext.attributes,

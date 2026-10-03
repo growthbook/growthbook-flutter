@@ -30,8 +30,14 @@ class DataSourceMock extends FeaturesFlowDelegate {
     _isError = false;
   }
 
+  int apiModelSuccessCount = 0;
+  FeaturedDataModel? lastApiModel;
+
   @override
-  void featuresAPIModelSuccessfully(FeaturedDataModel model) {}
+  void featuresAPIModelSuccessfully(FeaturedDataModel model) {
+    apiModelSuccessCount++;
+    lastApiModel = model;
+  }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {

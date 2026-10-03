@@ -377,7 +377,7 @@ class ExperimentEvaluator {
         ? experimentMeta[targetVariationIndex]
         : null;
 
-    return GBExperimentResult(
+    final result = GBExperimentResult(
       inExperiment: inExperiment,
       variationID: targetVariationIndex,
       value: (experiment.variations.length > targetVariationIndex)
@@ -393,6 +393,19 @@ class ExperimentEvaluator {
       bucket: bucket,
       passthrough: meta?.passthrough,
     );
+
+    // Copy the contextual-bandit selection onto the result when the user is
+    // genuinely bucketed via hash. The feature evaluator clears the selection
+    // in the negative case, but we double-check here so a stray bandit
+    // doesn't leak into a non-bucketed exposure.
+    final bandit = experiment.contextualBandit;
+    if (bandit != null && hashUsed && inExperiment) {
+      result.leafId = bandit.leafId;
+      result.variationWeights = bandit.variationWeights;
+      result.banditVersion = bandit.banditVersion;
+    }
+
+    return result;
   }
 }
 

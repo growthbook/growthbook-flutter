@@ -64,24 +64,32 @@ const String gbTestCases = r'''
         "$and": [
           {
             "$groups": {
-              "$elemMatch": { "$eq": "a" }
+              "$elemMatch": {
+                "$eq": "a"
+              }
             }
           },
           {
             "$groups": {
-              "$elemMatch": { "$eq": "b" }
+              "$elemMatch": {
+                "$eq": "b"
+              }
             }
           },
           {
             "$or": [
               {
                 "$groups": {
-                  "$elemMatch": { "$eq": "c" }
+                  "$elemMatch": {
+                    "$eq": "c"
+                  }
                 }
               },
               {
                 "$groups": {
-                  "$elemMatch": { "$eq": "e" }
+                  "$elemMatch": {
+                    "$eq": "e"
+                  }
                 }
               }
             ]
@@ -89,21 +97,30 @@ const String gbTestCases = r'''
           {
             "$not": {
               "$groups": {
-                "$elemMatch": { "$eq": "f" }
+                "$elemMatch": {
+                  "$eq": "f"
+                }
               }
             }
           },
           {
             "$not": {
               "$groups": {
-                "$elemMatch": { "$eq": "g" }
+                "$elemMatch": {
+                  "$eq": "g"
+                }
               }
             }
           }
         ]
       },
       {
-        "$groups": ["a", "b", "c", "d"]
+        "$groups": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
       },
       true
     ],
@@ -113,24 +130,32 @@ const String gbTestCases = r'''
         "$and": [
           {
             "$groups": {
-              "$elemMatch": { "$eq": "a" }
+              "$elemMatch": {
+                "$eq": "a"
+              }
             }
           },
           {
             "$groups": {
-              "$elemMatch": { "$eq": "b" }
+              "$elemMatch": {
+                "$eq": "b"
+              }
             }
           },
           {
             "$or": [
               {
                 "$groups": {
-                  "$elemMatch": { "$eq": "c" }
+                  "$elemMatch": {
+                    "$eq": "c"
+                  }
                 }
               },
               {
                 "$groups": {
-                  "$elemMatch": { "$eq": "e" }
+                  "$elemMatch": {
+                    "$eq": "e"
+                  }
                 }
               }
             ]
@@ -138,21 +163,30 @@ const String gbTestCases = r'''
           {
             "$not": {
               "$groups": {
-                "$elemMatch": { "$eq": "d" }
+                "$elemMatch": {
+                  "$eq": "d"
+                }
               }
             }
           },
           {
             "$not": {
               "$groups": {
-                "$elemMatch": { "$eq": "g" }
+                "$elemMatch": {
+                  "$eq": "g"
+                }
               }
             }
           }
         ]
       },
       {
-        "$groups": ["a", "b", "c", "d"]
+        "$groups": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
       },
       false
     ],
@@ -390,7 +424,11 @@ const String gbTestCases = r'''
       "$in - pass",
       {
         "num": {
-          "$in": [1, 2, 3]
+          "$in": [
+            1,
+            2,
+            3
+          ]
         }
       },
       {
@@ -402,7 +440,11 @@ const String gbTestCases = r'''
       "$in - fail",
       {
         "num": {
-          "$in": [1, 2, 3]
+          "$in": [
+            1,
+            2,
+            3
+          ]
         }
       },
       {
@@ -426,11 +468,18 @@ const String gbTestCases = r'''
       "$in - array pass 1",
       {
         "tags": {
-          "$in": ["a", "b"]
+          "$in": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "e", "a"]
+        "tags": [
+          "d",
+          "e",
+          "a"
+        ]
       },
       true
     ],
@@ -438,11 +487,18 @@ const String gbTestCases = r'''
       "$in - array pass 2",
       {
         "tags": {
-          "$in": ["a", "b"]
+          "$in": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "b", "f"]
+        "tags": [
+          "d",
+          "b",
+          "f"
+        ]
       },
       true
     ],
@@ -450,11 +506,18 @@ const String gbTestCases = r'''
       "$in - array pass 3",
       {
         "tags": {
-          "$in": ["a", "b"]
+          "$in": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "b", "a"]
+        "tags": [
+          "d",
+          "b",
+          "a"
+        ]
       },
       true
     ],
@@ -462,11 +525,18 @@ const String gbTestCases = r'''
       "$in - array fail 1",
       {
         "tags": {
-          "$in": ["a", "b"]
+          "$in": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "e", "f"]
+        "tags": [
+          "d",
+          "e",
+          "f"
+        ]
       },
       false
     ],
@@ -474,7 +544,10 @@ const String gbTestCases = r'''
       "$in - array fail 2",
       {
         "tags": {
-          "$in": ["a", "b"]
+          "$in": [
+            "a",
+            "b"
+          ]
         }
       },
       {
@@ -486,7 +559,11 @@ const String gbTestCases = r'''
       "$nin - pass",
       {
         "num": {
-          "$nin": [1, 2, 3]
+          "$nin": [
+            1,
+            2,
+            3
+          ]
         }
       },
       {
@@ -498,7 +575,11 @@ const String gbTestCases = r'''
       "$nin - fail",
       {
         "num": {
-          "$nin": [1, 2, 3]
+          "$nin": [
+            1,
+            2,
+            3
+          ]
         }
       },
       {
@@ -522,11 +603,18 @@ const String gbTestCases = r'''
       "$nin - array fail 1",
       {
         "tags": {
-          "$nin": ["a", "b"]
+          "$nin": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "e", "a"]
+        "tags": [
+          "d",
+          "e",
+          "a"
+        ]
       },
       false
     ],
@@ -534,11 +622,18 @@ const String gbTestCases = r'''
       "$nin - array fail 2",
       {
         "tags": {
-          "$nin": ["a", "b"]
+          "$nin": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "b", "f"]
+        "tags": [
+          "d",
+          "b",
+          "f"
+        ]
       },
       false
     ],
@@ -546,11 +641,18 @@ const String gbTestCases = r'''
       "$nin - array fail 3",
       {
         "tags": {
-          "$nin": ["a", "b"]
+          "$nin": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "b", "a"]
+        "tags": [
+          "d",
+          "b",
+          "a"
+        ]
       },
       false
     ],
@@ -558,11 +660,18 @@ const String gbTestCases = r'''
       "$nin - array pass 1",
       {
         "tags": {
-          "$nin": ["a", "b"]
+          "$nin": [
+            "a",
+            "b"
+          ]
         }
       },
       {
-        "tags": ["d", "e", "f"]
+        "tags": [
+          "d",
+          "e",
+          "f"
+        ]
       },
       true
     ],
@@ -570,7 +679,10 @@ const String gbTestCases = r'''
       "$nin - array pass 2",
       {
         "tags": {
-          "$nin": ["a", "b"]
+          "$nin": [
+            "a",
+            "b"
+          ]
         }
       },
       {
@@ -588,7 +700,12 @@ const String gbTestCases = r'''
         }
       },
       {
-        "nums": [0, 5, -20, 15]
+        "nums": [
+          0,
+          5,
+          -20,
+          15
+        ]
       },
       true
     ],
@@ -602,7 +719,12 @@ const String gbTestCases = r'''
         }
       },
       {
-        "nums": [0, 5, -20, 8]
+        "nums": [
+          0,
+          5,
+          -20,
+          8
+        ]
       },
       false
     ],
@@ -610,7 +732,9 @@ const String gbTestCases = r'''
       "missing attribute - fail",
       {
         "pets.dog.name": {
-          "$in": ["fido"]
+          "$in": [
+            "fido"
+          ]
         }
       },
       {
@@ -846,7 +970,10 @@ const String gbTestCases = r'''
       "$ini - pass",
       {
         "tags": {
-          "$ini": ["A", "B"]
+          "$ini": [
+            "A",
+            "B"
+          ]
         }
       },
       {
@@ -858,7 +985,10 @@ const String gbTestCases = r'''
       "$ini - fail",
       {
         "tags": {
-          "$ini": ["a", "b"]
+          "$ini": [
+            "a",
+            "b"
+          ]
         }
       },
       {
@@ -870,11 +1000,17 @@ const String gbTestCases = r'''
       "$ini - array pass",
       {
         "tags": {
-          "$ini": ["A", "B"]
+          "$ini": [
+            "A",
+            "B"
+          ]
         }
       },
       {
-        "tags": ["d", "a"]
+        "tags": [
+          "d",
+          "a"
+        ]
       },
       true
     ],
@@ -882,7 +1018,10 @@ const String gbTestCases = r'''
       "$nini - pass",
       {
         "tags": {
-          "$nini": ["A", "B"]
+          "$nini": [
+            "A",
+            "B"
+          ]
         }
       },
       {
@@ -894,7 +1033,10 @@ const String gbTestCases = r'''
       "$nini - fail",
       {
         "tags": {
-          "$nini": ["A", "B"]
+          "$nini": [
+            "A",
+            "B"
+          ]
         }
       },
       {
@@ -906,11 +1048,18 @@ const String gbTestCases = r'''
       "$alli - pass",
       {
         "tags": {
-          "$alli": ["A", "B"]
+          "$alli": [
+            "A",
+            "B"
+          ]
         }
       },
       {
-        "tags": ["a", "b", "c"]
+        "tags": [
+          "a",
+          "b",
+          "c"
+        ]
       },
       true
     ],
@@ -918,11 +1067,17 @@ const String gbTestCases = r'''
       "$alli - fail",
       {
         "tags": {
-          "$alli": ["A", "B"]
+          "$alli": [
+            "A",
+            "B"
+          ]
         }
       },
       {
-        "tags": ["a", "c"]
+        "tags": [
+          "a",
+          "c"
+        ]
       },
       false
     ],
@@ -1295,7 +1450,10 @@ const String gbTestCases = r'''
         }
       },
       {
-        "a": [1, 2]
+        "a": [
+          1,
+          2
+        ]
       },
       true
     ],
@@ -1350,7 +1508,9 @@ const String gbTestCases = r'''
     [
       "$size empty - pass",
       {
-        "tags": { "$size": 0 }
+        "tags": {
+          "$size": 0
+        }
       },
       {
         "tags": []
@@ -1360,10 +1520,14 @@ const String gbTestCases = r'''
     [
       "$size empty - fail",
       {
-        "tags": { "$size": 0 }
+        "tags": {
+          "$size": 0
+        }
       },
       {
-        "tags": [10]
+        "tags": [
+          10
+        ]
       },
       false
     ],
@@ -1375,7 +1539,11 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["a", "b", "c"]
+        "tags": [
+          "a",
+          "b",
+          "c"
+        ]
       },
       true
     ],
@@ -1387,7 +1555,10 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["a", "b"]
+        "tags": [
+          "a",
+          "b"
+        ]
       },
       false
     ],
@@ -1399,7 +1570,12 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["a", "b", "c", "d"]
+        "tags": [
+          "a",
+          "b",
+          "c",
+          "d"
+        ]
       },
       false
     ],
@@ -1425,7 +1601,11 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [0, 1, 2]
+        "tags": [
+          0,
+          1,
+          2
+        ]
       },
       true
     ],
@@ -1439,7 +1619,10 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [0, 1]
+        "tags": [
+          0,
+          1
+        ]
       },
       false
     ],
@@ -1453,7 +1636,9 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": [0]
+        "tags": [
+          0
+        ]
       },
       false
     ],
@@ -1467,7 +1652,11 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["foo", "bar", "baz"]
+        "tags": [
+          "foo",
+          "bar",
+          "baz"
+        ]
       },
       true
     ],
@@ -1481,7 +1670,10 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["foo", "baz"]
+        "tags": [
+          "foo",
+          "baz"
+        ]
       },
       false
     ],
@@ -1490,12 +1682,19 @@ const String gbTestCases = r'''
       {
         "tags": {
           "$elemMatch": {
-            "$in": ["a", "b"]
+            "$in": [
+              "a",
+              "b"
+            ]
           }
         }
       },
       {
-        "tags": ["d", "e", "b"]
+        "tags": [
+          "d",
+          "e",
+          "b"
+        ]
       },
       true
     ],
@@ -1504,12 +1703,19 @@ const String gbTestCases = r'''
       {
         "tags": {
           "$elemMatch": {
-            "$in": ["a", "b"]
+            "$in": [
+              "a",
+              "b"
+            ]
           }
         }
       },
       {
-        "tags": ["d", "e", "f"]
+        "tags": [
+          "d",
+          "e",
+          "f"
+        ]
       },
       false
     ],
@@ -1525,7 +1731,10 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["foo", "baz"]
+        "tags": [
+          "foo",
+          "baz"
+        ]
       },
       true
     ],
@@ -1541,7 +1750,11 @@ const String gbTestCases = r'''
         }
       },
       {
-        "tags": ["foo", "bar", "baz"]
+        "tags": [
+          "foo",
+          "bar",
+          "baz"
+        ]
       },
       false
     ],
@@ -1642,11 +1855,18 @@ const String gbTestCases = r'''
       "$all - pass",
       {
         "tags": {
-          "$all": ["one", "three"]
+          "$all": [
+            "one",
+            "three"
+          ]
         }
       },
       {
-        "tags": ["one", "two", "three"]
+        "tags": [
+          "one",
+          "two",
+          "three"
+        ]
       },
       true
     ],
@@ -1654,11 +1874,18 @@ const String gbTestCases = r'''
       "$all - fail",
       {
         "tags": {
-          "$all": ["one", "three"]
+          "$all": [
+            "one",
+            "three"
+          ]
         }
       },
       {
-        "tags": ["one", "two", "four"]
+        "tags": [
+          "one",
+          "two",
+          "four"
+        ]
       },
       false
     ],
@@ -1666,7 +1893,10 @@ const String gbTestCases = r'''
       "$all - fail not array",
       {
         "tags": {
-          "$all": ["one", "three"]
+          "$all": [
+            "one",
+            "three"
+          ]
         }
       },
       {
@@ -1757,47 +1987,74 @@ const String gbTestCases = r'''
     [
       "equals array - pass",
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       true
     ],
     [
       "equals array - fail order",
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       {
-        "tags": ["world", "hello"]
+        "tags": [
+          "world",
+          "hello"
+        ]
       },
       false
     ],
     [
       "equals array - fail missing item",
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       {
-        "tags": ["hello"]
+        "tags": [
+          "hello"
+        ]
       },
       false
     ],
     [
       "equals array - fail extra item",
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       {
-        "tags": ["hello", "world", "foo"]
+        "tags": [
+          "hello",
+          "world",
+          "foo"
+        ]
       },
       false
     ],
     [
       "equals array - fail type mismatch",
       {
-        "tags": ["hello", "world"]
+        "tags": [
+          "hello",
+          "world"
+        ]
       },
       {
         "tags": "hello world"
@@ -1926,7 +2183,9 @@ const String gbTestCases = r'''
     [
       "false strict condition - missing attribute",
       {
-        "userId": { "$eq": false }
+        "userId": {
+          "$eq": false
+        }
       },
       {},
       false
@@ -3037,7 +3296,14 @@ const String gbTestCases = r'''
     [
       "$or pass but second condition fail",
       {
-        "$or": [{ "foo": 1 }, { "bar": 1 }],
+        "$or": [
+          {
+            "foo": 1
+          },
+          {
+            "bar": 1
+          }
+        ],
         "baz": 2
       },
       {
@@ -3050,7 +3316,14 @@ const String gbTestCases = r'''
     [
       "$or and second condition both pass",
       {
-        "$or": [{ "foo": 1 }, { "bar": 1 }],
+        "$or": [
+          {
+            "foo": 1
+          },
+          {
+            "bar": 1
+          }
+        ],
         "baz": 2
       },
       {
@@ -3063,8 +3336,22 @@ const String gbTestCases = r'''
     [
       "$and condition pass but $or fail",
       {
-        "$and": [{ "foo": 1 }, { "bar": 1 }],
-        "$or": [{ "baz": 1 }, { "empty": 1 }]
+        "$and": [
+          {
+            "foo": 1
+          },
+          {
+            "bar": 1
+          }
+        ],
+        "$or": [
+          {
+            "baz": 1
+          },
+          {
+            "empty": 1
+          }
+        ]
       },
       {
         "foo": 1,
@@ -3076,8 +3363,22 @@ const String gbTestCases = r'''
     [
       "$and and $or both pass",
       {
-        "$and": [{ "foo": 1 }, { "bar": 1 }],
-        "$or": [{ "baz": 1 }, { "empty": 1 }]
+        "$and": [
+          {
+            "foo": 1
+          },
+          {
+            "bar": 1
+          }
+        ],
+        "$or": [
+          {
+            "baz": 1
+          },
+          {
+            "empty": 1
+          }
+        ]
       },
       {
         "foo": 1,
@@ -3090,202 +3391,529 @@ const String gbTestCases = r'''
     [
       "$inGroup passes for member of known group id",
       {
-        "id": { "$inGroup": "group_id" }
+        "id": {
+          "$inGroup": "group_id"
+        }
       },
-      { "id": 1 },
+      {
+        "id": 1
+      },
       true,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$inGroup fails for non-member of known group id",
       {
-        "id": { "$inGroup": "group_id" }
+        "id": {
+          "$inGroup": "group_id"
+        }
       },
-      { "id": 5 },
+      {
+        "id": 5
+      },
       false,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$inGroup fails for unknown group id",
       {
-        "id": { "$inGroup": "unknowngroup_id" }
+        "id": {
+          "$inGroup": "unknowngroup_id"
+        }
       },
-      { "id": 1 },
+      {
+        "id": 1
+      },
       false,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$notInGroup fails for member of known group id",
       {
-        "id": { "$notInGroup": "group_id" }
+        "id": {
+          "$notInGroup": "group_id"
+        }
       },
-      { "id": 1 },
+      {
+        "id": 1
+      },
       false,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$notInGroup passes for non-member of known group id",
       {
-        "id": { "$notInGroup": "group_id" }
+        "id": {
+          "$notInGroup": "group_id"
+        }
       },
-      { "id": 5 },
+      {
+        "id": 5
+      },
       true,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$notInGroup passes for unknown group id",
       {
-        "id": { "$notInGroup": "unknowngroup_id" }
+        "id": {
+          "$notInGroup": "unknowngroup_id"
+        }
       },
-      { "id": 1 },
+      {
+        "id": 1
+      },
       true,
-      { "group_id": [1, 2, 3] }
+      {
+        "group_id": [
+          1,
+          2,
+          3
+        ]
+      }
     ],
     [
       "$inGroup passes for properly typed data",
       {
-        "id": { "$inGroup": "group_id" }
+        "id": {
+          "$inGroup": "group_id"
+        }
       },
-      { "id": "2" },
+      {
+        "id": "2"
+      },
       true,
-      { "group_id": [1, "2", 3] }
+      {
+        "group_id": [
+          1,
+          "2",
+          3
+        ]
+      }
     ],
     [
       "$inGroup fails for improperly typed data",
       {
-        "id": { "$inGroup": "group_id" }
+        "id": {
+          "$inGroup": "group_id"
+        }
       },
-      { "id": "3" },
+      {
+        "id": "3"
+      },
       false,
-      { "group_id": [1, "2", 3] }
+      {
+        "group_id": [
+          1,
+          "2",
+          3
+        ]
+      }
     ]
   ],
   "hash": [
-    ["", "a", 1, 0.22],
-    ["", "b", 1, 0.077],
-    ["b", "a", 1, 0.946],
-    ["ef", "d", 1, 0.652],
-    ["asdf", "8952klfjas09ujk", 1, 0.549],
-    ["", "123", 1, 0.011],
-    ["", "___)((*\":&", 1, 0.563],
-    ["seed", "a", 2, 0.0505],
-    ["seed", "b", 2, 0.2696],
-    ["foo", "ab", 2, 0.2575],
-    ["foo", "def", 2, 0.2019],
-    ["89123klj", "8952klfjas09ujkasdf", 2, 0.124],
-    ["90850943850283058242805", "123", 2, 0.7516],
-    ["()**(%$##$%#$#", "___)((*\":&", 2, 0.0128],
-    ["abc", "def", 99, null]
+    [
+      "",
+      "a",
+      1,
+      0.22
+    ],
+    [
+      "",
+      "b",
+      1,
+      0.077
+    ],
+    [
+      "b",
+      "a",
+      1,
+      0.946
+    ],
+    [
+      "ef",
+      "d",
+      1,
+      0.652
+    ],
+    [
+      "asdf",
+      "8952klfjas09ujk",
+      1,
+      0.549
+    ],
+    [
+      "",
+      "123",
+      1,
+      0.011
+    ],
+    [
+      "",
+      "___)((*\":&",
+      1,
+      0.563
+    ],
+    [
+      "seed",
+      "a",
+      2,
+      0.0505
+    ],
+    [
+      "seed",
+      "b",
+      2,
+      0.2696
+    ],
+    [
+      "foo",
+      "ab",
+      2,
+      0.2575
+    ],
+    [
+      "foo",
+      "def",
+      2,
+      0.2019
+    ],
+    [
+      "89123klj",
+      "8952klfjas09ujkasdf",
+      2,
+      0.124
+    ],
+    [
+      "90850943850283058242805",
+      "123",
+      2,
+      0.7516
+    ],
+    [
+      "()**(%$##$%#$#",
+      "___)((*\":&",
+      2,
+      0.0128
+    ],
+    [
+      "abc",
+      "def",
+      99,
+      null
+    ]
   ],
   "getBucketRange": [
     [
       "normal 50/50",
-      [2, 1, null],
       [
-        [0, 0.5],
-        [0.5, 1]
+        2,
+        1,
+        null
+      ],
+      [
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ]
     ],
     [
       "reduced coverage",
-      [2, 0.5, null],
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        2,
+        0.5,
+        null
+      ],
+      [
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ]
     ],
     [
       "zero coverage",
-      [2, 0, null],
       [
-        [0, 0],
-        [0.5, 0.5]
+        2,
+        0,
+        null
+      ],
+      [
+        [
+          0,
+          0
+        ],
+        [
+          0.5,
+          0.5
+        ]
       ]
     ],
     [
       "4 variations",
-      [4, 1, null],
       [
-        [0, 0.25],
-        [0.25, 0.5],
-        [0.5, 0.75],
-        [0.75, 1]
+        4,
+        1,
+        null
+      ],
+      [
+        [
+          0,
+          0.25
+        ],
+        [
+          0.25,
+          0.5
+        ],
+        [
+          0.5,
+          0.75
+        ],
+        [
+          0.75,
+          1
+        ]
       ]
     ],
     [
       "uneven weights",
-      [2, 1, [0.4, 0.6]],
       [
-        [0, 0.4],
-        [0.4, 1]
+        2,
+        1,
+        [
+          0.4,
+          0.6
+        ]
+      ],
+      [
+        [
+          0,
+          0.4
+        ],
+        [
+          0.4,
+          1
+        ]
       ]
     ],
     [
       "uneven weights, 3 variations",
-      [3, 1, [0.2, 0.3, 0.5]],
       [
-        [0, 0.2],
-        [0.2, 0.5],
-        [0.5, 1]
+        3,
+        1,
+        [
+          0.2,
+          0.3,
+          0.5
+        ]
+      ],
+      [
+        [
+          0,
+          0.2
+        ],
+        [
+          0.2,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ]
     ],
     [
       "uneven weights, reduced coverage, 3 variations",
-      [3, 0.2, [0.2, 0.3, 0.5]],
       [
-        [0, 0.04],
-        [0.2, 0.26],
-        [0.5, 0.6]
+        3,
+        0.2,
+        [
+          0.2,
+          0.3,
+          0.5
+        ]
+      ],
+      [
+        [
+          0,
+          0.04
+        ],
+        [
+          0.2,
+          0.26
+        ],
+        [
+          0.5,
+          0.6
+        ]
       ]
     ],
     [
       "negative coverage",
-      [2, -0.2, null],
       [
-        [0, 0],
-        [0.5, 0.5]
+        2,
+        -0.2,
+        null
+      ],
+      [
+        [
+          0,
+          0
+        ],
+        [
+          0.5,
+          0.5
+        ]
       ]
     ],
     [
       "coverage above 1",
-      [2, 1.5, null],
       [
-        [0, 0.5],
-        [0.5, 1]
+        2,
+        1.5,
+        null
+      ],
+      [
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ]
     ],
     [
       "weights sum below 1",
-      [2, 1, [0.4, 0.1]],
       [
-        [0, 0.5],
-        [0.5, 1]
+        2,
+        1,
+        [
+          0.4,
+          0.1
+        ]
+      ],
+      [
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ]
     ],
     [
       "weights sum above 1",
-      [2, 1, [0.7, 0.6]],
       [
-        [0, 0.5],
-        [0.5, 1]
+        2,
+        1,
+        [
+          0.7,
+          0.6
+        ]
+      ],
+      [
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ]
     ],
     [
       "weights.length not equal to num variations",
-      [4, 1, [0.4, 0.4, 0.2]],
       [
-        [0, 0.25],
-        [0.25, 0.5],
-        [0.5, 0.75],
-        [0.75, 1]
+        4,
+        1,
+        [
+          0.4,
+          0.4,
+          0.2
+        ]
+      ],
+      [
+        [
+          0,
+          0.25
+        ],
+        [
+          0.25,
+          0.5
+        ],
+        [
+          0.5,
+          0.75
+        ],
+        [
+          0.75,
+          1
+        ]
       ]
     ],
     [
       "weights sum almost equals 1",
-      [2, 1, [0.4, 0.5999]],
       [
-        [0, 0.4],
-        [0.4, 0.9999]
+        2,
+        1,
+        [
+          0.4,
+          0.5999
+        ]
+      ],
+      [
+        [
+          0,
+          0.4
+        ],
+        [
+          0.4,
+          0.9999
+        ]
       ]
     ]
   ],
@@ -3304,7 +3932,11 @@ const String gbTestCases = r'''
     ],
     [
       "defaults when empty",
-      { "features": { "feature": {} } },
+      {
+        "features": {
+          "feature": {}
+        }
+      },
       "feature",
       {
         "value": null,
@@ -3316,7 +3948,13 @@ const String gbTestCases = r'''
     ],
     [
       "uses defaultValue - number",
-      { "features": { "feature": { "defaultValue": 1 } } },
+      {
+        "features": {
+          "feature": {
+            "defaultValue": 1
+          }
+        }
+      },
       "feature",
       {
         "value": 1,
@@ -3328,7 +3966,13 @@ const String gbTestCases = r'''
     ],
     [
       "uses custom values - string",
-      { "features": { "feature": { "defaultValue": "yes" } } },
+      {
+        "features": {
+          "feature": {
+            "defaultValue": "yes"
+          }
+        }
+      },
       "feature",
       {
         "value": "yes",
@@ -3557,7 +4201,12 @@ const String gbTestCases = r'''
               {
                 "force": 1,
                 "condition": {
-                  "country": { "$in": ["US", "CA"] },
+                  "country": {
+                    "$in": [
+                      "US",
+                      "CA"
+                    ]
+                  },
                   "browser": "firefox"
                 }
               }
@@ -3588,7 +4237,12 @@ const String gbTestCases = r'''
               {
                 "force": 1,
                 "condition": {
-                  "country": { "$in": ["US", "CA"] },
+                  "country": {
+                    "$in": [
+                      "US",
+                      "CA"
+                    ]
+                  },
                   "browser": "firefox"
                 }
               }
@@ -3638,7 +4292,9 @@ const String gbTestCases = r'''
       {
         "features": {
           "feature": {
-            "rules": [{}]
+            "rules": [
+              {}
+            ]
           }
         }
       },
@@ -3661,7 +4317,11 @@ const String gbTestCases = r'''
           "feature": {
             "rules": [
               {
-                "variations": ["a", "b", "c"]
+                "variations": [
+                  "a",
+                  "b",
+                  "c"
+                ]
               }
             ]
           }
@@ -3674,7 +4334,11 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": ["a", "b", "c"]
+          "variations": [
+            "a",
+            "b",
+            "c"
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3703,7 +4367,11 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "id": "id",
-                "variations": ["a", "b", "c"]
+                "variations": [
+                  "a",
+                  "b",
+                  "c"
+                ]
               }
             ]
           }
@@ -3716,7 +4384,11 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": ["a", "b", "c"]
+          "variations": [
+            "a",
+            "b",
+            "c"
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3744,7 +4416,11 @@ const String gbTestCases = r'''
           "feature": {
             "rules": [
               {
-                "variations": ["a", "b", "c"]
+                "variations": [
+                  "a",
+                  "b",
+                  "c"
+                ]
               }
             ]
           }
@@ -3757,7 +4433,11 @@ const String gbTestCases = r'''
         "off": false,
         "experiment": {
           "key": "feature",
-          "variations": ["a", "b", "c"]
+          "variations": [
+            "a",
+            "b",
+            "c"
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3793,8 +4473,14 @@ const String gbTestCases = r'''
                 "name": "Test",
                 "phase": "1",
                 "ranges": [
-                  [0, 0.1],
-                  [0.1, 1.0]
+                  [
+                    0,
+                    0.1
+                  ],
+                  [
+                    0.1,
+                    1.0
+                  ]
                 ],
                 "meta": [
                   {
@@ -3810,14 +4496,31 @@ const String gbTestCases = r'''
                   {
                     "attribute": "anonId",
                     "seed": "pricing",
-                    "ranges": [[0, 1]]
+                    "ranges": [
+                      [
+                        0,
+                        1
+                      ]
+                    ]
                   }
                 ],
-                "namespace": ["pricing", 0, 1],
+                "namespace": [
+                  "pricing",
+                  0,
+                  1
+                ],
                 "key": "hello",
-                "variations": [true, false],
-                "weights": [0.1, 0.9],
-                "condition": { "premium": true },
+                "variations": [
+                  true,
+                  false
+                ],
+                "weights": [
+                  0.1,
+                  0.9
+                ],
+                "condition": {
+                  "premium": true
+                },
                 "foo": "bar"
               }
             ]
@@ -3833,8 +4536,14 @@ const String gbTestCases = r'''
         "experiment": {
           "coverage": 0.99,
           "ranges": [
-            [0, 0.1],
-            [0.1, 1.0]
+            [
+              0,
+              0.1
+            ],
+            [
+              0.1,
+              1.0
+            ]
           ],
           "meta": [
             {
@@ -3850,7 +4559,12 @@ const String gbTestCases = r'''
             {
               "attribute": "anonId",
               "seed": "pricing",
-              "ranges": [[0, 1]]
+              "ranges": [
+                [
+                  0,
+                  1
+                ]
+              ]
             }
           ],
           "name": "Test",
@@ -3858,11 +4572,23 @@ const String gbTestCases = r'''
           "seed": "feature",
           "hashVersion": 2,
           "hashAttribute": "anonId",
-          "namespace": ["pricing", 0, 1],
+          "namespace": [
+            "pricing",
+            0,
+            1
+          ],
           "key": "hello",
-          "variations": [true, false],
-          "weights": [0.1, 0.9],
-          "condition": { "premium": true }
+          "variations": [
+            true,
+            false
+          ],
+          "weights": [
+            0.1,
+            0.9
+          ],
+          "condition": {
+            "premium": true
+          }
         },
         "experimentResult": {
           "featureId": "feature",
@@ -3892,15 +4618,21 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "condition": { "browser": "chrome" }
+                "condition": {
+                  "browser": "chrome"
+                }
               },
               {
                 "force": 2,
-                "condition": { "browser": "firefox" }
+                "condition": {
+                  "browser": "firefox"
+                }
               },
               {
                 "force": 3,
-                "condition": { "browser": "safari" }
+                "condition": {
+                  "browser": "safari"
+                }
               }
             ]
           }
@@ -3928,17 +4660,23 @@ const String gbTestCases = r'''
               {
                 "force": 1,
                 "id": "1",
-                "condition": { "browser": "chrome" }
+                "condition": {
+                  "browser": "chrome"
+                }
               },
               {
                 "id": "2",
                 "force": 2,
-                "condition": { "browser": "firefox" }
+                "condition": {
+                  "browser": "firefox"
+                }
               },
               {
                 "id": "3",
                 "force": 3,
-                "condition": { "browser": "safari" }
+                "condition": {
+                  "browser": "safari"
+                }
               }
             ]
           }
@@ -3965,15 +4703,21 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 1,
-                "condition": { "browser": "chrome" }
+                "condition": {
+                  "browser": "chrome"
+                }
               },
               {
                 "force": 2,
-                "condition": { "browser": "firefox" }
+                "condition": {
+                  "browser": "firefox"
+                }
               },
               {
                 "force": 3,
-                "condition": { "browser": "safari" }
+                "condition": {
+                  "browser": "safari"
+                }
               }
             ]
           }
@@ -3991,13 +4735,20 @@ const String gbTestCases = r'''
     [
       "skips experiment on coverage",
       {
-        "attributes": { "id": "123" },
+        "attributes": {
+          "id": "123"
+        },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1, 2, 3],
+                "variations": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
                 "coverage": 0.01
               },
               {
@@ -4019,14 +4770,25 @@ const String gbTestCases = r'''
     [
       "skips experiment on namespace",
       {
-        "attributes": { "id": "123" },
+        "attributes": {
+          "id": "123"
+        },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1, 2, 3],
-                "namespace": ["pricing", 0, 0.01]
+                "variations": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
+                "namespace": [
+                  "pricing",
+                  0,
+                  0.01
+                ]
               },
               {
                 "force": 3
@@ -4047,13 +4809,18 @@ const String gbTestCases = r'''
     [
       "handles integer hashAttribute",
       {
-        "attributes": { "id": 123 },
+        "attributes": {
+          "id": 123
+        },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1]
+                "variations": [
+                  0,
+                  1
+                ]
               }
             ]
           }
@@ -4067,7 +4834,10 @@ const String gbTestCases = r'''
         "source": "experiment",
         "experiment": {
           "key": "feature",
-          "variations": [0, 1]
+          "variations": [
+            0,
+            1
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4087,13 +4857,20 @@ const String gbTestCases = r'''
     [
       "skip experiment on missing hashAttribute",
       {
-        "attributes": { "id": "123" },
+        "attributes": {
+          "id": "123"
+        },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1, 2, 3],
+                "variations": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
                 "hashAttribute": "company"
               },
               {
@@ -4115,7 +4892,9 @@ const String gbTestCases = r'''
     [
       "include experiments when forced",
       {
-        "attributes": { "id": "123" },
+        "attributes": {
+          "id": "123"
+        },
         "forcedVariations": {
           "feature": 1
         },
@@ -4124,7 +4903,12 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1, 2, 3]
+                "variations": [
+                  0,
+                  1,
+                  2,
+                  3
+                ]
               },
               {
                 "force": 3
@@ -4141,7 +4925,12 @@ const String gbTestCases = r'''
         "source": "experiment",
         "experiment": {
           "key": "feature",
-          "variations": [0, 1, 2, 3]
+          "variations": [
+            0,
+            1,
+            2,
+            3
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4170,7 +4959,10 @@ const String gbTestCases = r'''
               {
                 "force": 2,
                 "coverage": 0.01,
-                "range": [0, 0.99]
+                "range": [
+                  0,
+                  0.99
+                ]
               }
             ]
           }
@@ -4198,7 +4990,10 @@ const String gbTestCases = r'''
               {
                 "force": 2,
                 "hashVersion": 2,
-                "range": [0.96, 0.97]
+                "range": [
+                  0.96,
+                  0.97
+                ]
               }
             ]
           }
@@ -4225,7 +5020,10 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 2,
-                "range": [0, 0.01]
+                "range": [
+                  0,
+                  0.01
+                ]
               }
             ]
           }
@@ -4255,7 +5053,12 @@ const String gbTestCases = r'''
                 "filters": [
                   {
                     "seed": "seed",
-                    "ranges": [[0, 0.01]]
+                    "ranges": [
+                      [
+                        0,
+                        0.01
+                      ]
+                    ]
                   }
                 ]
               }
@@ -4284,7 +5087,10 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": 2,
-                "range": [0, 0.5],
+                "range": [
+                  0,
+                  0.5
+                ],
                 "seed": "fjdslafdsa",
                 "hashVersion": 2
               }
@@ -4313,11 +5119,20 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "holdout",
-                "variations": [1, 2],
+                "variations": [
+                  1,
+                  2
+                ],
                 "hashVersion": 2,
                 "ranges": [
-                  [0, 0.01],
-                  [0.01, 1.0]
+                  [
+                    0,
+                    0.01
+                  ],
+                  [
+                    0.01,
+                    1.0
+                  ]
                 ],
                 "meta": [
                   {},
@@ -4328,11 +5143,20 @@ const String gbTestCases = r'''
               },
               {
                 "key": "experiment",
-                "variations": [3, 4],
+                "variations": [
+                  3,
+                  4
+                ],
                 "hashVersion": 2,
                 "ranges": [
-                  [0, 0.5],
-                  [0.5, 1.0]
+                  [
+                    0,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    1.0
+                  ]
                 ]
               }
             ]
@@ -4348,10 +5172,19 @@ const String gbTestCases = r'''
         "experiment": {
           "key": "experiment",
           "hashVersion": 2,
-          "variations": [3, 4],
+          "variations": [
+            3,
+            4
+          ],
           "ranges": [
-            [0, 0.5],
-            [0.5, 1.0]
+            [
+              0,
+              0.5
+            ],
+            [
+              0.5,
+              1.0
+            ]
           ]
         },
         "experimentResult": {
@@ -4382,10 +5215,19 @@ const String gbTestCases = r'''
               {
                 "key": "holdout",
                 "hashVersion": 2,
-                "variations": [1, 2],
+                "variations": [
+                  1,
+                  2
+                ],
                 "ranges": [
-                  [0, 0.99],
-                  [0.99, 1.0]
+                  [
+                    0,
+                    0.99
+                  ],
+                  [
+                    0.99,
+                    1.0
+                  ]
                 ],
                 "meta": [
                   {},
@@ -4397,10 +5239,19 @@ const String gbTestCases = r'''
               {
                 "key": "experiment",
                 "hashVersion": 2,
-                "variations": [3, 4],
+                "variations": [
+                  3,
+                  4
+                ],
                 "ranges": [
-                  [0, 0.5],
-                  [0.5, 1.0]
+                  [
+                    0,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    1.0
+                  ]
                 ]
               }
             ]
@@ -4416,8 +5267,14 @@ const String gbTestCases = r'''
         "experiment": {
           "hashVersion": 2,
           "ranges": [
-            [0, 0.99],
-            [0.99, 1.0]
+            [
+              0,
+              0.99
+            ],
+            [
+              0.99,
+              1.0
+            ]
           ],
           "meta": [
             {},
@@ -4426,7 +5283,10 @@ const String gbTestCases = r'''
             }
           ],
           "key": "holdout",
-          "variations": [1, 2]
+          "variations": [
+            1,
+            2
+          ]
         },
         "experimentResult": {
           "featureId": "feature",
@@ -4456,11 +5316,20 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": { "country": "Canada" },
+                "condition": {
+                  "country": "Canada"
+                },
                 "force": "red"
               },
               {
-                "condition": { "country": { "$in": ["USA", "Mexico"] } },
+                "condition": {
+                  "country": {
+                    "$in": [
+                      "USA",
+                      "Mexico"
+                    ]
+                  }
+                },
                 "force": "green"
               }
             ]
@@ -4472,13 +5341,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": "green" },
+                    "condition": {
+                      "value": "green"
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4510,13 +5383,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": "green" },
+                    "condition": {
+                      "value": "green"
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4545,11 +5422,20 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": { "country": "Canada" },
+                "condition": {
+                  "country": "Canada"
+                },
                 "force": "red"
               },
               {
-                "condition": { "country": { "$in": ["USA", "Mexico"] } },
+                "condition": {
+                  "country": {
+                    "$in": [
+                      "USA",
+                      "Mexico"
+                    ]
+                  }
+                },
                 "force": "green"
               }
             ]
@@ -4561,13 +5447,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": "green" },
+                    "condition": {
+                      "value": "green"
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4596,11 +5486,20 @@ const String gbTestCases = r'''
             "defaultValue": "silver",
             "rules": [
               {
-                "condition": { "country": "Canada" },
+                "condition": {
+                  "country": "Canada"
+                },
                 "force": "red"
               },
               {
-                "condition": { "country": { "$in": ["USA", "Mexico"] } },
+                "condition": {
+                  "country": {
+                    "$in": [
+                      "USA",
+                      "Mexico"
+                    ]
+                  }
+                },
                 "force": "green"
               }
             ]
@@ -4609,7 +5508,9 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "condition": { "id": "123" },
+                "condition": {
+                  "id": "123"
+                },
                 "force": 2
               }
             ]
@@ -4621,7 +5522,9 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag1",
-                    "condition": { "value": "green" },
+                    "condition": {
+                      "value": "green"
+                    },
                     "gate": true
                   }
                 ]
@@ -4630,13 +5533,19 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag2",
-                    "condition": { "value": { "$gt": 1 } },
+                    "condition": {
+                      "value": {
+                        "$gt": 1
+                      }
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4668,17 +5577,30 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag2",
-                    "condition": { "value": { "$gt": 1 } },
+                    "condition": {
+                      "value": {
+                        "$gt": 1
+                      }
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "country": "Canada" },
+                "condition": {
+                  "country": "Canada"
+                },
                 "force": "red"
               },
               {
-                "condition": { "country": { "$in": ["USA", "Mexico"] } },
+                "condition": {
+                  "country": {
+                    "$in": [
+                      "USA",
+                      "Mexico"
+                    ]
+                  }
+                },
                 "force": "green"
               }
             ]
@@ -4687,7 +5609,9 @@ const String gbTestCases = r'''
             "defaultValue": 0,
             "rules": [
               {
-                "condition": { "id": "123" },
+                "condition": {
+                  "id": "123"
+                },
                 "force": 2
               }
             ]
@@ -4699,13 +5623,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag1",
-                    "condition": { "value": "green" },
+                    "condition": {
+                      "value": "green"
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4735,12 +5663,21 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "experiment",
-                "variations": [0, 1],
+                "variations": [
+                  0,
+                  1
+                ],
                 "hashAttribute": "id",
                 "hashVersion": 2,
                 "ranges": [
-                  [0, 0.5],
-                  [0.5, 1.0]
+                  [
+                    0,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    1.0
+                  ]
                 ]
               }
             ]
@@ -4752,13 +5689,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentExperimentFlag",
-                    "condition": { "value": 1 },
+                    "condition": {
+                      "value": 1
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4788,12 +5729,21 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "experiment",
-                "variations": [0, 1],
+                "variations": [
+                  0,
+                  1
+                ],
                 "hashAttribute": "id",
                 "hashVersion": 2,
                 "ranges": [
-                  [0, 0.5],
-                  [0.5, 1.0]
+                  [
+                    0,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    1.0
+                  ]
                 ]
               }
             ]
@@ -4805,13 +5755,17 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentExperimentFlag",
-                    "condition": { "value": 0 },
+                    "condition": {
+                      "value": 0
+                    },
                     "gate": true
                   }
                 ]
               },
               {
-                "condition": { "memberType": "basic" },
+                "condition": {
+                  "memberType": "basic"
+                },
                 "force": "success"
               }
             ]
@@ -4841,7 +5795,9 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "flag2",
-                    "condition": { "value": true },
+                    "condition": {
+                      "value": true
+                    },
                     "gate": true
                   }
                 ]
@@ -4855,7 +5811,9 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "flag1",
-                    "condition": { "value": true },
+                    "condition": {
+                      "value": true
+                    },
                     "gate": true
                   }
                 ]
@@ -4888,12 +5846,18 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": { "$ne": false } },
+                    "condition": {
+                      "value": {
+                        "$ne": false
+                      }
+                    },
                     "gate": true
                   },
                   {
                     "id": "parentFlag",
-                    "condition": { "value": true },
+                    "condition": {
+                      "value": true
+                    },
                     "gate": true
                   }
                 ]
@@ -4905,19 +5869,25 @@ const String gbTestCases = r'''
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": true }
+                    "condition": {
+                      "value": true
+                    }
                   }
                 ],
                 "force": "C"
               },
               {
                 "condition": {
-                  "browser": { "$ne": "safari" }
+                  "browser": {
+                    "$ne": "safari"
+                  }
                 },
                 "parentConditions": [
                   {
                     "id": "parentFlag",
-                    "condition": { "value": true }
+                    "condition": {
+                      "value": true
+                    }
                   }
                 ],
                 "force": "T"
@@ -4950,13 +5920,20 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "force": true,
-                "condition": { "id": { "$inGroup": "group_id" } }
+                "condition": {
+                  "id": {
+                    "$inGroup": "group_id"
+                  }
+                }
               }
             ]
           }
         },
         "savedGroups": {
-          "group_id": [123, 456]
+          "group_id": [
+            123,
+            456
+          ]
         }
       },
       "inGroup_force_rule",
@@ -4980,19 +5957,35 @@ const String gbTestCases = r'''
             "rules": [
               {
                 "key": "experiment",
-                "condition": { "id": { "$inGroup": "group_id" } },
+                "condition": {
+                  "id": {
+                    "$inGroup": "group_id"
+                  }
+                },
                 "hashVersion": 2,
-                "variations": [1, 2],
+                "variations": [
+                  1,
+                  2
+                ],
                 "ranges": [
-                  [0, 0.5],
-                  [0.5, 1.0]
+                  [
+                    0,
+                    0.5
+                  ],
+                  [
+                    0.5,
+                    1.0
+                  ]
                 ]
               }
             ]
           }
         },
         "savedGroups": {
-          "group_id": [123, 456]
+          "group_id": [
+            123,
+            456
+          ]
         }
       },
       "inGroup_experiment_rule",
@@ -5003,11 +5996,24 @@ const String gbTestCases = r'''
         "source": "experiment",
         "experiment": {
           "hashVersion": 2,
-          "condition": { "id": { "$inGroup": "group_id" } },
-          "variations": [1, 2],
+          "condition": {
+            "id": {
+              "$inGroup": "group_id"
+            }
+          },
+          "variations": [
+            1,
+            2
+          ],
           "ranges": [
-            [0, 0.5],
-            [0.5, 1.0]
+            [
+              0,
+              0.5
+            ],
+            [
+              0.5,
+              1.0
+            ]
           ],
           "key": "experiment"
         },
@@ -5027,331 +6033,4494 @@ const String gbTestCases = r'''
       }
     ]
   ],
+  "contextualBandit": [
+    [
+      "single catch-all leaf routes and sets CB result fields",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "anything"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  1,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "matches the first (specific) leaf",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "falls through to the catch-all leaf",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "free"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0,
+            1
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 2,
+            "variationWeights": [
+              0,
+              1
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 2,
+          "variationWeights": [
+            0,
+            1
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf condition operators - $in matches",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "free",
+          "cartValue": 100
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": {
+                    "$in": [
+                      "free",
+                      "basic"
+                    ]
+                  }
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {
+                  "cartValue": {
+                    "$gte": 500
+                  }
+                },
+                "weights": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "leafId": 3,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf condition operators - $gte matches second leaf",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "pro",
+          "cartValue": 600
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": {
+                    "$in": [
+                      "free",
+                      "basic"
+                    ]
+                  }
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {
+                  "cartValue": {
+                    "$gte": 500
+                  }
+                },
+                "weights": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "leafId": 3,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0,
+            1
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 2,
+            "variationWeights": [
+              0,
+              1
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 2,
+          "variationWeights": [
+            0,
+            1
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "first-match-wins when multiple leaf conditions match",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "pro",
+          "country": "US"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "pro"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {
+                  "country": "US"
+                },
+                "weights": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "leafId": 3,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "missing attribute used by a leaf condition falls into the catch-all leaf",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0,
+            1
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 2,
+            "variationWeights": [
+              0,
+              1
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 2,
+          "variationWeights": [
+            0,
+            1
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "CB rule outer condition fails, a following force rule applies",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "condition": {
+                  "country": "US"
+                },
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              },
+              {
+                "force": "forced"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "forced",
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
+      }
+    ],
+    [
+      "outer condition fails - CB rule skipped",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "condition": {
+                  "country": "US"
+                },
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "coverage excludes user even though a leaf matched",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 0.01,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "three-arm CB leaf routes with positional weights",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "c0",
+                  "c1",
+                  "c2"
+                ],
+                "weights": [
+                  0.34,
+                  0.33,
+                  0.33
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  0,
+                  0,
+                  1
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0.34,
+                  0.33,
+                  0.33
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "c2",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "c0",
+            "c1",
+            "c2"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0,
+            0,
+            1
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            },
+            {
+              "key": "2"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0,
+              0,
+              1
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "2",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 2,
+          "value": "c2",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            0,
+            0,
+            1
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "CB rule as a later rule in the list",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise",
+          "country": "US"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "first",
+                "seed": "first",
+                "hashVersion": 2,
+                "coverage": 1,
+                "variations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "condition": {
+                  "country": "CA"
+                }
+              },
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf with even weights distributes users - id 1",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0.5,
+              0.5
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            0.5,
+            0.5
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf with even weights distributes users - id 2",
+      {
+        "attributes": {
+          "id": "2"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0.5,
+              0.5
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "2",
+          "stickyBucketUsed": false,
+          "bucket": 0.9374,
+          "leafId": 1,
+          "variationWeights": [
+            0.5,
+            0.5
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf with even weights distributes users - id 3",
+      {
+        "attributes": {
+          "id": "3"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  0.5,
+                  0.5
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0.5,
+              0.5
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "3",
+          "stickyBucketUsed": false,
+          "bucket": 0.8606,
+          "leafId": 1,
+          "variationWeights": [
+            0.5,
+            0.5
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf with uneven weights distributes users - id 1",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  0.1,
+                  0.9
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.1,
+            0.9
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0.1,
+              0.9
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            0.1,
+            0.9
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "leaf with uneven weights distributes users - id 4",
+      {
+        "attributes": {
+          "id": "4"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  0.1,
+                  0.9
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.1,
+            0.9
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              0.1,
+              0.9
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "4",
+          "stickyBucketUsed": false,
+          "bucket": 0.4818,
+          "leafId": 1,
+          "variationWeights": [
+            0.1,
+            0.9
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "CB empty hashAttribute - not in experiment",
+      {
+        "attributes": {
+          "id": "",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "CB null hashAttribute - not in experiment",
+      {
+        "attributes": {
+          "id": null,
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "CB missing hashAttribute - not in experiment",
+      {
+        "attributes": {
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "CB buckets on a custom hashAttribute",
+      {
+        "attributes": {
+          "anonId": "123",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "anonId",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "anonId",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "anonId",
+          "hashValue": "123",
+          "stickyBucketUsed": false,
+          "bucket": 0.0484,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "forcedVariations from context overrides CB routing",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "forcedVariations": {
+          "bandit-exp": 1
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": false,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false
+        }
+      }
+    ],
+    [
+      "querystring force overrides CB routing",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "url": "https://example.com/?bandit-exp=1",
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": false,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false
+        }
+      }
+    ],
+    [
+      "CB skipped in QA mode",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "qaMode": true,
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "CB in QA mode if forced in context",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "qaMode": true,
+        "forcedVariations": {
+          "bandit-exp": 0
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": false,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false
+        }
+      }
+    ],
+    [
+      "CB rule when globally disabled",
+      {
+        "enabled": false,
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "JSON variation values with CB routing",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": {
+              "color": "none"
+            },
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  {
+                    "color": "blue"
+                  },
+                  {
+                    "color": "green"
+                  }
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": {
+          "color": "blue"
+        },
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            {
+              "color": "blue"
+            },
+            {
+              "color": "green"
+            }
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": {
+            "color": "blue"
+          },
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "single-variation CB rule is invalid - not in experiment",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control"
+                ],
+                "weights": [
+                  1
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "outer condition passes - CB routes",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise",
+          "country": "US"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "condition": {
+                  "country": "US"
+                },
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "condition": {
+            "country": "US"
+          },
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "coverage distribution within a leaf - id 1",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 0.5,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "default",
+        "on": true,
+        "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "coverage distribution within a leaf - id 8",
+      {
+        "attributes": {
+          "id": "8",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 0.5,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "leafId": 2,
+                "condition": {},
+                "weights": [
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 0.5,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "8",
+          "stickyBucketUsed": false,
+          "bucket": 0.011,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "dangling contextualBanditRef uses marginal weights with no CB metadata",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305
+        }
+      }
+    ],
+    [
+      "empty contexts array uses marginal weights with fallback leaf -1",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": []
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": -1,
+            "variationWeights": [
+              0.5,
+              0.5
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": -1,
+          "variationWeights": [
+            0.5,
+            0.5
+          ],
+          "banditVersion": 7
+        }
+      }
+    ],
+    [
+      "banditVersion omitted from definition is absent from result",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "enterprise"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {},
+                "weights": [
+                  1,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "control",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            1,
+            0
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": 1,
+            "variationWeights": [
+              1,
+              0
+            ]
+          }
+        },
+        "experimentResult": {
+          "key": "0",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 0,
+          "value": "control",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": 1,
+          "variationWeights": [
+            1,
+            0
+          ]
+        }
+      }
+    ],
+    [
+      "required attribute present but no leaf matches - fallback leaf -1",
+      {
+        "attributes": {
+          "id": "1",
+          "plan": "free"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashAttribute": "id",
+                "hashVersion": 2,
+                "coverage": 1,
+                "contextualVariations": [
+                  "control",
+                  "treatment"
+                ],
+                "weights": [
+                  0.5,
+                  0.5
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "contextualBanditRef": "cb-bandit"
+              }
+            ]
+          }
+        },
+        "contextualBandits": {
+          "cb-bandit": {
+            "banditVersion": 7,
+            "contexts": [
+              {
+                "leafId": 1,
+                "condition": {
+                  "plan": "enterprise"
+                },
+                "weights": [
+                  1,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": [
+            "control",
+            "treatment"
+          ],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [
+            0.5,
+            0.5
+          ],
+          "hashAttribute": "id",
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2,
+          "contextualBandit": {
+            "leafId": -1,
+            "variationWeights": [
+              0.5,
+              0.5
+            ],
+            "banditVersion": 7
+          }
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305,
+          "leafId": -1,
+          "variationWeights": [
+            0.5,
+            0.5
+          ],
+          "banditVersion": 7
+        }
+      }
+    ]
+  ],
   "run": [
     [
       "default weights - 1",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "default weights - 2",
-      { "attributes": { "id": "2" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "2"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "default weights - 3",
-      { "attributes": { "id": "3" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "3"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "default weights - 4",
-      { "attributes": { "id": "4" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "4"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "default weights - 5",
-      { "attributes": { "id": "5" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "5"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "default weights - 6",
-      { "attributes": { "id": "6" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "6"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "default weights - 7",
-      { "attributes": { "id": "7" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "7"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "default weights - 8",
-      { "attributes": { "id": "8" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "8"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "default weights - 9",
-      { "attributes": { "id": "9" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "9"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "uneven weights - 1",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 2",
-      { "attributes": { "id": "2" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "2"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 3",
-      { "attributes": { "id": "3" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "3"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "uneven weights - 4",
-      { "attributes": { "id": "4" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "4"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 5",
-      { "attributes": { "id": "5" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "5"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 6",
-      { "attributes": { "id": "6" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "6"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 7",
-      { "attributes": { "id": "7" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "7"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "uneven weights - 8",
-      { "attributes": { "id": "8" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "8"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "uneven weights - 9",
-      { "attributes": { "id": "9" } },
-      { "key": "my-test", "variations": [0, 1], "weights": [0.1, 0.9] },
+      {
+        "attributes": {
+          "id": "9"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.1,
+          0.9
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "coverage - 1",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       false,
       false
     ],
     [
       "coverage - 2",
-      { "attributes": { "id": "2" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "2"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       true,
       true
     ],
     [
       "coverage - 3",
-      { "attributes": { "id": "3" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "3"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       true,
       true
     ],
     [
       "coverage - 4",
-      { "attributes": { "id": "4" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "4"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       false,
       false
     ],
     [
       "coverage - 5",
-      { "attributes": { "id": "5" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "5"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       1,
       true,
       true
     ],
     [
       "coverage - 6",
-      { "attributes": { "id": "6" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "6"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       false,
       false
     ],
     [
       "coverage - 7",
-      { "attributes": { "id": "7" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "7"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       true,
       true
     ],
     [
       "coverage - 8",
-      { "attributes": { "id": "8" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "8"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       1,
       true,
       true
     ],
     [
       "coverage - 9",
-      { "attributes": { "id": "9" } },
-      { "key": "my-test", "variations": [0, 1], "coverage": 0.4 },
+      {
+        "attributes": {
+          "id": "9"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "coverage": 0.4
+      },
       0,
       false,
       false
     ],
     [
       "three way test - 1",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       2,
       true,
       true
     ],
     [
       "three way test - 2",
-      { "attributes": { "id": "2" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "2"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "three way test - 3",
-      { "attributes": { "id": "3" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "3"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "three way test - 4",
-      { "attributes": { "id": "4" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "4"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       2,
       true,
       true
     ],
     [
       "three way test - 5",
-      { "attributes": { "id": "5" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "5"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "three way test - 6",
-      { "attributes": { "id": "6" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "6"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       2,
       true,
       true
     ],
     [
       "three way test - 7",
-      { "attributes": { "id": "7" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "7"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "three way test - 8",
-      { "attributes": { "id": "8" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "8"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "three way test - 9",
-      { "attributes": { "id": "9" } },
-      { "key": "my-test", "variations": [0, 1, 2] },
+      {
+        "attributes": {
+          "id": "9"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1,
+          2
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "test name - my-test",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       1,
       true,
       true
     ],
     [
       "test name - my-test-3",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test-3", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test-3",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       true,
       true
     ],
     [
       "empty id",
-      { "attributes": { "id": "" } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": ""
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       false,
       false
     ],
     [
       "null id",
-      { "attributes": { "id": null } },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {
+          "id": null
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       false,
       false
     ],
     [
       "missing id",
-      { "attributes": {} },
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "attributes": {}
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       false,
       false
@@ -5359,31 +10528,68 @@ const String gbTestCases = r'''
     [
       "missing attributes",
       {},
-      { "key": "my-test", "variations": [0, 1] },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ]
+      },
       0,
       false,
       false
     ],
     [
       "single variation",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0] },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0
+        ]
+      },
       0,
       false,
       false
     ],
     [
       "negative forced variation",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1], "force": -8 },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "force": -8
+      },
       0,
       false,
       false
     ],
     [
       "high forced variation",
-      { "attributes": { "id": "1" } },
-      { "key": "my-test", "variations": [0, 1], "force": 25 },
+      {
+        "attributes": {
+          "id": "1"
+        }
+      },
+      {
+        "key": "my-test",
+        "variations": [
+          0,
+          1
+        ],
+        "force": 25
+      },
       0,
       false,
       false
@@ -5398,7 +10604,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "condition": {
           "browser": "firefox"
         }
@@ -5417,7 +10626,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "condition": {
           "browser": "firefox"
         }
@@ -5436,7 +10648,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "hashAttribute": "companyId"
       },
       1,
@@ -5453,7 +10668,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       0,
       false,
@@ -5469,7 +10687,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "forced-test-qs",
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       1,
       true,
@@ -5485,7 +10706,10 @@ const String gbTestCases = r'''
       {
         "key": "my-test",
         "active": true,
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       1,
       true,
@@ -5501,7 +10725,10 @@ const String gbTestCases = r'''
       {
         "key": "my-test",
         "active": false,
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       0,
       false,
@@ -5518,7 +10745,10 @@ const String gbTestCases = r'''
       {
         "key": "my-test",
         "active": false,
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       1,
       true,
@@ -5535,7 +10765,10 @@ const String gbTestCases = r'''
         "key": "my-test",
         "force": 1,
         "coverage": 0.01,
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       0,
       false,
@@ -5571,12 +10804,19 @@ const String gbTestCases = r'''
     [
       "Force variation from context",
       {
-        "attributes": { "id": "1" },
-        "forcedVariations": { "my-test": 0 }
+        "attributes": {
+          "id": "1"
+        },
+        "forcedVariations": {
+          "my-test": 0
+        }
       },
       {
         "key": "my-test",
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       0,
       true,
@@ -5585,12 +10825,17 @@ const String gbTestCases = r'''
     [
       "Skips experiments in QA mode",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "qaMode": true
       },
       {
         "key": "my-test",
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       0,
       false,
@@ -5599,13 +10844,20 @@ const String gbTestCases = r'''
     [
       "Works in QA mode if forced in context",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "qaMode": true,
-        "forcedVariations": { "my-test": 1 }
+        "forcedVariations": {
+          "my-test": 1
+        }
       },
       {
         "key": "my-test",
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       1,
       true,
@@ -5614,12 +10866,17 @@ const String gbTestCases = r'''
     [
       "Works in QA mode if forced in experiment",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "qaMode": true
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "force": 1
       },
       1,
@@ -5635,8 +10892,15 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
-        "namespace": ["namespace", 0.1, 1]
+        "variations": [
+          0,
+          1
+        ],
+        "namespace": [
+          "namespace",
+          0.1,
+          1
+        ]
       },
       1,
       true,
@@ -5651,8 +10915,15 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
-        "namespace": ["namespace", 0, 0.1]
+        "variations": [
+          0,
+          1
+        ],
+        "namespace": [
+          "namespace",
+          0,
+          0.1
+        ]
       },
       0,
       false,
@@ -5667,7 +10938,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "no-coverage",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "coverage": 0
       },
       0,
@@ -5684,19 +10958,33 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [0, 0.1],
-              [0.2, 0.4]
+              [
+                0,
+                0.1
+              ],
+              [
+                0.2,
+                0.4
+              ]
             ]
           },
           {
             "seed": "seed",
             "attribute": "anonId",
-            "ranges": [[0.8, 1.0]]
+            "ranges": [
+              [
+                0.8,
+                1.0
+              ]
+            ]
           }
         ]
       },
@@ -5714,19 +11002,33 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [0, 0.1],
-              [0.2, 0.4]
+              [
+                0,
+                0.1
+              ],
+              [
+                0.2,
+                0.4
+              ]
             ]
           },
           {
             "seed": "seed",
             "attribute": "anonId",
-            "ranges": [[0.6, 0.8]]
+            "ranges": [
+              [
+                0.6,
+                0.8
+              ]
+            ]
           }
         ]
       },
@@ -5743,17 +11045,30 @@ const String gbTestCases = r'''
       },
       {
         "key": "filtered",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "filters": [
           {
             "seed": "seed",
             "ranges": [
-              [0, 0.1],
-              [0.2, 0.4]
+              [
+                0,
+                0.1
+              ],
+              [
+                0.2,
+                0.4
+              ]
             ]
           }
         ],
-        "namespace": ["test", 0, 0.001]
+        "namespace": [
+          "test",
+          0,
+          0.001
+        ]
       },
       1,
       true,
@@ -5768,13 +11083,25 @@ const String gbTestCases = r'''
       },
       {
         "key": "ranges",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "ranges": [
-          [0.99, 1.0],
-          [0.0, 0.99]
+          [
+            0.99,
+            1.0
+          ],
+          [
+            0.0,
+            0.99
+          ]
         ],
         "coverage": 0.01,
-        "weights": [0.99, 0.01]
+        "weights": [
+          0.99,
+          0.01
+        ]
       },
       1,
       true,
@@ -5789,10 +11116,19 @@ const String gbTestCases = r'''
       },
       {
         "key": "configs",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "ranges": [
-          [0, 0.1],
-          [0.9, 1.0]
+          [
+            0,
+            0.1
+          ],
+          [
+            0.9,
+            1.0
+          ]
         ]
       },
       0,
@@ -5810,10 +11146,19 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "ranges": [
-          [0, 0.5],
-          [0.5, 1.0]
+          [
+            0,
+            0.5
+          ],
+          [
+            0.5,
+            1.0
+          ]
         ]
       },
       1,
@@ -5831,7 +11176,10 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [0, 1]
+        "variations": [
+          0,
+          1
+        ]
       },
       1,
       true,
@@ -5848,8 +11196,14 @@ const String gbTestCases = r'''
         "key": "key",
         "seed": "foo",
         "hashVersion": 2,
-        "variations": [0, 1],
-        "weights": [0.5, 0.5],
+        "variations": [
+          0,
+          1
+        ],
+        "weights": [
+          0.5,
+          0.5
+        ],
         "coverage": 0.99
       },
       1,
@@ -5859,7 +11213,9 @@ const String gbTestCases = r'''
     [
       "Prerequisite condition passes",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "features": {
           "parentFlag": {
             "defaultValue": true
@@ -5868,7 +11224,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "parentConditions": [
           {
             "id": "parentFlag",
@@ -5885,7 +11244,9 @@ const String gbTestCases = r'''
     [
       "Prerequisite condition fails",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "features": {
           "parentFlag": {
             "defaultValue": false
@@ -5894,7 +11255,10 @@ const String gbTestCases = r'''
       },
       {
         "key": "my-test",
-        "variations": [0, 1],
+        "variations": [
+          0,
+          1
+        ],
         "parentConditions": [
           {
             "id": "parentFlag",
@@ -5911,15 +11275,29 @@ const String gbTestCases = r'''
     [
       "SavedGroups correctly pulled from context for experiment",
       {
-        "attributes": { "id": "4" },
-        "savedGroups": { "group_id": ["4", "5", "6"] }
+        "attributes": {
+          "id": "4"
+        },
+        "savedGroups": {
+          "group_id": [
+            "4",
+            "5",
+            "6"
+          ]
+        }
       },
       {
         "key": "group-filtered-test",
         "condition": {
-          "id": { "$inGroup": "group_id" }
+          "id": {
+            "$inGroup": "group_id"
+          }
         },
-        "variations": [0, 1, 2]
+        "variations": [
+          0,
+          1,
+          2
+        ]
       },
       0,
       true,
@@ -5931,8 +11309,14 @@ const String gbTestCases = r'''
       "even range, 0.2",
       0.2,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       0
     ],
@@ -5940,8 +11324,14 @@ const String gbTestCases = r'''
       "even range, 0.4",
       0.4,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       0
     ],
@@ -5949,8 +11339,14 @@ const String gbTestCases = r'''
       "even range, 0.6",
       0.6,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       1
     ],
@@ -5958,8 +11354,14 @@ const String gbTestCases = r'''
       "even range, 0.8",
       0.8,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       1
     ],
@@ -5967,8 +11369,14 @@ const String gbTestCases = r'''
       "even range, 0",
       0,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       0
     ],
@@ -5976,8 +11384,14 @@ const String gbTestCases = r'''
       "even range, 0.5",
       0.5,
       [
-        [0, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       1
     ],
@@ -5985,8 +11399,14 @@ const String gbTestCases = r'''
       "reduced range, 0.2",
       0.2,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       0
     ],
@@ -5994,8 +11414,14 @@ const String gbTestCases = r'''
       "reduced range, 0.4",
       0.4,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       -1
     ],
@@ -6003,8 +11429,14 @@ const String gbTestCases = r'''
       "reduced range, 0.6",
       0.6,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       1
     ],
@@ -6012,8 +11444,14 @@ const String gbTestCases = r'''
       "reduced range, 0.8",
       0.8,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       -1
     ],
@@ -6021,8 +11459,14 @@ const String gbTestCases = r'''
       "reduced range, 0.25",
       0.25,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       -1
     ],
@@ -6030,8 +11474,14 @@ const String gbTestCases = r'''
       "reduced range, 0.5",
       0.5,
       [
-        [0, 0.25],
-        [0.5, 0.75]
+        [
+          0,
+          0.25
+        ],
+        [
+          0.5,
+          0.75
+        ]
       ],
       1
     ],
@@ -6039,17 +11489,44 @@ const String gbTestCases = r'''
       "zero range",
       0.5,
       [
-        [0, 0.5],
-        [0.5, 0.5],
-        [0.5, 1]
+        [
+          0,
+          0.5
+        ],
+        [
+          0.5,
+          0.5
+        ],
+        [
+          0.5,
+          1
+        ]
       ],
       2
     ]
   ],
   "getQueryStringOverride": [
-    ["empty url", "my-test", "", 2, null],
-    ["no query string", "my-test", "http://example.com", 2, null],
-    ["empty query string", "my-test", "http://example.com?", 2, null],
+    [
+      "empty url",
+      "my-test",
+      "",
+      2,
+      null
+    ],
+    [
+      "no query string",
+      "my-test",
+      "http://example.com",
+      2,
+      null
+    ],
+    [
+      "empty query string",
+      "my-test",
+      "http://example.com?",
+      2,
+      null
+    ],
     [
       "no query string match",
       "my-test",
@@ -6057,14 +11534,62 @@ const String gbTestCases = r'''
       2,
       null
     ],
-    ["invalid query string", "my-test", "http://example.com??&&&?#", 2, null],
-    ["simple match 0", "my-test", "http://example.com?my-test=0", 2, 0],
-    ["simple match 1", "my-test", "http://example.com?my-test=1", 2, 1],
-    ["negative variation", "my-test", "http://example.com?my-test=-1", 2, null],
-    ["float", "my-test", "http://example.com?my-test=2.054", 2, null],
-    ["string", "my-test", "http://example.com?my-test=foo", 2, null],
-    ["variation too high", "my-test", "http://example.com?my-test=5", 2, null],
-    ["high numVariations", "my-test", "http://example.com?my-test=5", 6, 5],
+    [
+      "invalid query string",
+      "my-test",
+      "http://example.com??&&&?#",
+      2,
+      null
+    ],
+    [
+      "simple match 0",
+      "my-test",
+      "http://example.com?my-test=0",
+      2,
+      0
+    ],
+    [
+      "simple match 1",
+      "my-test",
+      "http://example.com?my-test=1",
+      2,
+      1
+    ],
+    [
+      "negative variation",
+      "my-test",
+      "http://example.com?my-test=-1",
+      2,
+      null
+    ],
+    [
+      "float",
+      "my-test",
+      "http://example.com?my-test=2.054",
+      2,
+      null
+    ],
+    [
+      "string",
+      "my-test",
+      "http://example.com?my-test=foo",
+      2,
+      null
+    ],
+    [
+      "variation too high",
+      "my-test",
+      "http://example.com?my-test=5",
+      2,
+      null
+    ],
+    [
+      "high numVariations",
+      "my-test",
+      "http://example.com?my-test=5",
+      6,
+      5
+    ],
     [
       "equal to numVariations",
       "my-test",
@@ -6086,33 +11611,215 @@ const String gbTestCases = r'''
       2,
       1
     ],
-    ["anchor", "my-test", "http://example.com?my-test=1#foo", 2, 1]
+    [
+      "anchor",
+      "my-test",
+      "http://example.com?my-test=1#foo",
+      2,
+      1
+    ]
   ],
   "inNamespace": [
-    ["user 1, namespace1, 1", "1", ["namespace1", 0, 0.4], false],
-    ["user 1, namespace1, 2", "1", ["namespace1", 0.4, 1], true],
-    ["user 1, namespace2, 1", "1", ["namespace2", 0, 0.4], false],
-    ["user 1, namespace2, 2", "1", ["namespace2", 0.4, 1], true],
-    ["user 2, namespace1, 1", "2", ["namespace1", 0, 0.4], false],
-    ["user 2, namespace1, 2", "2", ["namespace1", 0.4, 1], true],
-    ["user 2, namespace2, 1", "2", ["namespace2", 0, 0.4], false],
-    ["user 2, namespace2, 2", "2", ["namespace2", 0.4, 1], true],
-    ["user 3, namespace1, 1", "3", ["namespace1", 0, 0.4], false],
-    ["user 3, namespace1, 2", "3", ["namespace1", 0.4, 1], true],
-    ["user 3, namespace2, 1", "3", ["namespace2", 0, 0.4], true],
-    ["user 3, namespace2, 2", "3", ["namespace2", 0.4, 1], false],
-    ["user 4, namespace1, 1", "4", ["namespace1", 0, 0.4], false],
-    ["user 4, namespace1, 2", "4", ["namespace1", 0.4, 1], true],
-    ["user 4, namespace2, 1", "4", ["namespace2", 0, 0.4], true],
-    ["user 4, namespace2, 2", "4", ["namespace2", 0.4, 1], false]
+    [
+      "user 1, namespace1, 1",
+      "1",
+      [
+        "namespace1",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 1, namespace1, 2",
+      "1",
+      [
+        "namespace1",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 1, namespace2, 1",
+      "1",
+      [
+        "namespace2",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 1, namespace2, 2",
+      "1",
+      [
+        "namespace2",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 2, namespace1, 1",
+      "2",
+      [
+        "namespace1",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 2, namespace1, 2",
+      "2",
+      [
+        "namespace1",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 2, namespace2, 1",
+      "2",
+      [
+        "namespace2",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 2, namespace2, 2",
+      "2",
+      [
+        "namespace2",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 3, namespace1, 1",
+      "3",
+      [
+        "namespace1",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 3, namespace1, 2",
+      "3",
+      [
+        "namespace1",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 3, namespace2, 1",
+      "3",
+      [
+        "namespace2",
+        0,
+        0.4
+      ],
+      true
+    ],
+    [
+      "user 3, namespace2, 2",
+      "3",
+      [
+        "namespace2",
+        0.4,
+        1
+      ],
+      false
+    ],
+    [
+      "user 4, namespace1, 1",
+      "4",
+      [
+        "namespace1",
+        0,
+        0.4
+      ],
+      false
+    ],
+    [
+      "user 4, namespace1, 2",
+      "4",
+      [
+        "namespace1",
+        0.4,
+        1
+      ],
+      true
+    ],
+    [
+      "user 4, namespace2, 1",
+      "4",
+      [
+        "namespace2",
+        0,
+        0.4
+      ],
+      true
+    ],
+    [
+      "user 4, namespace2, 2",
+      "4",
+      [
+        "namespace2",
+        0.4,
+        1
+      ],
+      false
+    ]
   ],
   "getEqualWeights": [
-    [-1, []],
-    [0, []],
-    [1, [1]],
-    [2, [0.5, 0.5]],
-    [3, [0.33333333, 0.33333333, 0.33333333]],
-    [4, [0.25, 0.25, 0.25, 0.25]]
+    [
+      -1,
+      []
+    ],
+    [
+      0,
+      []
+    ],
+    [
+      1,
+      [
+        1
+      ]
+    ],
+    [
+      2,
+      [
+        0.5,
+        0.5
+      ]
+    ],
+    [
+      3,
+      [
+        0.33333333,
+        0.33333333,
+        0.33333333
+      ]
+    ],
+    [
+      4,
+      [
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ]
+    ]
   ],
   "decrypt": [
     [
@@ -6180,13 +11887,20 @@ const String gbTestCases = r'''
     [
       "use fallbackAttribute when missing hashAttribute",
       {
-        "attributes": { "anonymousId": "123" },
+        "attributes": {
+          "anonymousId": "123"
+        },
         "features": {
           "feature": {
             "defaultValue": 0,
             "rules": [
               {
-                "variations": [0, 1, 2, 3],
+                "variations": [
+                  0,
+                  1,
+                  2,
+                  3
+                ],
                 "hashAttribute": "id",
                 "fallbackAttribute": "anonymousId"
               }
@@ -6210,7 +11924,9 @@ const String gbTestCases = r'''
       },
       {
         "anonymousId||123": {
-          "assignments": { "feature__0": "3" },
+          "assignments": {
+            "feature__0": "3"
+          },
           "attributeName": "anonymousId",
           "attributeValue": "123"
         }
@@ -6236,11 +11952,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6264,7 +12000,9 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -6290,11 +12028,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6325,7 +12083,9 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": { "feature-exp__0": "2" },
+          "assignments": {
+            "feature-exp__0": "2"
+          },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -6351,11 +12111,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6386,7 +12166,9 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -6412,11 +12194,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "anonymousId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6447,12 +12249,16 @@ const String gbTestCases = r'''
       },
       {
         "anonymousId||ses123": {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "anonymousId",
           "attributeValue": "ses123"
         },
         "id||i123": {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -6478,11 +12284,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "anonymousId",
                 "hashVersion": 2,
                 "bucketVersion": 0,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6520,12 +12346,16 @@ const String gbTestCases = r'''
       },
       {
         "anonymousId||ses123": {
-          "assignments": { "feature-exp__0": "2" },
+          "assignments": {
+            "feature-exp__0": "2"
+          },
           "attributeName": "anonymousId",
           "attributeValue": "ses123"
         },
         "id||i123": {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -6550,11 +12380,31 @@ const String gbTestCases = r'''
                 "fallbackAttribute": "deviceId",
                 "hashVersion": 2,
                 "bucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6563,7 +12413,9 @@ const String gbTestCases = r'''
       },
       [
         {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -6612,11 +12464,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 3,
                 "minBucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6625,7 +12497,9 @@ const String gbTestCases = r'''
       },
       [
         {
-          "assignments": { "feature-exp__0": "1" },
+          "assignments": {
+            "feature-exp__0": "1"
+          },
           "attributeName": "id",
           "attributeValue": "i123"
         }
@@ -6663,11 +12537,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 3,
                 "minBucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6698,7 +12592,9 @@ const String gbTestCases = r'''
       },
       {
         "deviceId||d123": {
-          "assignments": { "feature-exp__3": "2" },
+          "assignments": {
+            "feature-exp__3": "2"
+          },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -6725,11 +12621,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 3,
                 "minBucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6749,7 +12665,9 @@ const String gbTestCases = r'''
       null,
       {
         "deviceId||d123": {
-          "assignments": { "feature-exp__2": "2" },
+          "assignments": {
+            "feature-exp__2": "2"
+          },
           "attributeName": "deviceId",
           "attributeValue": "d123"
         }
@@ -6776,11 +12694,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 3,
                 "minBucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6841,11 +12779,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 4,
                 "minBucketVersion": 3,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6905,11 +12863,31 @@ const String gbTestCases = r'''
                 "hashVersion": 2,
                 "bucketVersion": 1,
                 "disableStickyBucketing": true,
-                "condition": { "country": "USA" },
-                "variations": ["control", "red", "blue"],
-                "meta": [{ "key": "0" }, { "key": "1" }, { "key": "2" }],
+                "condition": {
+                  "country": "USA"
+                },
+                "variations": [
+                  "control",
+                  "red",
+                  "blue"
+                ],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  },
+                  {
+                    "key": "2"
+                  }
+                ],
                 "coverage": 1,
-                "weights": [0.3334, 0.3333, 0.3333],
+                "weights": [
+                  0.3334,
+                  0.3333,
+                  0.3333
+                ],
                 "phase": "0"
               }
             ]
@@ -6920,7 +12898,9 @@ const String gbTestCases = r'''
         {
           "attributeName": "id",
           "attributeValue": "i123",
-          "assignments": { "feature-exp__0": "1" }
+          "assignments": {
+            "feature-exp__0": "1"
+          }
         }
       ],
       "exp1",
@@ -6940,7 +12920,9 @@ const String gbTestCases = r'''
         "id||i123": {
           "attributeName": "id",
           "attributeValue": "i123",
-          "assignments": { "feature-exp__0": "1" }
+          "assignments": {
+            "feature-exp__0": "1"
+          }
         }
       }
     ]
@@ -6949,7 +12931,9 @@ const String gbTestCases = r'''
     [
       "redirects correctly without query strings",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "url": "http://www.example.com/home",
         "experiments": [
           {
@@ -6961,7 +12945,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {
@@ -6982,7 +12969,9 @@ const String gbTestCases = r'''
     [
       "redirects with query string on original url and persistQueryString enabled",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "url": "http://www.example.com/home?color=blue&food=sushi",
         "experiments": [
           {
@@ -6994,7 +12983,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {
@@ -7016,7 +13008,9 @@ const String gbTestCases = r'''
     [
       "merges query strings on original url & redirect url with param conflicts correctly when persistQueryString enabled",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "url": "http://www.example.com/home?color=blue&food=sushi&title=original",
         "experiments": [
           {
@@ -7028,7 +13022,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {
@@ -7050,7 +13047,9 @@ const String gbTestCases = r'''
     [
       "only performs a redirect for first eligible experiment when there are multiple eligible experiments",
       {
-        "attributes": { "id": "1" },
+        "attributes": {
+          "id": "1"
+        },
         "url": "http://www.example.com/home",
         "experiments": [
           {
@@ -7062,7 +13061,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {
@@ -7079,7 +13081,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {
@@ -7096,7 +13101,10 @@ const String gbTestCases = r'''
                 "pattern": "http://www.example.com/home"
               }
             ],
-            "weights": [0.1, 0.9],
+            "weights": [
+              0.1,
+              0.9
+            ],
             "variations": [
               {},
               {

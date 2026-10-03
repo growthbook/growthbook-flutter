@@ -14,6 +14,8 @@ FeaturedDataModel _$FeaturedDataModelFromJson(Map<String, dynamic> json) =>
       encryptedFeatures: json['encryptedFeatures'] as String?,
       savedGroups: json['savedGroups'] as Map<String, dynamic>?,
       encryptedSavedGroups: json['encryptedSavedGroups'] as String?,
+      contextualBandits: json['contextualBandits'] as Map<String, dynamic>?,
+      encryptedContextualBandits: json['encryptedContextualBandits'] as String?,
     );
 
 Map<String, dynamic> _$FeaturedDataModelToJson(FeaturedDataModel instance) =>
@@ -24,6 +26,8 @@ Map<String, dynamic> _$FeaturedDataModelToJson(FeaturedDataModel instance) =>
       'encryptedFeatures': instance.encryptedFeatures,
       'savedGroups': instance.savedGroups,
       'encryptedSavedGroups': instance.encryptedSavedGroups,
+      'contextualBandits': instance.contextualBandits,
+      'encryptedContextualBandits': instance.encryptedContextualBandits,
     };
 
 Value? _$JsonConverterFromJson<Json, Value>(

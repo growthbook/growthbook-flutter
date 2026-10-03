@@ -20,6 +20,7 @@ class GBContext {
     this.backgroundSync = false,
     this.savedGroups,
     this.url,
+    this.contextualBandits,
   });
 
   /// Registered API key for GrowthBook SDK.
@@ -76,6 +77,13 @@ class GBContext {
 
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
+
+  /// Contextual-bandit definitions from the feature payload, keyed by the
+  /// `contextualBanditRef` a feature rule points at. Each value is the raw
+  /// JSON blob decoded from either `contextualBandits` or
+  /// `encryptedContextualBandits`. The SDK parses individual definitions on
+  /// demand during evaluation.
+  Map<String, dynamic>? contextualBandits;
 
   String? getFeaturesURL() => _buildUrl('/api/features/');
 

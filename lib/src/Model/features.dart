@@ -54,6 +54,8 @@ class GBFeatureRule {
     this.phase,
     this.tracks,
     this.parentConditions,
+    this.contextualBanditRef,
+    this.contextualVariations,
   });
 
   /// Unique feature rule id
@@ -128,6 +130,16 @@ class GBFeatureRule {
   /// Array of tracking calls to fire
   // GBTrack? tracks;
   List<GBTrack>? tracks;
+
+  /// Reference into `contextualBandits` in the feature payload. Present when
+  /// the rule is a contextual-bandit rule; SDKs without bandit support skip
+  /// the rule (its variations ship under [contextualVariations]) and its
+  /// weights are resolved per-user from the referenced definition.
+  String? contextualBanditRef;
+
+  /// Variations for a contextual-bandit rule. Used in place of [variations]
+  /// when [contextualBanditRef] is set.
+  List<dynamic>? contextualVariations;
 
   factory GBFeatureRule.fromJson(Map<String, dynamic> value) =>
       _$GBFeatureRuleFromJson(value);

@@ -11,6 +11,8 @@ class FeaturedDataModel {
     required this.encryptedFeatures,
     this.savedGroups,
     this.encryptedSavedGroups,
+    this.contextualBandits,
+    this.encryptedContextualBandits,
   });
 
   @GBFeaturesConverter()
@@ -21,6 +23,13 @@ class FeaturedDataModel {
   final SavedGroupsValues? savedGroups;
 
   final String? encryptedSavedGroups;
+
+  /// Map of `contextualBanditRef` → raw JSON definition. The SDK deserializes
+  /// each entry lazily during evaluation via
+  /// [ContextualBanditDefinition.fromJson].
+  final Map<String, dynamic>? contextualBandits;
+
+  final String? encryptedContextualBandits;
 
   factory FeaturedDataModel.fromJson(Map<String, dynamic> json) =>
       _$FeaturedDataModelFromJson(json);
