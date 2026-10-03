@@ -6,6 +6,7 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/log_redaction.dart';
 
 typedef VoidCallback = void Function();
 
@@ -55,6 +56,8 @@ class GBSDKBuilderApp {
   final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
+    _validateRemoteEval();
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
@@ -82,6 +85,33 @@ class GBSDKBuilderApp {
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
     return gb;
+  }
+
+  /// Rejects the remote-eval configurations the reference JS SDK rejects, and
+  /// only those: an encryption key, a missing client key, and a GrowthBook
+  /// Cloud host, which serves no remote-evaluation endpoint.
+  ///
+  /// Streaming and a sticky bucket service are deliberately not rejected — the
+  /// reference SDK supports both alongside remote evaluation, and a streamed
+  /// event is handled as a signal to re-evaluate remotely.
+  void _validateRemoteEval() {
+    if (!remoteEval) return;
+
+    if (apiKey.isEmpty) {
+      throw ArgumentError('remoteEval requires a non-empty apiKey');
+    }
+    if (encryptionKey != null) {
+      throw ArgumentError('remoteEval is incompatible with encryptionKey');
+    }
+    // Matched against the hostname's suffix rather than anywhere in the URL, so
+    // a host that merely contains the string — https://mygrowthbook.iodine.test
+    // or a path segment — is not mistaken for the cloud API.
+    final host = Uri.tryParse(hostURL)?.host.toLowerCase() ?? '';
+    if (host.endsWith('growthbook.io')) {
+      throw ArgumentError(
+        'remoteEval requires a self-hosted GrowthBook proxy, not the cloud API',
+      );
+    }
   }
 
   /// Registers a legacy refresh handler that only receives a boolean.
@@ -151,7 +181,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         source: FeatureDataSource(context: _context, client: _baseClient),
         encryptionKey: _context.encryptionKey ?? "",
         backgroundSync: _context.backgroundSync,
-        ttlSeconds: ttlSeconds);
+        ttlSeconds: ttlSeconds,
+        // Only set in remote-eval mode, which is what puts the view model in
+        // that mode; the provider is invoked per round so every request carries
+        // the evaluation inputs as they are at that moment.
+        remoteEvalRequestProvider:
+            _context.remoteEval ? _buildRemoteEvalRequest : null);
     autoRefresh();
   }
 
@@ -269,7 +304,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       await refreshForRemoteEval();
     } else {
-      log(context.getFeaturesURL().toString());
+      log('Fetching features from ${redactUrl(context.getFeaturesURL())}');
       await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
@@ -337,14 +372,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       // Fire and forget - don't block feature evaluation
 
       if (_context.remoteEval) {
-        refreshForRemoteEval().catchError((e) {
-          log('Background refresh failed: $e');
+        refreshForRemoteEval().catchError((Object e) {
+          log('Background refresh failed: ${describeRequestError(e)}');
         });
       } else {
         _featureViewModel
             .fetchFeatures(context.getFeaturesURL())
-            .catchError((e) {
-          log('Background refresh failed: $e');
+            .catchError((Object e) {
+          log('Background refresh failed: ${describeRequestError(e)}');
         });
       }
     }
@@ -375,14 +410,23 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// Replaces the Map of user attributes that are used to assign variations.
   ///
+  /// This is a full **replace**: any previously set attribute that is missing
+  /// from [attributes] is dropped. Use [updateAttributes] to merge into the
+  /// existing attributes instead.
+  ///
   /// Sticky bucket refresh runs in the background (fire-and-forget).
   /// If you use Sticky Bucketing and need to guarantee that assignments are
   /// loaded before evaluating experiments (e.g. after login or user switch),
   /// use [setAttributesAsync] instead.
+  ///
+  /// In remote-eval mode attributes are part of the evaluation payload, so
+  /// changing them makes the cached response stale — a fresh remote evaluation
+  /// is triggered in the background.
   void setAttributes(Map<String, dynamic> attributes) {
     _context.attributes = attributes;
     _updateEvaluationContext();
     refreshStickyBucketService(null);
+    refreshForRemoteEval();
   }
 
   /// Async version of [setAttributes] that awaits sticky bucket refresh
@@ -392,10 +436,61 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// await sdk.setAttributesAsync(loginAttributes);
   /// final result = sdk.feature('my-experiment'); // sticky buckets guaranteed
   /// ```
+  ///
+  /// In remote-eval mode the refetch triggered by the new attributes is
+  /// awaited as well.
   Future<void> setAttributesAsync(Map<String, dynamic> attributes) async {
     _context.attributes = attributes;
     _updateEvaluationContext();
     await refreshStickyBucketService(null);
+    await refreshForRemoteEval();
+  }
+
+  /// Merges [attributes] into the existing user attributes instead of
+  /// replacing them (parity with the JS/TS SDK's `updateAttributes`).
+  ///
+  /// New keys are added, existing keys are overwritten and keys that are not
+  /// present in [attributes] are preserved:
+  /// ```dart
+  /// sdk.setAttributes({'id': '1'});
+  /// sdk.updateAttributes({'plan': 'pro'}); // {'id': '1', 'plan': 'pro'}
+  /// ```
+  ///
+  /// The merge is shallow — a nested Map or List replaces the previous value of
+  /// that key instead of being merged recursively. A `null` value is stored as
+  /// `null`; it does not remove the key. An empty Map is a no-op.
+  ///
+  /// Sticky bucket refresh runs in the background (fire-and-forget); use
+  /// [updateAttributesAsync] when assignments must be loaded before evaluating.
+  /// In remote-eval mode a fresh remote evaluation is triggered, because
+  /// attributes are part of the evaluation payload.
+  void updateAttributes(Map<String, dynamic> attributes) {
+    _context.attributes = _mergedAttributes(attributes);
+    _updateEvaluationContext();
+    refreshStickyBucketService(null);
+    refreshForRemoteEval();
+  }
+
+  /// Async version of [updateAttributes] that awaits the sticky bucket refresh
+  /// and, in remote-eval mode, the refetch before returning.
+  /// See [setAttributesAsync].
+  Future<void> updateAttributesAsync(Map<String, dynamic> attributes) async {
+    _context.attributes = _mergedAttributes(attributes);
+    _updateEvaluationContext();
+    await refreshStickyBucketService(null);
+    await refreshForRemoteEval();
+  }
+
+  /// Builds a new Map with [attributes] shallow-merged over the current ones.
+  ///
+  /// The merged Map is built off to the side and assigned in a single step, so
+  /// an evaluation running between two updates always sees either the previous
+  /// or the fully merged attributes, never a partially merged state.
+  Map<String, dynamic> _mergedAttributes(Map<String, dynamic> attributes) {
+    return <String, dynamic>{
+      ...?_context.attributes,
+      ...attributes,
+    };
   }
 
   /// Gets the current attribute overrides
@@ -426,9 +521,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   /// The setForcedFeatures method updates forced features
+  ///
+  /// Forced features are part of the remote-evaluation payload, so in
+  /// remote-eval mode changing them triggers a fresh evaluation in the
+  /// background — otherwise the server would keep evaluating against the
+  /// previous forced values.
   void setForcedFeatures(List<dynamic> forcedFeatures) {
     _forcedFeatures = forcedFeatures;
     _updateEvaluationContext();
+    refreshForRemoteEval();
   }
 
   void setEncryptedFeatures(String encryptedString, String encryptionKey,
@@ -458,6 +559,13 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshForRemoteEval();
   }
 
+  Future<void> setUrl(String url) async {
+    _context.url = url;
+    if (_context.remoteEval) {
+      await refreshForRemoteEval();
+    }
+  }
+
   @override
   Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
     await refreshStickyBucketService(model);
@@ -476,20 +584,29 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  /// Builds the request for the next remote-evaluation round from the current
+  /// evaluation inputs. Passed to the view model as a provider, so a round that
+  /// starts later (a refresh after an attribute change, a streamed update) sends
+  /// the state as it is then.
+  RemoteEvalRequest? _buildRemoteEvalRequest() {
+    final apiUrl = context.getRemoteEvalUrl();
+    // No usable URL (host or client key missing) — nothing to evaluate against.
+    if (apiUrl == null) return null;
+
+    return RemoteEvalRequest(
+      apiUrl: apiUrl,
+      payload: RemoteEvalModel(
+        attributes: _evaluationContext.userContext.attributes ?? {},
+        forcedFeatures: _forcedFeatures,
+        forcedVariations:
+            _evaluationContext.userContext.forcedVariationsMap ?? {},
+      ),
+    );
+  }
+
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
-    RemoteEvalModel payload = RemoteEvalModel(
-      attributes: _evaluationContext.userContext.attributes ?? {},
-      forcedFeatures: _forcedFeatures,
-      forcedVariations:
-          _evaluationContext.userContext.forcedVariationsMap ?? {},
-    );
-
-    await _featureViewModel.fetchFeatures(
-      context.getRemoteEvalUrl(),
-      remoteEval: context.remoteEval,
-      payload: payload,
-    );
+    await _featureViewModel.fetchFeatures(context.getRemoteEvalUrl());
   }
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.

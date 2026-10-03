@@ -253,14 +253,6 @@ void main() {
       test(
           'reads cached features via GBFeaturesConverter when encryptionKey is set',
           () async {
-        // Pre-populate cache with mock features JSON
-        final cacheContent =
-            Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        CachingManager().putData(
-          fileName: Constant.featureCache,
-          content: cacheContent,
-        );
-
         final vm = FeatureViewModel(
           encryptionKey: '3tfeoyW0wlo47bDnbWDkxg==',
           delegate: delegate,
@@ -268,6 +260,15 @@ void main() {
             client: const MockNetworkClient(),
             context: context,
           ),
+        );
+
+        // Pre-populate the cache this view model reads from: the entry is
+        // namespaced per SDK connection.
+        final cacheContent =
+            Uint8List.fromList(utf8.encode(MockResponse.successResponse));
+        CachingManager().putData(
+          fileName: vm.featureCacheFileName,
+          content: cacheContent,
         );
 
         await vm.fetchFeatures(context.getFeaturesURL());

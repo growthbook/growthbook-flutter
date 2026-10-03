@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:growthbook_sdk_flutter/src/Network/lru_etag_cache.dart';
 import 'package:growthbook_sdk_flutter/src/Network/sse_event_transformer.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/log_redaction.dart';
 
 typedef OnSuccess = Future<void> Function(Map<String, dynamic> onSuccess);
 typedef OnError = void Function(Object error, StackTrace stackTrace);
@@ -49,7 +50,7 @@ class DioClient extends BaseClient {
     required OnError onError,
   }) async {
     try {
-      log('Establishing SSE connection to: $url');
+      log('Establishing SSE connection to: ${redactUrl(url)}');
       final resp = await _dio.get(
         url,
         options: Options(responseType: ResponseType.stream),
@@ -102,7 +103,7 @@ class DioClient extends BaseClient {
         );
       }
     } catch (error) {
-      log('SSE connection error: $error');
+      log('SSE connection error: ${describeRequestError(error)}');
       onError(error, StackTrace.current);
     }
   }
@@ -160,10 +161,10 @@ class DioClient extends BaseClient {
         onError(Exception('Unexpected response format'), StackTrace.current);
       }
     } on DioException catch (e, s) {
-      log('DioException: $e');
+      log('Feature request failed: ${describeRequestError(e)}');
       onError(e, s);
     } catch (e, s) {
-      log('Unexpected error: $e');
+      log('Unexpected error: ${describeRequestError(e)}');
       onError(e, s);
     }
   }
