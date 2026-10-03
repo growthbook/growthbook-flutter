@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 import '../mocks/network_view_model_mock.dart';
@@ -43,6 +42,7 @@ void main() {
       return FeatureViewModel(
         encryptionKey: encryptionKey,
         delegate: customDelegate ?? delegate,
+        manager: FileCacheStorage(),
         source: FeatureDataSource(
           client: MockNetworkClient(error: networkError),
           context: context,
@@ -64,7 +64,7 @@ void main() {
     });
 
     tearDown(() async {
-      await CachingManager().clearCache();
+      await FileCacheStorage().clearCache();
     });
 
     // -------------------------------------------------------------------------
@@ -256,7 +256,7 @@ void main() {
         // Pre-populate cache with mock features JSON
         final cacheContent =
             Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        CachingManager().putData(
+        await FileCacheStorage().saveContent(
           fileName: Constant.featureCache,
           content: cacheContent,
         );
@@ -264,6 +264,7 @@ void main() {
         final vm = FeatureViewModel(
           encryptionKey: '3tfeoyW0wlo47bDnbWDkxg==',
           delegate: delegate,
+          manager: FileCacheStorage(),
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,

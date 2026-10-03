@@ -2,7 +2,6 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 
@@ -10,7 +9,7 @@ void main() {
   group('GrowthBookSDK — saved groups callbacks', () {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage();
 
     Future<GrowthBookSDK> buildSdk({
       CacheRefreshHandler? refreshHandler,

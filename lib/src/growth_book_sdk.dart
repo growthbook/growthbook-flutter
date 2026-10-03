@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
@@ -29,7 +30,11 @@ class GBSDKBuilderApp {
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url,
+      String? cacheDirectory,
+      CacheStorage? cacheStorage})
+      : cachingManager = cacheStorage ??
+            FileCacheStorage(cacheDirectory: cacheDirectory, apiKey: apiKey);
 
   final String apiKey;
   final String? encryptionKey;
@@ -52,6 +57,7 @@ class GBSDKBuilderApp {
   CacheRefreshHandlerV2? refreshHandlerV2;
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
+  CacheStorage cachingManager;
   final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
@@ -74,10 +80,16 @@ class GBSDKBuilderApp {
         context: gbContext,
         client: client,
         onInitializationFailure: onInitializationFailure,
+        cachingManager: cachingManager,
         refreshHandler: refreshHandler,
         refreshHandlerV2: refreshHandlerV2,
         pluginRegistry: PluginRegistry(_plugins),
         ttlSeconds: ttlSeconds);
+    if (gbFeatures.isNotEmpty) {
+      await cachingManager.saveContent(
+          fileName: Constant.featureCache,
+          content: Uint8List.fromList(utf8.encode(jsonEncode(gbFeatures))));
+    }
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
@@ -92,6 +104,11 @@ class GBSDKBuilderApp {
   // ignore: deprecated_member_use_from_same_package
   GBSDKBuilderApp setRefreshHandler(CacheRefreshHandler refreshHandler) {
     this.refreshHandler = refreshHandler;
+    return this;
+  }
+
+  GBSDKBuilderApp setCachingManager(CacheStorage cachingManager) {
+    this.cachingManager = cachingManager;
     return this;
   }
 
@@ -136,12 +153,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     CacheRefreshHandlerV2? refreshHandlerV2,
     PluginRegistry? pluginRegistry,
     required int ttlSeconds,
+    required CacheStorage cachingManager,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _refreshHandlerV2 = refreshHandlerV2,
+        _cachingManager = cachingManager,
         _baseClient = client ?? DioClient(),
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
@@ -151,6 +170,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         source: FeatureDataSource(context: _context, client: _baseClient),
         encryptionKey: _context.encryptionKey ?? "",
         backgroundSync: _context.backgroundSync,
+        manager: cachingManager,
         ttlSeconds: ttlSeconds);
     autoRefresh();
   }
@@ -160,6 +180,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   EvaluationContext _evaluationContext;
 
   late FeatureViewModel _featureViewModel;
+
+  final CacheStorage _cachingManager;
 
   final BaseClient _baseClient;
 
@@ -296,6 +318,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
             result.variationID) {
       updateSubscriptions(key: key, experiment: experiment, result: result);
     }
+  }
+
+  Future<void> clearCache() async {
+    await _cachingManager.clearCache();
   }
 
   void updateSubscriptions(

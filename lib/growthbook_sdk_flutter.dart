@@ -12,5 +12,6 @@ export 'src/Plugins/growth_book_tracking_plugin.dart';
 export 'src/Plugins/plugin_registry.dart';
 export 'src/Utils/utils.dart';
 export 'src/growth_book_sdk.dart';
+export 'src/Cache/caching_manager.dart';
 export 'src/Model/sticky_assignments_document.dart';
 export 'src/StickyBucketService/sticky_bucket_service.dart';

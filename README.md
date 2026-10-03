@@ -389,31 +389,109 @@ final condition2 = {
 
 ## 🔧 Advanced Features
 
-### Smart Caching Strategy
+### Caching
 
-The SDK implements an intelligent caching system for optimal performance:
+The SDK caches fetched features to disk so they are available immediately on the next launch and when the network is unavailable.
+
+#### Default storage
+
+By default, `FileCacheStorage` writes to the platform's application cache directory (obtained from `path_provider`), which persists across app launches on iOS, Android, macOS, and Windows:
+
+```
+<applicationCacheDirectory>/
+  GrowthBook-Cache/
+    <sha256(apiKey)>/
+      featuresCache.txt
+```
+
+Each API key gets its own isolated folder — the full SHA-256 hash of the key is used as the namespace, so instances with different API keys never share cache entries. On Flutter Web, `SharedPreferences` is used instead of the filesystem with the same namespace shape (`GrowthBook-Cache/<sha256(apiKey)>/<name>`).
+
+If `path_provider` is unavailable (for example in unit tests without a Flutter binding), the SDK falls back to the system temp directory and logs a warning.
+
+#### Custom cache directory
+
+Pass a `cacheDirectory` string to override the default location:
+
+```dart
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+final sdk = await GBSDKBuilderApp(
+  apiKey: 'your_api_key',
+  hostURL: 'https://cdn.growthbook.io/',
+  growthBookTrackingCallBack: (trackData) {},
+  cacheDirectory: '/absolute/path/to/your/cache',
+).initialize();
+```
+
+#### Custom CacheStorage implementation
+
+For full control (in-memory cache, encrypted storage, remote-backed, etc.), implement `CacheStorage` and pass it via `cacheStorage`:
+
+```dart
+import 'dart:typed_data';
+
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+
+class InMemoryCacheStorage extends CacheStorage {
+  final Map<String, Uint8List> _entries = {};
+
+  @override
+  Future<void> saveContent({
+    required String fileName,
+    required Uint8List content,
+  }) async {
+    _entries[fileName] = content;
+  }
+
+  @override
+  Future<Uint8List?> getContent({required String fileName}) async {
+    return _entries[fileName];
+  }
+
+  @override
+  Future<void> removeContent({required String fileName}) async {
+    _entries.remove(fileName);
+  }
+
+  @override
+  Future<void> clearCache() async {
+    _entries.clear();
+  }
+}
+
+final sdk = await GBSDKBuilderApp(
+  apiKey: 'your_api_key',
+  hostURL: 'https://cdn.growthbook.io/',
+  growthBookTrackingCallBack: (trackData) {},
+  cacheStorage: InMemoryCacheStorage(),
+).initialize();
+```
+
+#### Clearing the cache
+
+```dart
+await sdk.clearCache();
+```
+
+`clearCache()` is async — always `await` it to ensure the cache is fully cleared before continuing. It is scoped to this SDK instance's namespace, so instances configured with different API keys do not clear each other's caches.
+
+#### Cache key / API key separation
+
+The cache key is the full SHA-256 hash of the API key. If you change your API key, a new cache folder is created automatically and the old folder is left on disk — call `clearCache()` before switching keys if you want to free the old space.
+
+#### TTL and background sync
 
 ```dart
 final sdk = await GBSDKBuilderApp(
   apiKey: "your_api_key",
-  ttlSeconds: 300, // Cache TTL: 5 minutes
-  backgroundSync: true, // Enable background refresh
+  ttlSeconds: 300,       // Cache TTL: 5 minutes (default: 60s)
+  backgroundSync: true,  // Enable real-time streaming updates
 ).initialize();
 ```
 
-#### **How it works:**
+#### Migration notes
 
-1. **🚀 Instant Response** - Serve cached features immediately
-2. **🔄 Background Refresh** - Fetch updates in the background  
-3. **⚡ Stale-While-Revalidate** - Show cached data while updating
-4. **📊 Smart Invalidation** - Refresh only when needed
-
-#### **Benefits:**
-
-- ✅ **Zero loading delays** for feature flags
-- ✅ **Always up-to-date** with background sync
-- ✅ **Reduced API calls** with intelligent caching
-- ✅ **Offline resilience** with cached fallbacks
+The `putData` method on `FileCacheStorage` is deprecated — use `saveContent` instead.
 
 ### Sticky Bucketing
 
