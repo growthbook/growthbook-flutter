@@ -217,6 +217,11 @@ final sdk = await GBSDKBuilderApp(
   // Advanced Features
   remoteEval: false,            // Server-side evaluation
   encryptionKey: "...",         // For encrypted features
+
+  // Networking (see "Custom Hosts and Request Headers")
+  streamingHost: "https://proxy.example.com",
+  apiHostRequestHeaders: {'X-Gateway-Auth': gatewayToken},
+  streamingHostRequestHeaders: {'X-Gateway-Auth': gatewayToken},
 ).initialize();
 ```
 
@@ -483,6 +488,38 @@ final sdk = await GBSDKBuilderApp(
 // Features automatically update when changed in GrowthBook
 // No need to restart the app or refresh manually
 ```
+
+### Custom Hosts and Request Headers
+
+By default every request goes to `hostURL` with only the headers the SDK manages itself. Two options
+cover deployments where that is not enough — both match the JavaScript SDK.
+
+**A separate streaming host.** Set `streamingHost` when the SSE endpoint is served somewhere other
+than the API, for example features from a CDN while streaming goes through a GrowthBook Proxy. It
+applies only to the streaming connection; features and remote evaluation stay on `hostURL`, and
+without it streaming uses `hostURL` as before.
+
+**Custom request headers.** `apiHostRequestHeaders` is sent with the features request and with every
+remote-evaluation request; `streamingHostRequestHeaders` is sent with the streaming connection,
+including its reconnects. Typical uses are an authenticated gateway in front of a self-hosted
+GrowthBook, or proxy directives such as `X-Accel-Buffering` for SSE through nginx.
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  hostURL: "https://cdn.example.com",
+  streamingHost: "https://proxy.example.com",
+  backgroundSync: true,
+  // Read secrets from your configuration, never hardcode them
+  apiHostRequestHeaders: {'X-Gateway-Auth': gatewayToken},
+  streamingHostRequestHeaders: {'X-Accel-Buffering': 'no'},
+).initialize();
+```
+
+`User-Agent`, `If-None-Match` and `Cache-Control` are managed by the SDK — supplying any of them, in
+any letter case, throws an `ArgumentError` from `initialize()` instead of silently breaking ETag
+revalidation. A `streamingHost` that is not an absolute `http`/`https` URL is rejected the same way,
+so a misconfiguration is visible at startup rather than as a failed fetch later.
 
 ### Tracking Plugins
 
