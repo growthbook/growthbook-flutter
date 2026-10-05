@@ -16,6 +16,10 @@ const _runSections = {
   'getEqualWeights': 'gb_utils_test.dart',
   'decrypt': 'gb_utils_test.dart',
   'stickyBucket': 'gb_sticky_bucketing_feature_test.dart',
+  'savedGroupReferencesV2.evalCondition':
+      'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesV2.feature': 'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesV2.run': 'gb_saved_group_references_v2_test.dart',
 };
 
 /// Spec sections this SDK doesn't run, and why.
@@ -26,12 +30,6 @@ const _excludedSections = {
       'reducePayload) are not implemented for client SDKs to start with',
   'urlRedirect': 'URL redirects are a browser feature this SDK lacks',
   'contextualBandit': 'This SDK does not support contextual bandits yet',
-  'savedGroupReferencesV2.evalCondition':
-      'Saved group references (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesV2.feature':
-      'Saved group references (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesV2.run':
-      'Saved group references (\$savedGroup) are not implemented yet',
   'savedGroupReferencesRemote.evalCondition':
       'Remote saved groups (\$savedGroup) are not implemented yet',
   'savedGroupReferencesRemote.feature':
