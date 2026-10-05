@@ -74,8 +74,9 @@ class GBConditionEvaluator {
   bool? _evalCondition(
     dynamic attributes,
     dynamic conditionObj,
-    SavedGroupsValues savedGroups,
-  ) {
+    SavedGroupsValues savedGroups, {
+    Set<String> visited = const <String>{},
+  }) {
     if (conditionObj is List) {
       return false;
     }
@@ -89,24 +90,25 @@ class GBConditionEvaluator {
         bool? r;
         switch (key) {
           case "\$or":
-            r = _evalOr(attributes, value, savedGroups);
+            r = _evalOr(attributes, value, savedGroups, visited: visited);
             break;
           case "\$nor":
-            r = _not(_evalOr(attributes, value, savedGroups));
+            r = _not(_evalOr(attributes, value, savedGroups, visited: visited));
             break;
           case "\$and":
-            r = _evalAnd(attributes, value, savedGroups);
+            r = _evalAnd(attributes, value, savedGroups, visited: visited);
             break;
           case "\$not":
-            r = _not(_evalCondition(attributes, value, savedGroups));
+            r = _not(_evalCondition(attributes, value, savedGroups,
+                visited: visited));
             break;
           case "\$savedGroup":
-            // Saved group references aren't supported by this SDK yet
-            r = null;
+            r = _evalSavedGroup(attributes, value, savedGroups, visited);
             break;
           default:
             r = _evalConditionValue(
-                value, getPath(attributes, key), savedGroups);
+                value, getPath(attributes, key), savedGroups,
+                visited: visited);
         }
         // One failing entry decides it, wherever an unsupported one is
         if (r == false) return false;
@@ -123,12 +125,13 @@ class GBConditionEvaluator {
   }
 
   bool? _evalOr(
-      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups,
+      {Set<String> visited = const <String>{}}) {
     // If conditionObj is empty, return true
     if (conditionObj.isEmpty) return true;
     bool? result = false;
     for (var item in conditionObj) {
-      final r = _evalCondition(attributes, item, savedGroups);
+      final r = _evalCondition(attributes, item, savedGroups, visited: visited);
       if (r == true) return true;
       if (r == null) result = null;
     }
@@ -142,10 +145,11 @@ class GBConditionEvaluator {
   }
 
   bool? _evalAnd(
-      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups,
+      {Set<String> visited = const <String>{}}) {
     bool? result = true;
     for (var item in conditionObj) {
-      final r = _evalCondition(attributes, item, savedGroups);
+      final r = _evalCondition(attributes, item, savedGroups, visited: visited);
       if (r == false) return false;
       if (r == null) result = null;
     }
@@ -239,6 +243,7 @@ class GBConditionEvaluator {
     dynamic attributeValue,
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
+    Set<String> visited = const <String>{},
   }) {
     // Simple equality: the attribute must have the same type as the
     // condition, with no coercion ("10" does not equal 10).
@@ -275,7 +280,8 @@ class GBConditionEvaluator {
     bool? result = true;
     for (var key in (conditionValue as Map).keys) {
       final r = _evalOperator(
-          key.toString(), attributeValue, conditionValue[key], savedGroups);
+          key.toString(), attributeValue, conditionValue[key], savedGroups,
+          visited: visited);
       if (r == false) return false;
       if (r == null) result = null;
     }
@@ -289,8 +295,9 @@ class GBConditionEvaluator {
     return _elemMatch(attributeValue, condition, savedGroups) == true;
   }
 
-  bool? _elemMatch(dynamic attributeValue, dynamic condition,
-      SavedGroupsValues savedGroups) {
+  bool? _elemMatch(
+      dynamic attributeValue, dynamic condition, SavedGroupsValues savedGroups,
+      {Set<String> visited = const <String>{}}) {
     // If attributeValue is not an array, return false
     if (attributeValue is! List) return false;
     // Operators test each element itself. A condition, including one that only
@@ -302,8 +309,8 @@ class GBConditionEvaluator {
       // Only skip null elements; 0, "" and false are still tested
       if (item == null) continue;
       final r = testsItself
-          ? _evalConditionValue(condition, item, savedGroups)
-          : _evalCondition(item, condition, savedGroups);
+          ? _evalConditionValue(condition, item, savedGroups, visited: visited)
+          : _evalCondition(item, condition, savedGroups, visited: visited);
       if (r == true) return true;
       if (r == null) result = null;
     }
@@ -332,8 +339,9 @@ class GBConditionEvaluator {
     String operator,
     dynamic attributeValue,
     dynamic conditionValue,
-    SavedGroupsValues savedGroups,
-  ) {
+    SavedGroupsValues savedGroups, {
+    Set<String> visited = const <String>{},
+  }) {
     switch (operator) {
       case "\$veq":
       case "\$vne":
@@ -393,8 +401,9 @@ class GBConditionEvaluator {
 
       /// Evaluate NOT operator - whether condition doesn't contain attribute
       case "\$not":
-        return _not(
-            _evalConditionValue(conditionValue, attributeValue, savedGroups));
+        return _not(_evalConditionValue(
+            conditionValue, attributeValue, savedGroups,
+            visited: visited));
 
       case "\$inGroup":
       case "\$notInGroup":
@@ -437,24 +446,27 @@ class GBConditionEvaluator {
       /// Evaluate ALL operator - whether condition contains all attribute
       case '\$all':
         if (conditionValue is! List) return false;
-        return _isInAll(attributeValue, conditionValue, savedGroups);
+        return _isInAll(attributeValue, conditionValue, savedGroups,
+            visited: visited);
 
       /// Evaluate ALLI operator - case-insensitive version of $all
       case '\$alli':
         if (conditionValue is! List) return false;
         return _isInAll(attributeValue, conditionValue, savedGroups,
-            inSensitive: true);
+            inSensitive: true, visited: visited);
 
       /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
       case "\$elemMatch":
-        return _elemMatch(attributeValue, conditionValue, savedGroups);
+        return _elemMatch(attributeValue, conditionValue, savedGroups,
+            visited: visited);
 
       /// Evaluate SIZE operator - whether condition size is same as that
       /// of attribute
       case "\$size":
         if (attributeValue is! List) return false;
         return _evalConditionValue(
-            conditionValue, attributeValue.length, savedGroups);
+            conditionValue, attributeValue.length, savedGroups,
+            visited: visited);
 
       case '\$regex':
         return _evalRegex(
@@ -493,6 +505,68 @@ class GBConditionEvaluator {
         // where they never match
         if (_conditionOperators.contains(operator)) return false;
         logger.w('Unknown operator: $operator');
+        return null;
+    }
+  }
+
+  /// Resolves a `$savedGroup` reference (`savedGroupReferencesV2`): is the user
+  /// a member of the group it names?
+  ///
+  /// [reference] is `{"id": ..., "attributeKey"?: ...}`. Unlike `$inGroup`, the
+  /// operator has no attribute of its own, so the entry decides what membership
+  /// means — a `list` entry names the attribute to test, and a `condition` entry
+  /// is evaluated in full and may itself reference further groups.
+  ///
+  /// Anything this SDK cannot make sense of matches nobody rather than
+  /// throwing, and a group type added after this SDK was built is undecided
+  /// (`null`), so it fails under `$not` too.
+  ///
+  /// [visited] holds the ids currently being resolved, so a group that
+  /// references itself — directly or along a chain — stops instead of
+  /// recursing forever.
+  bool? _evalSavedGroup(dynamic attributes, dynamic reference,
+      SavedGroupsValues savedGroups, Set<String> visited) {
+    // The operator takes an object; a bare id string or an array is not one
+    if (reference is! Map) return false;
+
+    final id = reference['id'];
+    if (id is! String || visited.contains(id)) return false;
+
+    // An override that is present but unusable is not ignored: falling back to
+    // the entry's own attribute would test a different population than the
+    // payload asked for. `"attributeKey": null` counts as present too, as in the
+    // reference SDK (`attributeKey !== undefined`), hence `containsKey`.
+    final overrideKey = reference['attributeKey'];
+    if (reference.containsKey('attributeKey') && overrideKey is! String) {
+      return false;
+    }
+
+    // Absent from the payload, or a v1 bare array, which carries neither a type
+    // to act on nor an attribute for this operator to use
+    final entry = savedGroups[id];
+    if (entry is! Map) return false;
+
+    switch (entry['type']) {
+      case 'list':
+        // The override wins over the entry's own attribute
+        final key = overrideKey ?? entry['attributeKey'];
+        final values = entry['values'];
+        if (key is! String || values is! List) return false;
+        return isIn(getPath(attributes, key), values);
+
+      // A condition group has no single attribute, so an override has nothing
+      // to override
+      case 'condition':
+        final condition = entry['condition'];
+        if (condition is! Map) return false;
+        // A new set rather than `visited.add(id)`: sibling branches of an
+        // `$or` / `$and` must not see each other's ids, and the default
+        // `const {}` is unmodifiable
+        return _evalCondition(attributes, condition, savedGroups,
+            visited: {...visited, id});
+
+      // A group type added after this SDK was built
+      default:
         return null;
     }
   }
@@ -578,6 +652,7 @@ class GBConditionEvaluator {
     List<dynamic> conditionValue,
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
+    Set<String> visited = const <String>{},
   }) {
     if (attributeValue is! List) return false;
     bool? result = true;
@@ -585,7 +660,7 @@ class GBConditionEvaluator {
       bool? passed = false;
       for (final attribute in attributeValue) {
         final r = _evalConditionValue(condition, attribute, savedGroups,
-            inSensitive: inSensitive);
+            inSensitive: inSensitive, visited: visited);
         if (r == true) {
           passed = true;
           break;
