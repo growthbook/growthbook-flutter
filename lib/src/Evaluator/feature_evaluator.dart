@@ -202,8 +202,8 @@ class FeatureEvaluator {
                   experiment: exp,
                   result: result,
                   ruleId: rule.id);
-              context.options.notifyFeatureUsage(
-                  featureKey, experimentFeatureResult);
+              context.options
+                  .notifyFeatureUsage(featureKey, experimentFeatureResult);
               return experimentFeatureResult;
             }
           }
