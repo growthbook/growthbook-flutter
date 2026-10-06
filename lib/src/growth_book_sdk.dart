@@ -159,6 +159,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         encryptionKey: _context.encryptionKey ?? "",
         backgroundSync: _context.backgroundSync,
         ttlSeconds: ttlSeconds);
+    _installExperimentSink();
     autoRefresh();
   }
 
@@ -208,6 +209,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _evaluationContext = GBUtils.initializeEvalContext(
         _context, _refreshHandler,
         pluginRegistry: _pluginRegistry, experimentHelper: _experimentHelper);
+    _installExperimentSink();
+  }
+
+  /// Points the evaluators at [fireSubscriptions] so experiments a feature rule
+  /// triggers are recorded and reported, not just the ones a caller runs
+  /// directly. Has to be re-installed every time the evaluation context is
+  /// rebuilt, since [GBUtils.initializeEvalContext] produces a fresh one.
+  void _installExperimentSink() {
+    _evaluationContext.globalContext.onExperimentEvaluated = fireSubscriptions;
   }
 
   void _initializePlugins() {
@@ -273,7 +283,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   ///   await sdk.dispose();
   /// }
   /// ```
+  /// Also drops the accumulated experiment results, so a disposed instance does
+  /// not keep answering [getAllResults] — matching `destroy()` in the reference
+  /// SDK.
   Future<void> dispose() {
+    assigned.clear();
     return _pluginRegistry.close();
   }
 
@@ -336,13 +350,23 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   void fireSubscriptions(GBExperiment experiment, GBExperimentResult result) {
     String key = experiment.key;
     AssignedExperiment? prevAssignedExperiment = assigned[key];
-    if (prevAssignedExperiment == null ||
+    bool hasChanged = prevAssignedExperiment == null ||
         prevAssignedExperiment.experimentResult.inExperiment !=
             result.inExperiment ||
         prevAssignedExperiment.experimentResult.variationID !=
-            result.variationID) {
+            result.variationID;
+
+    if (hasChanged) {
       updateSubscriptions(key: key, experiment: experiment, result: result);
+      return;
     }
+
+    // Record the latest result even when nothing a subscriber cares about moved,
+    // so getAllResults() reflects every evaluation. Subscribers are not notified:
+    // a feature rule is re-evaluated on every read, and reporting each one would
+    // turn a single assignment into a stream of identical notifications.
+    assigned[key] =
+        AssignedExperiment(experiment: experiment, experimentResult: result);
   }
 
   void updateSubscriptions(
@@ -352,7 +376,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     assigned[key] =
         AssignedExperiment(experiment: experiment, experimentResult: result);
     for (var subscription in subscriptions) {
-      subscription(experiment, result);
+      // Subscribers now also fire from the feature evaluation path, so a
+      // throwing one would take feature() down with it. Guard it the way
+      // PluginRegistry guards plugin dispatch.
+      try {
+        subscription(experiment, result);
+      } catch (e) {
+        log('GrowthBook subscription error: $e');
+      }
     }
   }
 

@@ -308,6 +308,38 @@ if (purchaseCompleted) {
 }
 ```
 
+### Inspecting Assignments
+
+`getAllResults()` answers "which experiments is this user in", and `subscribe()`
+reports assignments as they happen. Both cover experiments reached through a
+feature rule, not just the ones passed to `run(...)` — in practice most
+experiments arrive that way:
+
+```dart
+// A feature whose rule runs an experiment
+sdk.feature('checkout_button');
+
+// ...is in the results map under its experiment key
+final results = sdk.getAllResults();          // {'checkout_button_test': ...}
+final assignment = results['checkout_button_test'];
+print('variation ${assignment?.variationID}, in experiment: ${assignment?.inExperiment}');
+
+// Subscribers see the same assignments live
+final unsubscribe = sdk.subscribe((experiment, result) {
+  debugPanel.record(experiment.key, result.variationID);
+});
+```
+
+A few things worth knowing:
+
+- A user evaluated against an experiment and **left out** of it is recorded too,
+  with `inExperiment == false`. "Not in it" is part of the answer.
+- A feature rule is re-evaluated on every read, but subscribers are only notified
+  when the assignment actually changes — participation or variation. The results
+  map always reflects the latest evaluation.
+- `getAllResults()` returns a snapshot; mutating it does not affect the SDK.
+- `dispose()` clears the accumulated results along with the plugins.
+
 ### User Attributes & Targeting
 
 ```dart
