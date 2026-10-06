@@ -82,7 +82,15 @@ class CachingManager extends CachingLayer {
     return '$targetFolderPath/$file.txt';
   }
 
-  String get localPath => Directory.systemTemp.path;
+  /// Base directory the cache folder is created under.
+  ///
+  /// Tests set this so suites running in parallel do not share one folder:
+  /// [clearCache] deletes the folder recursively, which otherwise removes the
+  /// directory another suite is in the middle of writing to.
+  @visibleForTesting
+  String? cacheDirectoryOverride;
+
+  String get localPath => cacheDirectoryOverride ?? Directory.systemTemp.path;
 
   @override
   Future<Uint8List?> getContent({required String fileName}) async {

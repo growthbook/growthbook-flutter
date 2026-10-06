@@ -4,7 +4,11 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
+import '../Helper/cache_isolation.dart';
+
 void main() {
+  useIsolatedCache();
+
   group('CachingManager — additional coverage', () {
     final manager = CachingManager();
 

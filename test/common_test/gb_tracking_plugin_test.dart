@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 
+import '../Helper/cache_isolation.dart';
 import '../mocks/network_mock.dart';
 
 // ---------------------------------------------------------------------------
@@ -110,6 +111,8 @@ GBExperiment _makeExp({double coverage = 1.0}) => GBExperiment(
 // ---------------------------------------------------------------------------
 
 void main() {
+  useIsolatedCache();
+
   group('GrowthBookPlugin — integration', () {
     test('plugin receives initialize with clientKey', () async {
       final plugin = MockPlugin();

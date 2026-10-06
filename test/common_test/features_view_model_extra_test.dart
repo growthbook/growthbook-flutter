@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
+import '../Helper/cache_isolation.dart';
 import '../mocks/network_mock.dart';
 import '../mocks/network_view_model_mock.dart';
 
@@ -18,6 +19,8 @@ class _ThrowingDelegate extends DataSourceMock {
 }
 
 void main() {
+  useIsolatedCache();
+
   group('FeatureViewModel — additional coverage', () {
     const testHostURL = '<HOST URL>';
     const testApiKey = '<SOME KEY>';

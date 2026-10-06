@@ -8,9 +8,12 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
+import '../Helper/cache_isolation.dart';
 import '../mocks/network_mock.dart';
 
 void main() {
+  useIsolatedCache();
+
   group('Initialization', () {
     const testApiKey = '<API_KEY>';
     const attr = <String, String>{};

@@ -2,10 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
+import '../Helper/cache_isolation.dart';
 import '../Helper/gb_test_helper.dart';
 import '../mocks/network_mock.dart';
 
 void main() {
+  useIsolatedCache();
+
   group('Feature Evaluator', () {
     late final List evaluateCondition;
     setUpAll(() {
