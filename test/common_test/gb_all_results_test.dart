@@ -221,8 +221,8 @@ void main() {
           force: viaFeature == 0 ? 1 : 0,
         ));
 
-        expect(sdk.getAllResults()['banner-exp']!.variationID,
-            isNot(viaFeature));
+        expect(
+            sdk.getAllResults()['banner-exp']!.variationID, isNot(viaFeature));
       });
 
       test('dispose clears the accumulated results', () async {
