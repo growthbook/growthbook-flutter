@@ -10,7 +10,7 @@ bool _docsEqual(
   if (a.length != b.length) return false;
   for (final key in a.keys) {
     if (!b.containsKey(key)) return false;
-    if (a[key].toString() != b[key].toString()) return false;
+    if (a[key] != b[key]) return false;
   }
   return true;
 }
