@@ -506,10 +506,13 @@ Future<void> main() async {
 
 #### Custom configuration
 
+Events go to `https://us1.gb-ingest.com` by default. Override `ingestorHost` to
+send them to another region, for example `https://eu-west-1.gb-ingest.com`:
+
 ```dart
 final trackingPlugin = GrowthBookTrackingPlugin(
   config: GrowthBookTrackingPluginConfig(
-    ingestorHost: 'https://ingest.growthbook.io',
+    ingestorHost: 'https://eu-west-1.gb-ingest.com',
     batchSize: 50,
     batchTimeout: Duration(seconds: 30),
   ),
@@ -519,6 +522,26 @@ await GBSDKBuilderApp(...)
     .addPlugin(trackingPlugin)
     .initialize();
 ```
+
+#### Flushing when the app goes to the background
+
+`flush()` delivers what the plugins have buffered and leaves them recording.
+Without it, events sit in the buffer for up to `batchTimeout` and are lost if
+the OS kills the suspended app — which is how most mobile apps end.
+
+```dart
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      sdk.flush();
+    }
+  }
+}
+```
+
+Use `dispose()` instead when the SDK instance is done for good — it flushes as
+well, but nothing is recorded afterwards.
 
 #### Lifecycle — always await `dispose()`
 
