@@ -27,7 +27,7 @@ class GrowthBookTrackingPluginConfig {
 ///
 /// **Wire contract**
 /// - Endpoint:  POST `{config.ingestorHost}/track?client_key={clientKey}`
-/// - Body: `[{ "event_name": "...", "properties": {...}, "attributes": {...} }]`
+/// - Body: a plain JSON array of ingest payloads
 /// - Headers: `Content-Type: application/json`, `User-Agent: growthbook-flutter-sdk/{version}`
 ///
 /// If initialized with an empty `clientKey` the plugin degrades to a no-op.
@@ -38,8 +38,6 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Dio? dio,
   })  : _config = config,
         _dio = dio ?? Dio();
-
-  static const String _sdkVersion = '4.4.0'; // x-release-please-version
 
   final GrowthBookTrackingPluginConfig _config;
   final Dio _dio;
@@ -69,8 +67,8 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBExperimentViewedEvent.from(
-        experiment, result, _mergedAttributes(attributes)));
+    _enqueue(
+        GBExperimentViewedEvent.from(experiment, result, attributes ?? {}));
   }
 
   @override
@@ -80,23 +78,23 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBFeatureEvaluatedEvent.from(
-        featureKey, result, _mergedAttributes(attributes)));
+    _enqueue(
+        GBFeatureEvaluatedEvent.from(featureKey, result, attributes ?? {}));
   }
 
-  static Map<String, dynamic> _mergedAttributes(
-      Map<String, dynamic>? userAttributes) {
-    return {
-      'sdk_language': 'dart',
-      'sdk_version': _sdkVersion,
-      ...?userAttributes,
-    };
-  }
+  /// Sends what is buffered and leaves the timer running, so recording resumes
+  /// as normal afterwards.
+  @override
+  Future<void> flush() => _flushSync();
 
   /// Stops the flush timer and sends all buffered events before returning.
+  ///
+  /// The plugin goes inert: anything evaluated afterwards is dropped rather
+  /// than buffered for a batch nobody will send.
   @override
   Future<void> close() async {
     _stopTimer();
+    _isInitialized = false;
     await _flushSync();
   }
 
@@ -148,7 +146,7 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'growthbook-flutter-sdk/$_sdkVersion',
+            'User-Agent': 'growthbook-flutter-sdk/$gbSdkVersion',
           },
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),
