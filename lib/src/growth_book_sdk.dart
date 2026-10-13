@@ -146,6 +146,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
+    // The initializer list cannot reach `_pluginRegistry`, and a caller may
+    // have supplied its own evaluation context, so the registry is attached
+    // here instead of being passed to `initializeEvalContext` above.
+    _evaluationContext.options.pluginRegistry = _pluginRegistry;
     _featureViewModel = FeatureViewModel(
         delegate: this,
         source: FeatureDataSource(context: _context, client: _baseClient),
@@ -194,12 +198,33 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// instead of creating new contexts on every evaluation, which is more efficient
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext =
-        GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext = GBUtils.initializeEvalContext(
+        _context, _refreshHandler,
+        pluginRegistry: _pluginRegistry);
   }
 
   void _initializePlugins() {
     _pluginRegistry.initialize(_context.apiKey ?? '');
+  }
+
+  /// Delivers whatever the registered plugins have buffered, leaving them
+  /// running.
+  ///
+  /// Call this when the app is heading to the background. Nothing else
+  /// delivers early: the tracking plugin batches for up to its `batchTimeout`,
+  /// and a process the OS kills while suspended never reaches [dispose], so
+  /// those events are simply lost.
+  ///
+  /// Unlike [dispose], recording resumes afterwards.
+  ///
+  /// ```dart
+  /// @override
+  /// void didChangeAppLifecycleState(AppLifecycleState state) {
+  ///   if (state == AppLifecycleState.paused) sdk.flush();
+  /// }
+  /// ```
+  Future<void> flush() {
+    return _pluginRegistry.flush();
   }
 
   /// Releases resources held by all registered plugins.
@@ -362,9 +387,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.stickyBucketAssignmentDocs =
         _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
-    if (result.inExperiment) {
-      _notifyExperimentViewed(experiment, result);
-    }
+    // Plugins are notified by [ExperimentEvaluator] itself, so that exposures
+    // from feature flag rules are recorded too.
     return result;
   }
 
@@ -507,11 +531,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
     _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
-  }
-
-  void _notifyExperimentViewed(
-      GBExperiment experiment, GBExperimentResult result) {
-    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off

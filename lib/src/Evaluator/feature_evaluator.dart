@@ -149,9 +149,13 @@ class FeatureEvaluator {
               if (track.experiment != null && track.result != null) {
                 var experiment = track.experiment!;
                 var result = track.result!;
-                if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-                  context.options.trackingCallBackWithUser!(GBTrackData(
+                if (experiment.active &&
+                    result.inExperiment &&
+                    !ExperimentHelper.shared.isTracked(experiment, result)) {
+                  context.options.trackingCallBackWithUser?.call(GBTrackData(
                       experiment: experiment, experimentResult: result));
+                  context.options.pluginRegistry?.onExperimentViewed(
+                      experiment, result, context.userContext.attributes);
                 }
               }
             }

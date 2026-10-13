@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/constant.dart';
+import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
@@ -18,6 +19,7 @@ class Options {
     this.refreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
     this.featureRefreshCallback,
     this.url,
+    this.pluginRegistry,
   });
 
   /// Whether globally all experiments are enabled (default: true)
@@ -60,4 +62,12 @@ class Options {
 
   FeatureRefreshCallback? featureRefreshCallback;
   String? url;
+
+  /// Plugins registered on the owning SDK instance.
+  ///
+  /// Experiment exposures are dispatched from the evaluators rather than from
+  /// the SDK facade, because an experiment that runs through a feature flag
+  /// rule never passes through [GrowthBookSDK.run] — tracking it anywhere else
+  /// would miss those exposures entirely.
+  PluginRegistry? pluginRegistry;
 }

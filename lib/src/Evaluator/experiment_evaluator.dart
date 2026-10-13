@@ -331,9 +331,12 @@ class ExperimentEvaluator {
       }
     }
 
-    if (!ExperimentHelper.shared.isTracked(experiment, result)) {
+    if (result.inExperiment &&
+        !ExperimentHelper.shared.isTracked(experiment, result)) {
       context.options.trackingCallBackWithUser
           ?.call(GBTrackData(experiment: experiment, experimentResult: result));
+      context.options.pluginRegistry?.onExperimentViewed(
+          experiment, result, context.userContext.attributes);
     }
 
     return result;
