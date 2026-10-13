@@ -63,6 +63,21 @@ class PluginRegistry {
     }
   }
 
+  void logEvent(
+    String eventName,
+    Map<String, dynamic>? properties,
+    Map<String, dynamic>? attributes,
+  ) {
+    if (_isClosed) return;
+    for (final plugin in _plugins) {
+      try {
+        plugin.logEvent(eventName, properties, attributes);
+      } catch (e) {
+        log('GrowthBookPlugin.logEvent error: $e');
+      }
+    }
+  }
+
   /// Sends what every plugin holds without shutting any of them down.
   Future<void> flush() async {
     if (_isClosed) return;
