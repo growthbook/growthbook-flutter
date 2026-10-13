@@ -523,6 +523,47 @@ await GBSDKBuilderApp(...)
     .initialize();
 ```
 
+#### Deduplication
+
+A flag read on every screen produces the same evaluation over and over. The
+plugin remembers the last 1,000 events and drops repeats, so only distinct
+evaluations are sent. The key is the event name plus its own fields —
+attributes are deliberately excluded, since a feature evaluation carries no
+unit identity of its own and every attribute change would otherwise look like a
+new event. A batch that fails to send gives its keys back, so nothing is lost
+to a dropped connection.
+
+Set `dedupeCacheSize` to tune the window, or to `0` to send every evaluation:
+
+```dart
+GrowthBookTrackingPluginConfig(dedupeCacheSize: 5000)
+```
+
+#### Turning off feature usage events
+
+Feature evaluations are by far the larger volume. An app that only needs
+experiment data can drop them and keep its exposures:
+
+```dart
+GrowthBookTrackingPluginConfig(enableFeatureUsageEvents: false)
+```
+
+Experiment exposures and custom events are unaffected.
+
+#### Custom events
+
+`logEvent` sends an event of your own through the same envelope as the SDK's
+own events. These are never deduplicated — a repeat is a second occurrence,
+not a redundant re-evaluation — and they carry the SDK's current attributes.
+
+```dart
+sdk.logEvent('Checkout Completed', {'total': 42.0, 'currency': 'USD'});
+sdk.logEvent('App Opened');
+```
+
+Like every other event they are buffered, so call `flush()` before the app is
+suspended if you need them delivered.
+
 #### Flushing when the app goes to the background
 
 `flush()` delivers what the plugins have buffered and leaves them recording.
