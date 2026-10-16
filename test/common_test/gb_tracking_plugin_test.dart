@@ -35,6 +35,16 @@ class MockPlugin extends GrowthBookPlugin {
           Map<String, dynamic>? attributes) =>
       featureCallCount++;
 
+  final List<String> loggedEvents = [];
+  Map<String, dynamic>? lastLoggedAttributes;
+
+  @override
+  void logEvent(String eventName, Map<String, dynamic>? properties,
+      Map<String, dynamic>? attributes) {
+    loggedEvents.add(eventName);
+    lastLoggedAttributes = attributes;
+  }
+
   @override
   Future<void> close() async => closeCalled = true;
 }
@@ -166,6 +176,24 @@ void main() {
       expect(p2.initializedWith, equals(_clientKey));
     });
 
+    test('logEvent reaches plugins with the current attributes', () async {
+      final plugin = MockPlugin();
+      final sdk = await _makeSDK(plugins: [plugin]);
+      sdk.logEvent('Checkout Completed', {'total': 42});
+
+      expect(plugin.loggedEvents, equals(['Checkout Completed']));
+      expect(plugin.lastLoggedAttributes?['id'], equals('user-1'));
+    });
+
+    test('logEvent is dropped once the SDK has been disposed', () async {
+      final plugin = MockPlugin();
+      final sdk = await _makeSDK(plugins: [plugin]);
+      await sdk.dispose();
+      sdk.logEvent('Checkout Completed');
+
+      expect(plugin.loggedEvents, isEmpty);
+    });
+
     test('misbehaving plugin does not crash the SDK', () async {
       final sdk = await _makeSDK(plugins: [_CrashingPlugin()]);
       expect(() => sdk.evalFeature('flag'), returnsNormally);
@@ -197,7 +225,11 @@ void main() {
           dio: dio,
         );
 
-    GBExperiment exp() => GBExperiment(key: 'test-exp', variations: [0, 1]);
+    // A fresh key per call: these tests exercise batching and flushing, and a
+    // repeated key would be suppressed by the dedupe cache instead.
+    var expCounter = 0;
+    GBExperiment exp() =>
+        GBExperiment(key: 'test-exp-${expCounter++}', variations: [0, 1]);
 
     GBExperimentResult expResult() => GBExperimentResult(
           inExperiment: true,
@@ -410,6 +442,223 @@ void main() {
       plugin.onExperimentViewed(exp(), expResult(), null);
       await Future<void>.delayed(const Duration(milliseconds: 50));
       expect(adapter.requestCount, equals(0));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Deduplication, custom events and the feature usage switch
+  // -------------------------------------------------------------------------
+
+  group('GrowthBookTrackingPlugin — dedupe and custom events', () {
+    late List<List<dynamic>> posted;
+    late Dio dio;
+
+    setUp(() {
+      posted = [];
+      dio = Dio()
+        ..httpClientAdapter = _MockHttpAdapter((options) async {
+          posted.add(jsonDecode(options.data as String) as List);
+          return _ok();
+        });
+    });
+
+    GrowthBookTrackingPlugin makePlugin({
+      int dedupeCacheSize =
+          GrowthBookTrackingPluginConfig.defaultDedupeCacheSize,
+      bool enableFeatureUsageEvents = true,
+      Dio? withDio,
+    }) =>
+        GrowthBookTrackingPlugin(
+          config: GrowthBookTrackingPluginConfig(
+            batchSize: 100,
+            batchTimeout: const Duration(seconds: 60),
+            dedupeCacheSize: dedupeCacheSize,
+            enableFeatureUsageEvents: enableFeatureUsageEvents,
+          ),
+          dio: withDio ?? dio,
+        )..initialize('sdk-test');
+
+    GBFeatureResult featureResult({String feature = 'a', bool value = true}) =>
+        GBFeatureResult(
+          value: value,
+          on: value,
+          off: !value,
+          source: GBFeatureSource.defaultValue,
+        );
+
+    List<dynamic> allEvents() => posted.expand((batch) => batch).toList();
+
+    test('an identical feature evaluation is only sent once', () async {
+      final plugin = makePlugin();
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(1));
+    });
+
+    test('a different evaluation of the same flag is still sent', () async {
+      final plugin = makePlugin();
+      plugin.onFeatureEvaluated('flag', featureResult(value: true), null);
+      plugin.onFeatureEvaluated('flag', featureResult(value: false), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(2));
+    });
+
+    test('attributes are not part of the dedupe key', () async {
+      final plugin = makePlugin();
+      plugin.onFeatureEvaluated('flag', featureResult(), {'id': 'user-1'});
+      plugin.onFeatureEvaluated('flag', featureResult(), {'id': 'user-2'});
+      await plugin.flush();
+
+      expect(allEvents().length, equals(1));
+    });
+
+    test('a cache size of zero disables deduplication', () async {
+      final plugin = makePlugin(dedupeCacheSize: 0);
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(2));
+    });
+
+    test('the oldest key is evicted once the cache is full', () async {
+      final plugin = makePlugin(dedupeCacheSize: 1);
+      plugin.onFeatureEvaluated('a', featureResult(), null);
+      plugin.onFeatureEvaluated('b', featureResult(), null);
+      // 'a' was evicted by 'b', so it is reported again rather than suppressed.
+      plugin.onFeatureEvaluated('a', featureResult(), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(3));
+    });
+
+    test('a failed batch releases its keys so the event can be retried',
+        () async {
+      var shouldFail = true;
+      final failingDio = Dio()
+        ..httpClientAdapter = _MockHttpAdapter((options) async {
+          if (shouldFail) throw Exception('network error');
+          posted.add(jsonDecode(options.data as String) as List);
+          return _ok();
+        });
+
+      final plugin = makePlugin(withDio: failingDio);
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      await plugin.flush();
+      expect(allEvents(), isEmpty);
+
+      shouldFail = false;
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(1),
+          reason: 'the key must have been given back by the failed batch');
+    });
+
+    test('the dedupe key does not depend on nested key order', () async {
+      final plugin = makePlugin();
+      GBFeatureResult withValue(Map<String, dynamic> value) => GBFeatureResult(
+            value: value,
+            source: GBFeatureSource.defaultValue,
+          );
+
+      plugin.onFeatureEvaluated('flag', withValue({'a': 1, 'b': 2}), null);
+      plugin.onFeatureEvaluated('flag', withValue({'b': 2, 'a': 1}), null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(1));
+    });
+
+    test('custom events are never deduplicated', () async {
+      final plugin = makePlugin();
+      plugin.logEvent('Checkout', {'total': 42}, null);
+      plugin.logEvent('Checkout', {'total': 42}, null);
+      await plugin.flush();
+
+      expect(allEvents().length, equals(2));
+    });
+
+    test('reusing one properties map does not rewrite queued events', () async {
+      final plugin = makePlugin();
+      final properties = <String, dynamic>{
+        'total': 10,
+        'items': ['a'],
+      };
+
+      plugin.logEvent('Purchase', properties, null);
+      properties['total'] = 20;
+      (properties['items'] as List).add('b');
+      plugin.logEvent('Purchase', properties, null);
+      await plugin.flush();
+
+      final sent = allEvents().map((event) => event['properties_json']);
+      expect(sent.map((p) => p['total']), equals([10, 20]));
+      expect(
+          sent.map((p) => p['items']),
+          equals([
+            ['a'],
+            ['a', 'b'],
+          ]));
+    });
+
+    test('a custom event is carried in the same envelope', () async {
+      final plugin = makePlugin();
+      plugin.logEvent('Checkout', {'total': 42}, {'id': 'user-1', 'plan': 'x'});
+      await plugin.flush();
+
+      final event = allEvents().single as Map<String, dynamic>;
+      expect(event['event_name'], equals('Checkout'));
+      expect(event['properties_json'], equals({'total': 42}));
+      expect(event['device_id'], equals('user-1'));
+      expect(event['context_json'], equals({'plan': 'x'}));
+      expect(event['sdk_language'], equals('dart'));
+    });
+
+    test('a custom event with no properties sends an empty object', () async {
+      final plugin = makePlugin();
+      plugin.logEvent('Opened', null, null);
+      await plugin.flush();
+
+      final event = allEvents().single as Map<String, dynamic>;
+      expect(event['properties_json'], equals(<String, dynamic>{}));
+    });
+
+    test('a custom event raised after close() is dropped', () async {
+      final plugin = makePlugin();
+      await plugin.close();
+
+      plugin.logEvent('Checkout', null, null);
+      await plugin.flush();
+
+      expect(allEvents(), isEmpty);
+    });
+
+    test('enableFeatureUsageEvents: false drops feature evaluations', () async {
+      final plugin = makePlugin(enableFeatureUsageEvents: false);
+      plugin.onFeatureEvaluated('flag', featureResult(), null);
+      await plugin.flush();
+
+      expect(allEvents(), isEmpty);
+    });
+
+    test('enableFeatureUsageEvents: false keeps exposures and custom events',
+        () async {
+      final plugin = makePlugin(enableFeatureUsageEvents: false);
+      plugin.onExperimentViewed(
+        GBExperiment(key: 'exp', variations: [0, 1]),
+        GBExperimentResult(inExperiment: true, key: 'treatment'),
+        null,
+      );
+      plugin.logEvent('Checkout', null, null);
+      await plugin.flush();
+
+      expect(
+        allEvents().map((e) => (e as Map<String, dynamic>)['event_name']),
+        equals(['Experiment Viewed', 'Checkout']),
+      );
     });
   });
 
