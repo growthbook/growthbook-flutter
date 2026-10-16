@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -147,9 +148,11 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _forcedFeatures = [],
         _attributeOverrides = {} {
     // The initializer list cannot reach `_pluginRegistry`, and a caller may
-    // have supplied its own evaluation context, so the registry is attached
-    // here instead of being passed to `initializeEvalContext` above.
+    // have supplied its own evaluation context, so the registry and the
+    // exposure history are attached here instead of being passed to
+    // `initializeEvalContext` above.
     _evaluationContext.options.pluginRegistry = _pluginRegistry;
+    _evaluationContext.options.experimentHelper = _experimentHelper;
     _featureViewModel = FeatureViewModel(
         delegate: this,
         source: FeatureDataSource(context: _context, client: _baseClient),
@@ -176,6 +179,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final PluginRegistry _pluginRegistry;
 
+  /// Exposures this instance has already reported. Outlives every evaluation
+  /// context rebuild, so an attribute update does not re-report them.
+  final ExperimentHelper _experimentHelper = ExperimentHelper();
+
   List<dynamic> _forcedFeatures;
 
   Map<String, dynamic> _attributeOverrides;
@@ -200,7 +207,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   void _updateEvaluationContext() {
     _evaluationContext = GBUtils.initializeEvalContext(
         _context, _refreshHandler,
-        pluginRegistry: _pluginRegistry);
+        pluginRegistry: _pluginRegistry, experimentHelper: _experimentHelper);
   }
 
   void _initializePlugins() {

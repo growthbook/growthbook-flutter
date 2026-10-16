@@ -610,6 +610,34 @@ void main() {
       expect(f.plugin.experimentCallCount, equals(1));
     });
 
+    test('another SDK instance does not suppress this one\'s exposure',
+        () async {
+      final experiment = _makeExp();
+
+      // Same user, same experiment, no plugin: it must not use up the exposure.
+      final other = await _makeSDK();
+      other.run(experiment);
+      await other.dispose();
+
+      final plugin = MockPlugin();
+      final sdk = await _makeSDK(plugins: [plugin]);
+      sdk.run(experiment);
+
+      expect(plugin.experimentCallCount, equals(1));
+    });
+
+    test('an attribute update does not report the exposure again', () async {
+      final experiment = _makeExp();
+      final plugin = MockPlugin();
+      final sdk = await _makeSDK(plugins: [plugin]);
+
+      sdk.run(experiment);
+      sdk.setAttributes({'id': 'user-1'});
+      sdk.run(experiment);
+
+      expect(plugin.experimentCallCount, equals(1));
+    });
+
     test('a closed registry stops reporting exposures', () async {
       final f = _ExposureFixture();
       await f.registry.close();
@@ -639,9 +667,8 @@ void main() {
 /// An evaluation context wired to a plugin registry, holding one feature whose
 /// only rule is an experiment.
 ///
-/// Every instance uses a fresh experiment key and unit id, because
-/// [ExperimentHelper] dedupes exposures in a process-wide singleton that
-/// outlives a single test.
+/// Every instance gets its own exposure history with its context; the fresh
+/// experiment key and unit id just keep the fixtures apart in failure output.
 class _ExposureFixture {
   _ExposureFixture() {
     final unique = _counter++;

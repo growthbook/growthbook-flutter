@@ -5,6 +5,7 @@ import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
@@ -712,7 +713,8 @@ class GBUtils {
       GBContext gbContext,
       // ignore: deprecated_member_use_from_same_package
       GBCacheRefreshHandler? refreshHandler,
-      {PluginRegistry? pluginRegistry}) {
+      {PluginRegistry? pluginRegistry,
+      ExperimentHelper? experimentHelper}) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -728,6 +730,7 @@ class GBUtils {
       featureRefreshCallback: refreshHandler,
       url: gbContext.url,
       pluginRegistry: pluginRegistry,
+      experimentHelper: experimentHelper,
     );
 
     var globalContext = GlobalContext(
