@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
@@ -146,6 +147,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
+    // The initializer list cannot reach `_pluginRegistry`, and a caller may
+    // have supplied its own evaluation context, so the registry and the
+    // exposure history are attached here instead of being passed to
+    // `initializeEvalContext` above.
+    _evaluationContext.options.pluginRegistry = _pluginRegistry;
+    _evaluationContext.options.experimentHelper = _experimentHelper;
     _featureViewModel = FeatureViewModel(
         delegate: this,
         source: FeatureDataSource(context: _context, client: _baseClient),
@@ -172,6 +179,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   final PluginRegistry _pluginRegistry;
 
+  /// Exposures this instance has already reported. Outlives every evaluation
+  /// context rebuild, so an attribute update does not re-report them.
+  final ExperimentHelper _experimentHelper = ExperimentHelper();
+
   List<dynamic> _forcedFeatures;
 
   Map<String, dynamic> _attributeOverrides;
@@ -194,12 +205,33 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// instead of creating new contexts on every evaluation, which is more efficient
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext =
-        GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext = GBUtils.initializeEvalContext(
+        _context, _refreshHandler,
+        pluginRegistry: _pluginRegistry, experimentHelper: _experimentHelper);
   }
 
   void _initializePlugins() {
     _pluginRegistry.initialize(_context.apiKey ?? '');
+  }
+
+  /// Delivers whatever the registered plugins have buffered, leaving them
+  /// running.
+  ///
+  /// Call this when the app is heading to the background. Nothing else
+  /// delivers early: the tracking plugin batches for up to its `batchTimeout`,
+  /// and a process the OS kills while suspended never reaches [dispose], so
+  /// those events are simply lost.
+  ///
+  /// Unlike [dispose], recording resumes afterwards.
+  ///
+  /// ```dart
+  /// @override
+  /// void didChangeAppLifecycleState(AppLifecycleState state) {
+  ///   if (state == AppLifecycleState.paused) sdk.flush();
+  /// }
+  /// ```
+  Future<void> flush() {
+    return _pluginRegistry.flush();
   }
 
   /// Releases resources held by all registered plugins.
@@ -362,9 +394,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.stickyBucketAssignmentDocs =
         _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
-    if (result.inExperiment) {
-      _notifyExperimentViewed(experiment, result);
-    }
+    // Plugins are notified by [ExperimentEvaluator] itself, so that exposures
+    // from feature flag rules are recorded too.
     return result;
   }
 
@@ -507,11 +538,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
     _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
-  }
-
-  void _notifyExperimentViewed(
-      GBExperiment experiment, GBExperimentResult result) {
-    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off

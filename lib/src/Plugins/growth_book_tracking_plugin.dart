@@ -27,7 +27,7 @@ class GrowthBookTrackingPluginConfig {
 ///
 /// **Wire contract**
 /// - Endpoint:  POST `{config.ingestorHost}/track?client_key={clientKey}`
-/// - Body: `[{ "event_name": "...", "properties": {...}, "attributes": {...} }]`
+/// - Body: a plain JSON array of ingest payloads
 /// - Headers: `Content-Type: application/json`, `User-Agent: growthbook-flutter-sdk/{version}`
 ///
 /// If initialized with an empty `clientKey` the plugin degrades to a no-op.
@@ -39,15 +39,20 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   })  : _config = config,
         _dio = dio ?? Dio();
 
-  static const String _sdkVersion = '4.4.0'; // x-release-please-version
-
   final GrowthBookTrackingPluginConfig _config;
   final Dio _dio;
 
   String _clientKey = '';
   bool _isInitialized = false;
 
-  final List<GBIngestEvent> _eventQueue = [];
+  /// Events already encoded to JSON when they were enqueued.
+  ///
+  /// The attributes handed to the plugin are the SDK's live map, so holding
+  /// the event and encoding it at flush time read whatever the map held then:
+  /// a user switch before the batch went out relabelled the earlier user's
+  /// events with the new identity. Encoding up front freezes each event as it
+  /// was, nested values included.
+  final List<String> _eventQueue = [];
   Timer? _flushTimer;
 
   // ---------------------------------------------------------------------------
@@ -69,8 +74,8 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBExperimentViewedEvent.from(
-        experiment, result, _mergedAttributes(attributes)));
+    _enqueue(
+        GBExperimentViewedEvent.from(experiment, result, attributes ?? {}));
   }
 
   @override
@@ -80,23 +85,23 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     Map<String, dynamic>? attributes,
   ) {
     if (!_isInitialized) return;
-    _enqueue(GBFeatureEvaluatedEvent.from(
-        featureKey, result, _mergedAttributes(attributes)));
+    _enqueue(
+        GBFeatureEvaluatedEvent.from(featureKey, result, attributes ?? {}));
   }
 
-  static Map<String, dynamic> _mergedAttributes(
-      Map<String, dynamic>? userAttributes) {
-    return {
-      'sdk_language': 'dart',
-      'sdk_version': _sdkVersion,
-      ...?userAttributes,
-    };
-  }
+  /// Sends what is buffered and leaves the timer running, so recording resumes
+  /// as normal afterwards.
+  @override
+  Future<void> flush() => _flushSync();
 
   /// Stops the flush timer and sends all buffered events before returning.
+  ///
+  /// The plugin goes inert: anything evaluated afterwards is dropped rather
+  /// than buffered for a batch nobody will send.
   @override
   Future<void> close() async {
     _stopTimer();
+    _isInitialized = false;
     await _flushSync();
   }
 
@@ -105,7 +110,17 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   // ---------------------------------------------------------------------------
 
   void _enqueue(GBIngestEvent event) {
-    _eventQueue.add(event);
+    final String encoded;
+    try {
+      encoded = jsonEncode(event.toJson());
+    } catch (e) {
+      // An attribute that is not JSON-encodable costs this event only, rather
+      // than failing the whole batch at send time.
+      log('GrowthBookTrackingPlugin: dropped an event that cannot be '
+          'encoded: $e');
+      return;
+    }
+    _eventQueue.add(encoded);
     if (_eventQueue.length >= _config.batchSize) {
       _flushAsync();
     }
@@ -132,23 +147,23 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     await _post(events);
   }
 
-  List<GBIngestEvent> _drainQueue() {
-    final events = List<GBIngestEvent>.from(_eventQueue);
+  List<String> _drainQueue() {
+    final events = List<String>.from(_eventQueue);
     _eventQueue.clear();
     return events;
   }
 
-  Future<void> _post(List<GBIngestEvent> events) async {
+  Future<void> _post(List<String> events) async {
     final url = '${_config.ingestorHost}/track?client_key=$_clientKey';
 
     try {
       await _dio.post<void>(
         url,
-        data: jsonEncode(events.map((e) => e.toJson()).toList()),
+        data: '[${events.join(',')}]',
         options: Options(
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'growthbook-flutter-sdk/$_sdkVersion',
+            'User-Agent': 'growthbook-flutter-sdk/$gbSdkVersion',
           },
           sendTimeout: const Duration(seconds: 10),
           receiveTimeout: const Duration(seconds: 10),

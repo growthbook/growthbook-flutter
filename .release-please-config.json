@@ -5,7 +5,7 @@
       "include-component-in-tag": false,
       "include-v-in-tag": true,
       "extra-files": [
-        "lib/src/Plugins/growth_book_tracking_plugin.dart"
+        "lib/src/Plugins/growth_book_plugin.dart"
       ]
     }
   },
