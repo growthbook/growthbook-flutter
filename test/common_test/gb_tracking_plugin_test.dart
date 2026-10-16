@@ -581,6 +581,29 @@ void main() {
       expect(allEvents().length, equals(2));
     });
 
+    test('reusing one properties map does not rewrite queued events', () async {
+      final plugin = makePlugin();
+      final properties = <String, dynamic>{
+        'total': 10,
+        'items': ['a'],
+      };
+
+      plugin.logEvent('Purchase', properties, null);
+      properties['total'] = 20;
+      (properties['items'] as List).add('b');
+      plugin.logEvent('Purchase', properties, null);
+      await plugin.flush();
+
+      final sent = allEvents().map((event) => event['properties_json']);
+      expect(sent.map((p) => p['total']), equals([10, 20]));
+      expect(
+          sent.map((p) => p['items']),
+          equals([
+            ['a'],
+            ['a', 'b'],
+          ]));
+    });
+
     test('a custom event is carried in the same envelope', () async {
       final plugin = makePlugin();
       plugin.logEvent('Checkout', {'total': 42}, {'id': 'user-1', 'plan': 'x'});
