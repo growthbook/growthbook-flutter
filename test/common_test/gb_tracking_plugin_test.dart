@@ -382,6 +382,26 @@ void main() {
       expect(adapter.requestCount, equals(2));
     });
 
+    test('a buffered event keeps the attributes it was raised with', () async {
+      final plugin = makePlugin(batchSize: 100);
+      plugin.initialize('sdk-test');
+
+      final attributes = <String, dynamic>{
+        'user_id': 'old-user',
+        'plan': {'tier': 'free'},
+      };
+      plugin.onExperimentViewed(exp(), expResult(), attributes);
+
+      // The user changes before the batch goes out.
+      attributes['user_id'] = 'new-user';
+      (attributes['plan'] as Map<String, dynamic>)['tier'] = 'pro';
+      await plugin.flush();
+
+      final events = jsonDecode(adapter.lastRequest!.data as String) as List;
+      expect(events.single['user_id'], equals('old-user'));
+      expect(events.single['context_json']['plan']['tier'], equals('free'));
+    });
+
     test('events raised after close() are dropped', () async {
       final plugin = makePlugin(batchSize: 1);
       plugin.initialize('sdk-test');

@@ -45,7 +45,14 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   String _clientKey = '';
   bool _isInitialized = false;
 
-  final List<GBIngestEvent> _eventQueue = [];
+  /// Events already encoded to JSON when they were enqueued.
+  ///
+  /// The attributes handed to the plugin are the SDK's live map, so holding
+  /// the event and encoding it at flush time read whatever the map held then:
+  /// a user switch before the batch went out relabelled the earlier user's
+  /// events with the new identity. Encoding up front freezes each event as it
+  /// was, nested values included.
+  final List<String> _eventQueue = [];
   Timer? _flushTimer;
 
   // ---------------------------------------------------------------------------
@@ -103,7 +110,17 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
   // ---------------------------------------------------------------------------
 
   void _enqueue(GBIngestEvent event) {
-    _eventQueue.add(event);
+    final String encoded;
+    try {
+      encoded = jsonEncode(event.toJson());
+    } catch (e) {
+      // An attribute that is not JSON-encodable costs this event only, rather
+      // than failing the whole batch at send time.
+      log('GrowthBookTrackingPlugin: dropped an event that cannot be '
+          'encoded: $e');
+      return;
+    }
+    _eventQueue.add(encoded);
     if (_eventQueue.length >= _config.batchSize) {
       _flushAsync();
     }
@@ -130,19 +147,19 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
     await _post(events);
   }
 
-  List<GBIngestEvent> _drainQueue() {
-    final events = List<GBIngestEvent>.from(_eventQueue);
+  List<String> _drainQueue() {
+    final events = List<String>.from(_eventQueue);
     _eventQueue.clear();
     return events;
   }
 
-  Future<void> _post(List<GBIngestEvent> events) async {
+  Future<void> _post(List<String> events) async {
     final url = '${_config.ingestorHost}/track?client_key=$_clientKey';
 
     try {
       await _dio.post<void>(
         url,
-        data: jsonEncode(events.map((e) => e.toJson()).toList()),
+        data: '[${events.join(',')}]',
         options: Options(
           headers: {
             'Content-Type': 'application/json',
