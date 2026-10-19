@@ -146,8 +146,8 @@ class GBUtils {
       cumulative += weight;
       double end = start + (targetCoverage * weight);
 
-      // Add the bucket range to the list, rounded to 4 decimal places
-      bucketRanges.add([start.roundTo(4), end.roundTo(4)]);
+      // Add the bucket range to the list (unrounded, to match the JS SDK)
+      bucketRanges.add([start, end]);
     }
 
     return bucketRanges;
