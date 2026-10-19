@@ -484,6 +484,56 @@ final sdk = await GBSDKBuilderApp(
 // No need to restart the app or refresh manually
 ```
 
+### Feature Refresh Listeners
+
+To react when feature definitions change — rebuilding a widget, invalidating a derived value —
+register a listener. `addFeatureRefreshListener` returns a function that removes it again:
+
+```dart
+class _MyWidgetState extends State<MyWidget> {
+  late final VoidCallback _stopListening;
+
+  @override
+  void initState() {
+    super.initState();
+    _stopListening = sdk.addFeatureRefreshListener((event) {
+      if (event.success) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _stopListening();
+    super.dispose();
+  }
+}
+```
+
+Every listener is called after each refresh attempt, with a `GBFeatureRefreshEvent` describing it:
+
+| Field | Meaning |
+|---|---|
+| `success` | whether the attempt produced usable definitions |
+| `source` | `network`, `cache`, or `notModified` for a 304 response |
+| `features` | the definitions now in effect, as an unmodifiable map — read-only by convention, see below |
+| `error` | why the attempt failed, when it did |
+
+Notes:
+
+- Any number of listeners can be registered at any point, and each is removed on its own;
+  `clearFeatureRefreshListeners()` removes all of them, and `dispose()` does too.
+- Listeners are also told about definitions read from the cache, which the refresh handler passed to
+  the builder stays silent about even though they are what a session starts evaluating with.
+- A listener that throws is logged and skipped: it stops neither the other listeners nor the refresh.
+- `event.features` cannot have entries added, replaced or removed, but the `GBFeature` values are the
+  SDK's own objects, not copies. Treat them as read-only: mutating one changes what evaluation
+  returns.
+- Calling the returned unsubscribe function twice is harmless — it removes only its own
+  registration, so registering the same function again later is unaffected.
+- `setRefreshHandlerV2` keeps working exactly as before. Use it for a single "did the refresh
+  succeed" callback; use listeners when more than one part of the app needs to react, or when the
+  source and the definitions matter.
+
 ### Tracking Plugins
 
 Plugins observe SDK lifecycle events (feature evaluated, experiment viewed) and can implement custom side effects such as forwarding events to an analytics backend. The SDK ships with `GrowthBookTrackingPlugin`, which batches events and sends them to the GrowthBook ingest endpoint.
