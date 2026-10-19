@@ -214,6 +214,21 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _pluginRegistry.initialize(_context.apiKey ?? '');
   }
 
+  /// Records an event of the app's own, alongside the exposures and
+  /// evaluations the SDK tracks by itself.
+  ///
+  /// Buffered and batched like every other event, so it is subject to the same
+  /// loss on termination — call [flush] when the app goes to the background.
+  /// Unlike the SDK's own events these are never deduplicated: a repeat is a
+  /// second occurrence, not a redundant re-evaluation.
+  ///
+  /// ```dart
+  /// sdk.logEvent('Checkout Completed', {'total': 42.0});
+  /// ```
+  void logEvent(String eventName, [Map<String, dynamic>? properties]) {
+    _pluginRegistry.logEvent(eventName, properties, _context.attributes);
+  }
+
   /// Delivers whatever the registered plugins have buffered, leaving them
   /// running.
   ///

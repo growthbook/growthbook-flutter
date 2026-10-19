@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Version reported on every ingested event and in the plugin's `User-Agent`.
@@ -24,6 +26,18 @@ abstract class GrowthBookPlugin {
     GBFeatureResult result,
     Map<String, dynamic>? attributes,
   );
+
+  /// Called for an event the app raised itself through [GrowthBookSDK.logEvent].
+  ///
+  /// Unlike the two callbacks above these are never deduplicated: the app chose
+  /// when to send each one, so a repeat is a second occurrence rather than a
+  /// redundant re-evaluation. Defaults to a no-op so existing plugins keep
+  /// working unchanged.
+  void logEvent(
+    String eventName,
+    Map<String, dynamic>? properties,
+    Map<String, dynamic>? attributes,
+  ) {}
 
   /// Sends any buffered data without shutting down.
   ///
@@ -115,11 +129,44 @@ Map<String, dynamic> _buildIngestPayload({
   };
 }
 
+/// Builds the string two identical events have to agree on.
+///
+/// Only the name and the event's own fields go in — deliberately not the
+/// attributes. A feature evaluation carries no unit identity of its own, so
+/// including attributes would make every attribute change look like a new
+/// event; the other SDKs draw the line in the same place.
+///
+/// Keys are sorted, recursively, because two encodings of the same evaluation
+/// that differ only in key order would never match. Returns null for anything
+/// that will not encode, which leaves that event undeduplicated rather than
+/// dropping it.
+String? _ingestDedupeKey(String eventName, Map<String, dynamic> properties) {
+  try {
+    return jsonEncode(
+        _withSortedKeys({'eventName': eventName, 'properties': properties}));
+  } catch (_) {
+    return null;
+  }
+}
+
+dynamic _withSortedKeys(dynamic value) {
+  if (value is Map) {
+    final keys = value.keys.map((key) => key.toString()).toList()..sort();
+    return {for (final key in keys) key: _withSortedKeys(value[key])};
+  }
+  if (value is List) return value.map(_withSortedKeys).toList();
+  return value;
+}
+
 /// Wire format for a single event sent to the GrowthBook ingest endpoint.
 sealed class GBIngestEvent {
   const GBIngestEvent();
 
   Map<String, dynamic> toJson();
+
+  /// The key a duplicate has to match on, or null for events that are never
+  /// deduplicated.
+  String? get dedupeKey;
 }
 
 class GBExperimentViewedEvent extends GBIngestEvent {
@@ -163,15 +210,21 @@ class GBExperimentViewedEvent extends GBIngestEvent {
 
   final Map<String, dynamic> attributes;
 
+  /// Read by both the payload and the dedupe key, so the two cannot drift.
+  Map<String, dynamic> get _properties => {
+        'experimentId': experimentId,
+        'variationId': variationId,
+        if (hashAttribute != null) 'hashAttribute': hashAttribute,
+        if (hashValue != null) 'hashValue': hashValue,
+      };
+
+  @override
+  String? get dedupeKey => _ingestDedupeKey(eventName, _properties);
+
   @override
   Map<String, dynamic> toJson() => _buildIngestPayload(
         eventName: eventName,
-        properties: {
-          'experimentId': experimentId,
-          'variationId': variationId,
-          if (hashAttribute != null) 'hashAttribute': hashAttribute,
-          if (hashValue != null) 'hashValue': hashValue,
-        },
+        properties: _properties,
         attributes: attributes,
       );
 }
@@ -220,16 +273,63 @@ class GBFeatureEvaluatedEvent extends GBIngestEvent {
 
   final Map<String, dynamic> attributes;
 
+  /// See [GBExperimentViewedEvent._properties].
+  Map<String, dynamic> get _properties => {
+        'feature': feature,
+        'source': source,
+        if (value != null) 'value': value,
+        'ruleId': ruleId,
+        'variationId': variationId,
+      };
+
+  @override
+  String? get dedupeKey => _ingestDedupeKey(eventName, _properties);
+
   @override
   Map<String, dynamic> toJson() => _buildIngestPayload(
         eventName: eventName,
-        properties: {
-          'feature': feature,
-          'source': source,
-          if (value != null) 'value': value,
-          'ruleId': ruleId,
-          'variationId': variationId,
-        },
+        properties: _properties,
+        attributes: attributes,
+      );
+}
+
+/// An event the app raised through [GrowthBookSDK.logEvent], carried in the
+/// same envelope as the SDK's own events so the ingestor needs no special case
+/// for it.
+class GBCustomEvent extends GBIngestEvent {
+  const GBCustomEvent({
+    required this.eventName,
+    required this.properties,
+    required this.attributes,
+  });
+
+  factory GBCustomEvent.from(
+    String eventName,
+    Map<String, dynamic>? properties,
+    Map<String, dynamic> attributes,
+  ) {
+    return GBCustomEvent(
+      eventName: eventName,
+      // An absent body is an empty object, not null: the ingestor reads
+      // `properties_json` as a record, and a null there is a different shape
+      // from "this event carried no fields".
+      properties: properties ?? const {},
+      attributes: attributes,
+    );
+  }
+
+  final String eventName;
+  final Map<String, dynamic> properties;
+  final Map<String, dynamic> attributes;
+
+  /// Never deduplicated — the app chose when to send each one.
+  @override
+  String? get dedupeKey => null;
+
+  @override
+  Map<String, dynamic> toJson() => _buildIngestPayload(
+        eventName: eventName,
+        properties: properties,
         attributes: attributes,
       );
 }
