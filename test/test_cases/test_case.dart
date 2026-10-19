@@ -1,6 +1,6 @@
 const String gbTestCases = r'''
 {
-  "specVersion": "0.7.2",
+  "specVersion": "0.9.0",
   "evalCondition": [
     [
       "$not - pass",
@@ -483,6 +483,18 @@ const String gbTestCases = r'''
       false
     ],
     [
+      "$in - fail (case sensitive mismatch)",
+      {
+        "country": {
+          "$in": ["us", "uk"]
+        }
+      },
+      {
+        "country": "US"
+      },
+      false
+    ],
+    [
       "$nin - pass",
       {
         "num": {
@@ -577,6 +589,198 @@ const String gbTestCases = r'''
         "tags": []
       },
       true
+    ],
+    [
+      "$nin - pass (case sensitive mismatch)",
+      {
+        "country": {
+          "$nin": ["us", "uk"]
+        }
+      },
+      {
+        "country": "US"
+      },
+      true
+    ],
+    [
+      "$ini - pass (case insensitive match)",
+      {
+        "country": {
+          "$ini": ["us", "uk"]
+        }
+      },
+      {
+        "country": "US"
+      },
+      true
+    ],
+    [
+      "$ini - pass (uppercase pattern, lowercase value)",
+      {
+        "country": {
+          "$ini": ["US", "UK"]
+        }
+      },
+      {
+        "country": "us"
+      },
+      true
+    ],
+    [
+      "$ini - pass (mixed case)",
+      {
+        "country": {
+          "$ini": ["Us", "Uk"]
+        }
+      },
+      {
+        "country": "US"
+      },
+      true
+    ],
+    [
+      "$ini - fail (no match)",
+      {
+        "country": {
+          "$ini": ["us", "uk"]
+        }
+      },
+      {
+        "country": "CA"
+      },
+      false
+    ],
+    [
+      "$ini - array pass 1",
+      {
+        "tags": {
+          "$ini": ["a", "b"]
+        }
+      },
+      {
+        "tags": ["d", "e", "A"]
+      },
+      true
+    ],
+    [
+      "$ini - array pass 2",
+      {
+        "tags": {
+          "$ini": ["A", "B"]
+        }
+      },
+      {
+        "tags": ["d", "b", "f"]
+      },
+      true
+    ],
+    [
+      "$ini - array fail",
+      {
+        "tags": {
+          "$ini": ["a", "b"]
+        }
+      },
+      {
+        "tags": ["d", "e", "f"]
+      },
+      false
+    ],
+    [
+      "$ini - not array",
+      {
+        "num": {
+          "$ini": 1
+        }
+      },
+      {
+        "num": 1
+      },
+      false
+    ],
+    [
+      "$nini - pass (case insensitive match)",
+      {
+        "country": {
+          "$nini": ["us", "uk"]
+        }
+      },
+      {
+        "country": "CA"
+      },
+      true
+    ],
+    [
+      "$nini - fail (case insensitive match)",
+      {
+        "country": {
+          "$nini": ["us", "uk"]
+        }
+      },
+      {
+        "country": "US"
+      },
+      false
+    ],
+    [
+      "$nini - fail (uppercase pattern, lowercase value)",
+      {
+        "country": {
+          "$nini": ["US", "UK"]
+        }
+      },
+      {
+        "country": "us"
+      },
+      false
+    ],
+    [
+      "$nini - array pass",
+      {
+        "tags": {
+          "$nini": ["a", "b"]
+        }
+      },
+      {
+        "tags": ["d", "e", "f"]
+      },
+      true
+    ],
+    [
+      "$nini - array fail 1",
+      {
+        "tags": {
+          "$nini": ["a", "b"]
+        }
+      },
+      {
+        "tags": ["d", "e", "A"]
+      },
+      false
+    ],
+    [
+      "$nini - array fail 2",
+      {
+        "tags": {
+          "$nini": ["A", "B"]
+        }
+      },
+      {
+        "tags": ["d", "b", "f"]
+      },
+      false
+    ],
+    [
+      "$nini - not array",
+      {
+        "num": {
+          "$nini": 1
+        }
+      },
+      {
+        "num": 1
+      },
+      false
     ],
     [
       "$elemMatch - pass - flat arrays",
@@ -759,6 +963,18 @@ const String gbTestCases = r'''
       false
     ],
     [
+      "$regex - fail (case sensitive mismatch)",
+      {
+        "userAgent": {
+          "$regex": "(mobile|tablet)"
+        }
+      },
+      {
+        "userAgent": "Android Mobile Browser"
+      },
+      false
+    ],
+    [
       "$regexi - pass (case insensitive match)",
       {
         "userAgent": {
@@ -791,138 +1007,6 @@ const String gbTestCases = r'''
       },
       {
         "userAgent": "Chrome Desktop Browser"
-      },
-      false
-    ],
-    [
-      "$notRegex - pass",
-      {
-        "userAgent": {
-          "$notRegex": "(Mobile|Tablet)"
-        }
-      },
-      {
-        "userAgent": "Chrome Desktop Browser"
-      },
-      true
-    ],
-    [
-      "$notRegex - fail",
-      {
-        "userAgent": {
-          "$notRegex": "(Mobile|Tablet)"
-        }
-      },
-      {
-        "userAgent": "Android Mobile Browser"
-      },
-      false
-    ],
-    [
-      "$notRegexi - pass",
-      {
-        "userAgent": {
-          "$notRegexi": "(mobile|tablet)"
-        }
-      },
-      {
-        "userAgent": "Chrome Desktop Browser"
-      },
-      true
-    ],
-    [
-      "$notRegexi - fail",
-      {
-        "userAgent": {
-          "$notRegexi": "(mobile|tablet)"
-        }
-      },
-      {
-        "userAgent": "Android Mobile Browser"
-      },
-      false
-    ],
-    [
-      "$ini - pass",
-      {
-        "tags": {
-          "$ini": ["A", "B"]
-        }
-      },
-      {
-        "tags": "a"
-      },
-      true
-    ],
-    [
-      "$ini - fail",
-      {
-        "tags": {
-          "$ini": ["a", "b"]
-        }
-      },
-      {
-        "tags": "c"
-      },
-      false
-    ],
-    [
-      "$ini - array pass",
-      {
-        "tags": {
-          "$ini": ["A", "B"]
-        }
-      },
-      {
-        "tags": ["d", "a"]
-      },
-      true
-    ],
-    [
-      "$nini - pass",
-      {
-        "tags": {
-          "$nini": ["A", "B"]
-        }
-      },
-      {
-        "tags": "c"
-      },
-      true
-    ],
-    [
-      "$nini - fail",
-      {
-        "tags": {
-          "$nini": ["A", "B"]
-        }
-      },
-      {
-        "tags": "a"
-      },
-      false
-    ],
-    [
-      "$alli - pass",
-      {
-        "tags": {
-          "$alli": ["A", "B"]
-        }
-      },
-      {
-        "tags": ["a", "b", "c"]
-      },
-      true
-    ],
-    [
-      "$alli - fail",
-      {
-        "tags": {
-          "$alli": ["A", "B"]
-        }
-      },
-      {
-        "tags": ["a", "c"]
       },
       false
     ],
@@ -1079,69 +1163,6 @@ const String gbTestCases = r'''
       },
       {
         "word": "AZL"
-      },
-      false
-    ],
-    [
-      "ISO date $gte/$lte - previously broken operators fix",
-      {
-        "subscriptionDate": {
-          "$gte": "2025-04-28T12:00",
-          "$lte": "2025-12-31T23:59"
-        }
-      },
-      {
-        "subscriptionDate": "2025-06-15T14:30"
-      },
-      true
-    ],
-    [
-      "ISO date $gt/$lt - ensure existing operators still work",
-      {
-        "lastLogin": {
-          "$gt": "2025-01-01T00:00",
-          "$lt": "2025-12-31T23:59"
-        }
-      },
-      {
-        "lastLogin": "2025-06-15T12:30"
-      },
-      true
-    ],
-    [
-      "ISO date with timezone - edge case handling",
-      {
-        "scheduledAt": {
-          "$lte": "2025-08-20T15:00:00+05:30"
-        }
-      },
-      {
-        "scheduledAt": "2025-08-20T14:30:00+05:30"
-      },
-      true
-    ],
-    [
-      "ISO date with milliseconds - precision handling",
-      {
-        "timestamp": {
-          "$gte": "2025-01-15T10:30:45.123Z"
-        }
-      },
-      {
-        "timestamp": "2025-01-15T10:30:45.456Z"
-      },
-      true
-    ],
-    [
-      "ISO date boundary test - $gt passes but $lt fails",
-      {
-        "lastLogin": {
-          "$gt": "2025-01-01T00:00",
-          "$lt": "2025-06-01T00:00"
-        }
-      },
-      {
-        "lastLogin": "2025-12-31T23:59"
       },
       false
     ],
@@ -1667,6 +1688,78 @@ const String gbTestCases = r'''
       {
         "tags": {
           "$all": ["one", "three"]
+        }
+      },
+      {
+        "tags": "hello"
+      },
+      false
+    ],
+    [
+      "$all - fail (case sensitive mismatch)",
+      {
+        "tags": {
+          "$all": ["one", "three"]
+        }
+      },
+      {
+        "tags": ["ONE", "two", "THREE"]
+      },
+      false
+    ],
+    [
+      "$alli - pass (case insensitive match)",
+      {
+        "tags": {
+          "$alli": ["one", "three"]
+        }
+      },
+      {
+        "tags": ["ONE", "two", "THREE"]
+      },
+      true
+    ],
+    [
+      "$alli - pass (uppercase pattern, lowercase value)",
+      {
+        "tags": {
+          "$alli": ["ONE", "THREE"]
+        }
+      },
+      {
+        "tags": ["one", "two", "three"]
+      },
+      true
+    ],
+    [
+      "$alli - pass (mixed case)",
+      {
+        "tags": {
+          "$alli": ["One", "Three"]
+        }
+      },
+      {
+        "tags": ["ONE", "two", "three"]
+      },
+      true
+    ],
+    [
+      "$alli - fail (case insensitive, missing value)",
+      {
+        "tags": {
+          "$alli": ["one", "three"]
+        }
+      },
+      {
+        "tags": ["ONE", "two", "four"]
+      },
+      false
+    ],
+    [
+      "$alli - fail not array",
+      {
+        "tags": {
+          "$alli": ["one", "three"]
         }
       },
       {
@@ -3035,6 +3128,298 @@ const String gbTestCases = r'''
       true
     ],
     [
+      "$vgt - date-based version",
+      {
+        "version": {
+          "$vgt": "20260909.9.9"
+        }
+      },
+      {
+        "version": "20260910.1.1"
+      },
+      true
+    ],
+    [
+      "$vlt - oversized condition operand",
+      {
+        "version": {
+          "$vlt": "123456789"
+        }
+      },
+      {
+        "version": "1.0.0"
+      },
+      true
+    ],
+    [
+      "$veq - oversized on both sides",
+      {
+        "version": {
+          "$veq": "123456789"
+        }
+      },
+      {
+        "version": "123456789"
+      },
+      true
+    ],
+    [
+      "$vgt - oversized pre-release segment",
+      {
+        "version": {
+          "$vgt": "1.2.3-rc.123455"
+        }
+      },
+      {
+        "version": "1.2.3-rc.123456"
+      },
+      true
+    ],
+    [
+      "$vlte - oversized equal segments",
+      {
+        "version": {
+          "$vlte": "20260910.1.0"
+        }
+      },
+      {
+        "version": "20260910.1.0"
+      },
+      true
+    ],
+    [
+      "$vlt - absent attribute is below any release",
+      {
+        "version": {
+          "$vlt": "0.0.1"
+        }
+      },
+      {},
+      true
+    ],
+    [
+      "$vgt - absent attribute is not above a release",
+      {
+        "version": {
+          "$vgt": "0.0.1"
+        }
+      },
+      {},
+      false
+    ],
+    [
+      "$veq - absent attribute equals 0",
+      {
+        "version": {
+          "$veq": "0"
+        }
+      },
+      {},
+      true
+    ],
+    [
+      "$vne - absent attribute differs from a real version",
+      {
+        "version": {
+          "$vne": "1.2.3"
+        }
+      },
+      {},
+      true
+    ],
+    [
+      "$vgt - numeric attribute is stringified",
+      {
+        "version": {
+          "$vgt": "1.0.0"
+        }
+      },
+      {
+        "version": 2
+      },
+      true
+    ],
+    [
+      "$veq - numeric attribute equals numeric condition",
+      {
+        "version": {
+          "$veq": 2
+        }
+      },
+      {
+        "version": 2
+      },
+      true
+    ],
+    [
+      "$veq - float attribute splits on the decimal point",
+      {
+        "version": {
+          "$veq": "1.5"
+        }
+      },
+      {
+        "version": 1.5
+      },
+      true
+    ],
+    [
+      "$veq - empty string attribute is version 0",
+      {
+        "version": {
+          "$veq": "0"
+        }
+      },
+      {
+        "version": ""
+      },
+      true
+    ],
+    [
+      "$veq - boolean attribute is version 0",
+      {
+        "version": {
+          "$veq": "0"
+        }
+      },
+      {
+        "version": true
+      },
+      true
+    ],
+    [
+      "$veq - array attribute is version 0",
+      {
+        "version": {
+          "$veq": "0"
+        }
+      },
+      {
+        "version": ["1.0.0"]
+      },
+      true
+    ],
+    [
+      "$veq - null attribute is version 0",
+      {
+        "version": {
+          "$veq": "0"
+        }
+      },
+      {
+        "version": null
+      },
+      true
+    ],
+    [
+      "$veq - leading v is ignored",
+      {
+        "version": {
+          "$veq": "1.2.3"
+        }
+      },
+      {
+        "version": "v1.2.3"
+      },
+      true
+    ],
+    [
+      "$veq - v inside a pre-release tag is kept",
+      {
+        "version": {
+          "$veq": "1.2.3-dev"
+        }
+      },
+      {
+        "version": "1.2.3-dev"
+      },
+      true
+    ],
+    [
+      "$vne - 1.2.3-dev is not 1.2.3-de",
+      {
+        "version": {
+          "$vne": "1.2.3-de"
+        }
+      },
+      {
+        "version": "1.2.3-dev"
+      },
+      true
+    ],
+    [
+      "$veq - v inside a dotted pre-release is kept",
+      {
+        "version": {
+          "$veq": "1.0.0-alpha.v1"
+        }
+      },
+      {
+        "version": "1.0.0-alpha.v1"
+      },
+      true
+    ],
+    [
+      "$veq - empty middle segment",
+      {
+        "version": {
+          "$veq": "1..2"
+        }
+      },
+      {
+        "version": "1..2"
+      },
+      true
+    ],
+    [
+      "$vne - empty segment changes the part count",
+      {
+        "version": {
+          "$vne": "1.2"
+        }
+      },
+      {
+        "version": "1..2"
+      },
+      true
+    ],
+    [
+      "$veq - leading separator",
+      {
+        "version": {
+          "$veq": "-1.2.3"
+        }
+      },
+      {
+        "version": "-1.2.3"
+      },
+      true
+    ],
+    [
+      "$vne - non-ASCII digit is not the ASCII digit",
+      {
+        "version": {
+          "$vne": "1.2.3-3"
+        }
+      },
+      {
+        "version": "1.2.3-٣"
+      },
+      true
+    ],
+    [
+      "$veq - non-ASCII digits compare as a tag",
+      {
+        "version": {
+          "$veq": "١.٢.٣"
+        }
+      },
+      {
+        "version": "١.٢.٣"
+      },
+      true
+    ],
+    [
       "$or pass but second condition fail",
       {
         "$or": [{ "foo": 1 }, { "bar": 1 }],
@@ -3629,6 +4014,62 @@ const String gbTestCases = r'''
         "value": 2,
         "on": true,
         "off": false,
+        "source": "defaultValue",
+        "ruleId": ""
+      }
+    ],
+    [
+      "force rules - hashVersion 2 includes user",
+      {
+        "attributes": {
+          "id": "user2"
+        },
+        "features": {
+          "feature": {
+            "defaultValue": 0,
+            "rules": [
+              {
+                "force": 1,
+                "coverage": 0.5,
+                "hashVersion": 2
+              }
+            ]
+          }
+        }
+      },
+      "feature",
+      {
+        "value": 1,
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
+      }
+    ],
+    [
+      "force rules - hashVersion 2 excludes user that v1 would include",
+      {
+        "attributes": {
+          "id": "user3"
+        },
+        "features": {
+          "feature": {
+            "defaultValue": 0,
+            "rules": [
+              {
+                "force": 1,
+                "coverage": 0.5,
+                "hashVersion": 2
+              }
+            ]
+          }
+        }
+      },
+      "feature",
+      {
+        "value": 0,
+        "on": false,
+        "off": true,
         "source": "defaultValue",
         "ruleId": ""
       }
@@ -5024,6 +5465,210 @@ const String gbTestCases = r'''
           "stickyBucketUsed": false
         },
         "ruleId": ""
+      }
+    ],
+    [
+      "multi-armed-bandit type is treated as a standard experiment",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashVersion": 2,
+                "coverage": 1,
+                "variations": ["control", "treatment"],
+                "weights": [0.5, 0.5],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "type": "multi-armed-bandit"
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": ["control", "treatment"],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [0.5, 0.5],
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305
+        }
+      }
+    ],
+    [
+      "standard type is treated as a standard experiment",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashVersion": 2,
+                "coverage": 1,
+                "variations": ["control", "treatment"],
+                "weights": [0.5, 0.5],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "type": "standard"
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": ["control", "treatment"],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [0.5, 0.5],
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305
+        }
+      }
+    ],
+    [
+      "unknown bandit fields on a non-CB rule are ignored",
+      {
+        "attributes": {
+          "id": "1"
+        },
+        "features": {
+          "bandit-feature": {
+            "defaultValue": "default",
+            "rules": [
+              {
+                "key": "bandit-exp",
+                "seed": "bandit-exp",
+                "hashVersion": 2,
+                "coverage": 1,
+                "variations": ["control", "treatment"],
+                "weights": [0.5, 0.5],
+                "meta": [
+                  {
+                    "key": "0"
+                  },
+                  {
+                    "key": "1"
+                  }
+                ],
+                "banditVersion": 9
+              }
+            ]
+          }
+        }
+      },
+      "bandit-feature",
+      {
+        "value": "treatment",
+        "on": true,
+        "off": false,
+        "source": "experiment",
+        "ruleId": "",
+        "experiment": {
+          "variations": ["control", "treatment"],
+          "key": "bandit-exp",
+          "coverage": 1,
+          "weights": [0.5, 0.5],
+          "meta": [
+            {
+              "key": "0"
+            },
+            {
+              "key": "1"
+            }
+          ],
+          "seed": "bandit-exp",
+          "hashVersion": 2
+        },
+        "experimentResult": {
+          "key": "1",
+          "featureId": "bandit-feature",
+          "inExperiment": true,
+          "hashUsed": true,
+          "variationId": 1,
+          "value": "treatment",
+          "hashAttribute": "id",
+          "hashValue": "1",
+          "stickyBucketUsed": false,
+          "bucket": 0.5305
+        }
       }
     ]
   ],
@@ -6812,8 +7457,8 @@ const String gbTestCases = r'''
       {
         "deviceId||d123": {
           "assignments": {
-            "feature-exp__4": "2",
-            "feature-exp__3": "1"
+            "feature-exp__3": "1",
+            "feature-exp__4": "2"
           },
           "attributeName": "deviceId",
           "attributeValue": "d123"
@@ -7114,6 +7759,1468 @@ const String gbTestCases = r'''
         }
       ]
     ]
-  ]
+  ],
+  "savedGroupReferencesV2": {
+    "evalCondition": [
+      [
+        "list entry matches when the attribute is in the list",
+        {
+          "$savedGroup": { "id": "grp_list" }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "list entry does not match when the attribute is absent from the list",
+        {
+          "$savedGroup": { "id": "grp_list" }
+        },
+        {
+          "id": "u_9"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "condition entry matches when its condition passes",
+        {
+          "$savedGroup": { "id": "grp_cond" }
+        },
+        {
+          "plan": "pro"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "condition entry does not match when its condition fails",
+        {
+          "$savedGroup": { "id": "grp_cond" }
+        },
+        {
+          "plan": "free"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "follows a chain of condition groups",
+        {
+          "$savedGroup": { "id": "grp_a" }
+        },
+        {
+          "country": "US"
+        },
+        true,
+        {
+          "grp_a": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_b" }
+            }
+          },
+          "grp_b": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_c" }
+            }
+          },
+          "grp_c": {
+            "type": "condition",
+            "condition": {
+              "country": "US"
+            }
+          }
+        }
+      ],
+      [
+        "follows a chain and fails at the end",
+        {
+          "$savedGroup": { "id": "grp_a" }
+        },
+        {
+          "country": "CA"
+        },
+        false,
+        {
+          "grp_a": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_b" }
+            }
+          },
+          "grp_b": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_c" }
+            }
+          },
+          "grp_c": {
+            "type": "condition",
+            "condition": {
+              "country": "US"
+            }
+          }
+        }
+      ],
+      [
+        "resolves inside $not",
+        {
+          "$not": {
+            "$savedGroup": { "id": "grp_list" }
+          }
+        },
+        {
+          "id": "u_9"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "resolves inside $and",
+        {
+          "$and": [
+            {
+              "$savedGroup": { "id": "grp_list" }
+            },
+            {
+              "$savedGroup": { "id": "grp_cond" }
+            }
+          ]
+        },
+        {
+          "id": "u_1",
+          "plan": "pro"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "resolves inside $or",
+        {
+          "$or": [
+            {
+              "$savedGroup": { "id": "grp_list" }
+            },
+            {
+              "$savedGroup": { "id": "grp_cond" }
+            }
+          ]
+        },
+        {
+          "id": "u_9",
+          "plan": "pro"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "match all: passes only when in every group",
+        {
+          "$and": [
+            {
+              "$savedGroup": { "id": "grp_list" }
+            },
+            {
+              "$savedGroup": { "id": "grp_cond" }
+            }
+          ]
+        },
+        {
+          "id": "u_1",
+          "plan": "free"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "match any: passes when in one group",
+        {
+          "$or": [
+            {
+              "$savedGroup": { "id": "grp_list" }
+            },
+            {
+              "$savedGroup": { "id": "grp_cond" }
+            }
+          ]
+        },
+        {
+          "id": "u_9",
+          "plan": "free"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "match none: an AND of NOTs passes when in neither group",
+        {
+          "$and": [
+            {
+              "$not": {
+                "$savedGroup": { "id": "grp_list" }
+              }
+            },
+            {
+              "$not": {
+                "$savedGroup": { "id": "grp_cond" }
+              }
+            }
+          ]
+        },
+        {
+          "id": "u_9",
+          "plan": "free"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "match none: an AND of NOTs fails when in one group",
+        {
+          "$and": [
+            {
+              "$not": {
+                "$savedGroup": { "id": "grp_list" }
+              }
+            },
+            {
+              "$not": {
+                "$savedGroup": { "id": "grp_cond" }
+              }
+            }
+          ]
+        },
+        {
+          "id": "u_1",
+          "plan": "free"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "a negated pair passes when in only one group, where an AND of NOTs fails",
+        {
+          "$not": {
+            "$and": [
+              {
+                "$savedGroup": { "id": "grp_list" }
+              },
+              {
+                "$savedGroup": { "id": "grp_cond" }
+              }
+            ]
+          }
+        },
+        {
+          "id": "u_1",
+          "plan": "free"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "combines with plain attribute targeting",
+        {
+          "$and": [
+            {
+              "country": "US"
+            },
+            {
+              "$savedGroup": { "id": "grp_list" }
+            }
+          ]
+        },
+        {
+          "country": "US",
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "combines with plain attribute targeting and fails on the attribute",
+        {
+          "$and": [
+            {
+              "country": "US"
+            },
+            {
+              "$savedGroup": { "id": "grp_list" }
+            }
+          ]
+        },
+        {
+          "country": "CA",
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "list entry intersects when the attribute is an array",
+        {
+          "$savedGroup": { "id": "grp_list" }
+        },
+        {
+          "id": ["u_9", "u_2"]
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "list entry matches numeric values",
+        {
+          "$savedGroup": { "id": "grp_num" }
+        },
+        {
+          "age": 21
+        },
+        true,
+        {
+          "grp_num": {
+            "type": "list",
+            "attributeKey": "age",
+            "values": [21, 30]
+          }
+        }
+      ],
+      [
+        "a cycle resolves to false instead of hanging",
+        {
+          "$savedGroup": { "id": "grp_x" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_x": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_y" }
+            }
+          },
+          "grp_y": {
+            "type": "condition",
+            "condition": {
+              "$savedGroup": { "id": "grp_x" }
+            }
+          }
+        }
+      ],
+      [
+        "an unknown group type matches nobody",
+        {
+          "$savedGroup": { "id": "grp_future" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_future": {
+            "type": "somethingNew",
+            "values": ["u_1"]
+          }
+        }
+      ],
+      [
+        "an id that is not in the payload matches nobody",
+        {
+          "$savedGroup": { "id": "grp_missing" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "a non-string operator value matches nobody",
+        {
+          "$savedGroup": ["grp_list"]
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "a list entry with no values matches nobody",
+        {
+          "$savedGroup": { "id": "grp_bad" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_bad": {
+            "type": "list",
+            "attributeKey": "id"
+          }
+        }
+      ],
+      [
+        "a condition entry with no condition matches nobody",
+        {
+          "$savedGroup": { "id": "grp_bad" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_bad": {
+            "type": "condition"
+          }
+        }
+      ],
+      [
+        "$savedGroup cannot resolve a legacy bare array",
+        {
+          "$savedGroup": { "id": "grp_legacy" }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_legacy": ["u_1"],
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "$inGroup still works beside typed entries",
+        {
+          "id": {
+            "$inGroup": "grp_legacy"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_legacy": ["u_1"],
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "$inGroup resolves a typed list entry",
+        {
+          "id": {
+            "$inGroup": "grp_list"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "$inGroup uses the attribute it sits on, not the one in the entry",
+        {
+          "backup_id": {
+            "$inGroup": "grp_list"
+          }
+        },
+        {
+          "id": "u_9",
+          "backup_id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "$inGroup matches nobody for a typed condition entry",
+        {
+          "id": {
+            "$inGroup": "grp_cond"
+          }
+        },
+        {
+          "id": "u_1",
+          "plan": "pro"
+        },
+        false,
+        {
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "$notInGroup resolves a typed list entry and fails for a member",
+        {
+          "id": {
+            "$notInGroup": "grp_list"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "$notInGroup resolves a typed list entry and passes for a non-member",
+        {
+          "id": {
+            "$notInGroup": "grp_list"
+          }
+        },
+        {
+          "id": "u_9"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "$notInGroup fails closed for a typed condition entry rather than passing everyone",
+        {
+          "id": {
+            "$notInGroup": "grp_cond"
+          }
+        },
+        {
+          "id": "u_1",
+          "plan": "free"
+        },
+        false,
+        {
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "$notInGroup fails closed for a group type added after the SDK was built",
+        {
+          "id": {
+            "$notInGroup": "grp_future"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_future": {
+            "type": "somethingNew",
+            "values": ["u_1"]
+          }
+        }
+      ],
+      [
+        "$notInGroup fails closed for a malformed entry rather than passing everyone",
+        {
+          "id": {
+            "$notInGroup": "grp_bad"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_bad": null
+        }
+      ],
+      [
+        "$inGroup matches nobody for a malformed entry",
+        {
+          "id": {
+            "$inGroup": "grp_bad"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_bad": null
+        }
+      ],
+      [
+        "$notInGroup still passes for an id that is not in the payload",
+        {
+          "id": {
+            "$notInGroup": "grp_missing"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "the authoring operator $savedGroups is not understood",
+        {
+          "$savedGroups": ["grp_list"]
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          },
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "an attributeKey override checks that attribute instead of the entry's",
+        {
+          "$savedGroup": {
+            "id": "grp_list",
+            "attributeKey": "backup_id"
+          }
+        },
+        {
+          "id": "u_9",
+          "backup_id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an attributeKey override does not fall back to the entry's attribute",
+        {
+          "$savedGroup": {
+            "id": "grp_list",
+            "attributeKey": "backup_id"
+          }
+        },
+        {
+          "id": "u_1",
+          "backup_id": "u_9"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an attributeKey override resolves inside $not",
+        {
+          "$not": {
+            "$savedGroup": {
+              "id": "grp_list",
+              "attributeKey": "backup_id"
+            }
+          }
+        },
+        {
+          "id": "u_1",
+          "backup_id": "u_9"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "a non-string attributeKey matches nobody rather than using the entry's",
+        {
+          "$savedGroup": {
+            "id": "grp_list",
+            "attributeKey": 42
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an attributeKey override is ignored for a condition entry",
+        {
+          "$savedGroup": {
+            "id": "grp_cond",
+            "attributeKey": "backup_id"
+          }
+        },
+        {
+          "plan": "pro"
+        },
+        true,
+        {
+          "grp_cond": {
+            "type": "condition",
+            "condition": {
+              "plan": "pro"
+            }
+          }
+        }
+      ],
+      [
+        "an unknown key inside the reference is ignored",
+        {
+          "$savedGroup": {
+            "id": "grp_list",
+            "somethingNew": "ignore me"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "a bare string id is not a reference and matches nobody",
+        {
+          "$savedGroup": "grp_list"
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "a reference with no id matches nobody",
+        {
+          "$savedGroup": {
+            "attributeKey": "id"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an error marker matches nobody",
+        {
+          "__sgInvalid__": "grp_cond"
+        },
+        {
+          "id": "u_1"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "a negated error marker passes everyone, as an unresolved exclusion did before",
+        {
+          "$not": {
+            "__sgUnknown__": "grp_missing"
+          }
+        },
+        {
+          "id": "u_1"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an error marker fails the $and it sits in",
+        {
+          "$and": [
+            {
+              "country": "US"
+            },
+            {
+              "__sgInvalid__": "grp_cond"
+            }
+          ]
+        },
+        {
+          "id": "u_1",
+          "country": "US"
+        },
+        false,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ],
+      [
+        "an error marker does not fail an $or whose other branch passes",
+        {
+          "$or": [
+            {
+              "country": "US"
+            },
+            {
+              "__sgInvalid__": "grp_cond"
+            }
+          ]
+        },
+        {
+          "id": "u_1",
+          "country": "US"
+        },
+        true,
+        {
+          "grp_list": {
+            "type": "list",
+            "attributeKey": "id",
+            "values": ["u_1", "u_2"]
+          }
+        }
+      ]
+    ],
+    "feature": [
+      [
+        "a rule condition using a saved group reference",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "pro"
+          },
+          "savedGroups": {
+            "grp_list": {
+              "type": "list",
+              "attributeKey": "id",
+              "values": ["u_1", "u_2"]
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          },
+          "features": {
+            "flag": {
+              "defaultValue": false,
+              "rules": [
+                {
+                  "condition": {
+                    "$savedGroup": { "id": "grp_cond" }
+                  },
+                  "force": true,
+                  "id": "rule_1"
+                }
+              ]
+            }
+          }
+        },
+        "flag",
+        {
+          "value": true,
+          "on": true,
+          "off": false,
+          "source": "force",
+          "ruleId": "rule_1"
+        }
+      ],
+      [
+        "a rule condition using a saved group reference that does not match",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "free"
+          },
+          "savedGroups": {
+            "grp_list": {
+              "type": "list",
+              "attributeKey": "id",
+              "values": ["u_1", "u_2"]
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          },
+          "features": {
+            "flag": {
+              "defaultValue": false,
+              "rules": [
+                {
+                  "condition": {
+                    "$savedGroup": { "id": "grp_cond" }
+                  },
+                  "force": true,
+                  "id": "rule_1"
+                }
+              ]
+            }
+          }
+        },
+        "flag",
+        {
+          "value": false,
+          "on": false,
+          "off": true,
+          "source": "defaultValue",
+          "ruleId": ""
+        }
+      ],
+      [
+        "a prerequisite gate that itself uses a saved group reference",
+        {
+          "attributes": {
+            "id": "u_1"
+          },
+          "savedGroups": {
+            "grp_parent_on": {
+              "type": "condition",
+              "condition": {
+                "value": true
+              }
+            }
+          },
+          "features": {
+            "parent": {
+              "defaultValue": true
+            },
+            "child": {
+              "defaultValue": false,
+              "rules": [
+                {
+                  "parentConditions": [
+                    {
+                      "id": "parent",
+                      "condition": {
+                        "$savedGroup": { "id": "grp_parent_on" }
+                      }
+                    }
+                  ],
+                  "force": true,
+                  "id": "child_rule"
+                }
+              ]
+            }
+          }
+        },
+        "child",
+        {
+          "value": true,
+          "on": true,
+          "off": false,
+          "source": "force",
+          "ruleId": "child_rule"
+        }
+      ],
+      [
+        "a prerequisite gate whose saved group reference does not match",
+        {
+          "attributes": {
+            "id": "u_1"
+          },
+          "savedGroups": {
+            "grp_parent_on": {
+              "type": "condition",
+              "condition": {
+                "value": true
+              }
+            }
+          },
+          "features": {
+            "parent": {
+              "defaultValue": false
+            },
+            "child": {
+              "defaultValue": false,
+              "rules": [
+                {
+                  "parentConditions": [
+                    {
+                      "id": "parent",
+                      "condition": {
+                        "$savedGroup": { "id": "grp_parent_on" }
+                      }
+                    }
+                  ],
+                  "force": true,
+                  "id": "child_rule"
+                }
+              ]
+            }
+          }
+        },
+        "child",
+        {
+          "value": false,
+          "on": false,
+          "off": true,
+          "source": "defaultValue",
+          "ruleId": ""
+        }
+      ]
+    ],
+    "run": [
+      [
+        "an experiment targeted by a saved group reference",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "pro"
+          },
+          "savedGroups": {
+            "grp_list": {
+              "type": "list",
+              "attributeKey": "id",
+              "values": ["u_1", "u_2"]
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          }
+        },
+        {
+          "key": "sg-exp",
+          "variations": [0, 1],
+          "condition": {
+            "$savedGroup": { "id": "grp_cond" }
+          }
+        },
+        0,
+        true,
+        true
+      ],
+      [
+        "an experiment skipped because the saved group does not match",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "free"
+          },
+          "savedGroups": {
+            "grp_list": {
+              "type": "list",
+              "attributeKey": "id",
+              "values": ["u_1", "u_2"]
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          }
+        },
+        {
+          "key": "sg-exp",
+          "variations": [0, 1],
+          "condition": {
+            "$savedGroup": { "id": "grp_cond" }
+          }
+        },
+        0,
+        false,
+        false
+      ],
+      [
+        "an experiment gated by a prerequisite that uses a saved group reference",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "pro"
+          },
+          "savedGroups": {
+            "grp_parent_on": {
+              "type": "condition",
+              "condition": {
+                "value": true
+              }
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          },
+          "features": {
+            "parent": {
+              "defaultValue": true
+            }
+          }
+        },
+        {
+          "key": "sg-prereq-exp",
+          "variations": [0, 1],
+          "parentConditions": [
+            {
+              "id": "parent",
+              "condition": {
+                "$savedGroup": { "id": "grp_parent_on" }
+              }
+            }
+          ]
+        },
+        0,
+        true,
+        true
+      ],
+      [
+        "an experiment blocked because its prerequisite saved group does not match",
+        {
+          "attributes": {
+            "id": "u_1",
+            "plan": "pro"
+          },
+          "savedGroups": {
+            "grp_parent_on": {
+              "type": "condition",
+              "condition": {
+                "value": true
+              }
+            },
+            "grp_cond": {
+              "type": "condition",
+              "condition": {
+                "plan": "pro"
+              }
+            }
+          },
+          "features": {
+            "parent": {
+              "defaultValue": false
+            }
+          }
+        },
+        {
+          "key": "sg-prereq-exp",
+          "variations": [0, 1],
+          "parentConditions": [
+            {
+              "id": "parent",
+              "condition": {
+                "$savedGroup": { "id": "grp_parent_on" }
+              }
+            }
+          ]
+        },
+        0,
+        false,
+        false
+      ]
+    ]
+  }
 }
 ''';
