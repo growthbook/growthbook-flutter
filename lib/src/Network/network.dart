@@ -11,24 +11,30 @@ typedef OnError = void Function(Object error, StackTrace stackTrace);
 abstract class BaseClient {
   const BaseClient();
 
+  /// [headers] carries the caller-configured request headers
+  /// (`apiHostRequestHeaders` / `streamingHostRequestHeaders`). They are added
+  /// to the request, never in place of the headers the SDK manages itself.
   Future<void> consumeGetRequest(
     String url,
     OnSuccess onSuccess,
-    OnError onError,
-  );
+    OnError onError, {
+    Map<String, String>? headers,
+  });
 
   Future<void> consumePostRequest(
     String baseUrl,
     Map<String, dynamic> params,
     OnSuccess onSuccess,
-    OnError onError,
-  );
+    OnError onError, {
+    Map<String, String>? headers,
+  });
 
   Future<void> consumeSseConnections(
     String url,
     OnSuccess onSuccess,
-    OnError onError,
-  );
+    OnError onError, {
+    Map<String, String>? headers,
+  });
 }
 
 class DioClient extends BaseClient {
@@ -47,12 +53,16 @@ class DioClient extends BaseClient {
     required String url,
     required OnSuccess onSuccess,
     required OnError onError,
+    Map<String, String>? headers,
   }) async {
     try {
       log('Establishing SSE connection to: $url');
       final resp = await _dio.get(
         url,
-        options: Options(responseType: ResponseType.stream),
+        options: Options(
+          responseType: ResponseType.stream,
+          headers: headers == null ? null : Map<String, String>.from(headers),
+        ),
       );
 
       final data = resp.data;
@@ -96,6 +106,7 @@ class DioClient extends BaseClient {
                 url: url,
                 onError: onError,
                 onSuccess: onSuccess,
+                headers: headers,
               );
             }
           },
@@ -115,23 +126,27 @@ class DioClient extends BaseClient {
   Future<void> consumeGetRequest(
     String url,
     OnSuccess onSuccess,
-    OnError onError,
-  ) async {
+    OnError onError, {
+    Map<String, String>? headers,
+  }) async {
     try {
-      final headers = <String, String>{};
+      // Caller headers first, so the SDK-managed ones below always win. Names
+      // the SDK manages are rejected at configuration time anyway; this keeps
+      // the guarantee even for a client constructed some other way.
+      final requestHeaders = <String, String>{...?headers};
 
       if (_featuresRegex.hasMatch(url)) {
         final etag = _etagCache.get(url);
         if (etag != null) {
-          headers["If-None-Match"] = etag;
+          requestHeaders["If-None-Match"] = etag;
         }
-        headers["Cache-Control"] = "max-age=3600";
+        requestHeaders["Cache-Control"] = "max-age=3600";
       }
 
       final response = await _dio.get(
         url,
         options: Options(
-          headers: headers,
+          headers: requestHeaders,
           validateStatus: (status) =>
               status != null &&
               ((status >= 200 && status < 300) || status == 304),
@@ -172,12 +187,14 @@ class DioClient extends BaseClient {
   Future<void> consumeSseConnections(
     String url,
     OnSuccess onSuccess,
-    OnError onError,
-  ) async {
+    OnError onError, {
+    Map<String, String>? headers,
+  }) async {
     await listenAndRetry(
       url: url,
       onError: onError,
       onSuccess: onSuccess,
+      headers: headers,
     );
   }
 
@@ -186,14 +203,18 @@ class DioClient extends BaseClient {
     String baseUrl,
     Map<String, dynamic> params,
     OnSuccess onSuccess,
-    OnError onError,
-  ) async {
+    OnError onError, {
+    Map<String, String>? headers,
+  }) async {
     try {
       Response response = await _dio.post(
         baseUrl,
         data: params,
         options: Options(
           headers: {
+            // Caller headers first: the content negotiation below describes the
+            // body this method sends and must not be replaced.
+            ...?headers,
             'Content-Type': 'application/json',
             'Accept': 'application/json',
           },
