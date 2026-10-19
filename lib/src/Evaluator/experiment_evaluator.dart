@@ -1,6 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
-import 'experiment_helper.dart';
 import '../MultiUserMode/Model/evaluation_context.dart';
 import '../Utils/gb_variation_meta.dart';
 import '../Utils/logger.dart';
@@ -331,9 +330,12 @@ class ExperimentEvaluator {
       }
     }
 
-    if (!ExperimentHelper.shared.isTracked(experiment, result)) {
+    if (result.inExperiment &&
+        !context.options.experimentHelper.isTracked(experiment, result)) {
       context.options.trackingCallBackWithUser
           ?.call(GBTrackData(experiment: experiment, experimentResult: result));
+      context.options.pluginRegistry?.onExperimentViewed(
+          experiment, result, context.userContext.attributes);
     }
 
     return result;

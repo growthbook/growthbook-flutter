@@ -5,10 +5,12 @@ import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
+import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
@@ -710,7 +712,9 @@ class GBUtils {
   static EvaluationContext initializeEvalContext(
       GBContext gbContext,
       // ignore: deprecated_member_use_from_same_package
-      GBCacheRefreshHandler? refreshHandler) {
+      GBCacheRefreshHandler? refreshHandler,
+      {PluginRegistry? pluginRegistry,
+      ExperimentHelper? experimentHelper}) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -725,6 +729,8 @@ class GBUtils {
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
       featureRefreshCallback: refreshHandler,
       url: gbContext.url,
+      pluginRegistry: pluginRegistry,
+      experimentHelper: experimentHelper,
     );
 
     var globalContext = GlobalContext(

@@ -1,5 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
@@ -149,9 +148,14 @@ class FeatureEvaluator {
               if (track.experiment != null && track.result != null) {
                 var experiment = track.experiment!;
                 var result = track.result!;
-                if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-                  context.options.trackingCallBackWithUser!(GBTrackData(
+                if (experiment.active &&
+                    result.inExperiment &&
+                    !context.options.experimentHelper
+                        .isTracked(experiment, result)) {
+                  context.options.trackingCallBackWithUser?.call(GBTrackData(
                       experiment: experiment, experimentResult: result));
+                  context.options.pluginRegistry?.onExperimentViewed(
+                      experiment, result, context.userContext.attributes);
                 }
               }
             }
