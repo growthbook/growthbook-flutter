@@ -11,6 +11,18 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [4.5.0](https://github.com/growthbook/growthbook-flutter/compare/v4.4.0...v4.5.0) (2026-10-19)
+
+
+### Features
+
+* deduplicate events, add logEvent, and allow turning off feature usage events ([#181](https://github.com/growthbook/growthbook-flutter/issues/181)) ([8aa23bb](https://github.com/growthbook/growthbook-flutter/commit/8aa23bbd7b74d500831073e1fa77ce53841b2045))
+
+
+### Bug Fixes
+
+* record feature flag experiment exposures and correct the ingest payload ([#180](https://github.com/growthbook/growthbook-flutter/issues/180)) ([3198011](https://github.com/growthbook/growthbook-flutter/commit/31980119cd91c3bfcbd0325dede6cdaa7c09099c))
+
 ## [4.4.0](https://github.com/growthbook/growthbook-flutter/compare/v4.3.1...v4.4.0) (2026-08-04)
 
 
