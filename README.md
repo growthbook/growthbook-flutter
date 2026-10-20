@@ -470,6 +470,20 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+`initialize()` throws an `ArgumentError` for a remote-evaluation configuration that cannot work:
+
+- an empty `apiKey`;
+- an `encryptionKey` (remote evaluation responses are not encrypted);
+- a `hostURL` on GrowthBook Cloud (any `*.growthbook.io` host), which serves no remote-evaluation endpoint.
+
+A sticky bucket service and `backgroundSync` are supported alongside remote evaluation; a streamed update triggers a fresh evaluation.
+
+Changing the evaluation inputs (`setAttributes`, `setForcedFeatures`, `setForcedVariations`, `setUrl`) sends a new evaluation request. The current URL is part of the request, so URL-targeting rules work too:
+
+```dart
+await sdk.setUrl('https://example.com/pricing');
+```
+
 ### Real-time Updates
 
 The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.

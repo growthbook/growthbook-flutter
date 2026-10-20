@@ -56,6 +56,8 @@ class GBSDKBuilderApp {
   final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
+    _validateRemoteEval();
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
@@ -83,6 +85,30 @@ class GBSDKBuilderApp {
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
     return gb;
+  }
+
+  /// Rejects the remote-eval configurations the JS SDK rejects, and only
+  /// those: an encryption key, a missing client key, and a GrowthBook Cloud
+  /// host, which serves no remote-evaluation endpoint.
+  ///
+  /// A sticky bucket service and streaming are allowed, as in the JS SDK; a
+  /// streamed event triggers a fresh remote evaluation.
+  void _validateRemoteEval() {
+    if (!remoteEval) return;
+
+    if (encryptionKey != null && encryptionKey!.isNotEmpty) {
+      throw ArgumentError('Encryption is not available for remoteEval');
+    }
+    if (apiKey.isEmpty) {
+      throw ArgumentError('remoteEval requires an apiKey');
+    }
+    // Matched on the hostname's suffix, as in the JS SDK, so every
+    // growthbook.io host is rejected while a URL that merely contains the
+    // string elsewhere is not.
+    final host = Uri.tryParse(hostURL)?.host.toLowerCase() ?? '';
+    if (host.endsWith('growthbook.io')) {
+      throw ArgumentError('Cannot use remoteEval on GrowthBook Cloud');
+    }
   }
 
   /// Registers a legacy refresh handler that only receives a boolean.
@@ -524,6 +550,18 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshForRemoteEval();
   }
 
+  /// Sets the URL that URL-targeting rules and URL-based forced variations are
+  /// evaluated against, like `setURL` in the JS SDK.
+  ///
+  /// In remote-eval mode the URL is part of the evaluation payload, so the
+  /// returned Future completes after the fresh evaluation that carries it.
+  Future<void> setUrl(String url) async {
+    if (url == _context.url) return;
+    _context.url = url;
+    _updateEvaluationContext();
+    await refreshForRemoteEval();
+  }
+
   @override
   Future<void> featuresAPIModelSuccessfully(FeaturedDataModel model) async {
     await refreshStickyBucketService(model);
@@ -558,6 +596,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         forcedFeatures: _forcedFeatures,
         forcedVariations:
             _evaluationContext.userContext.forcedVariationsMap ?? {},
+        // Always a string, as in the JS SDK, which sends "" when unset.
+        url: _context.url ?? '',
       ),
     );
   }

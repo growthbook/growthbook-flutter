@@ -11,6 +11,7 @@ RemoteEvalModel _$RemoteEvalModelFromJson(Map<String, dynamic> json) =>
       attributes: json['attributes'] as Map<String, dynamic>?,
       forcedFeatures: json['forcedFeatures'] as List<dynamic>?,
       forcedVariations: json['forcedVariations'] as Map<String, dynamic>?,
+      url: json['url'] as String?,
     );
 
 Map<String, dynamic> _$RemoteEvalModelToJson(RemoteEvalModel instance) =>
@@ -18,4 +19,5 @@ Map<String, dynamic> _$RemoteEvalModelToJson(RemoteEvalModel instance) =>
       'attributes': instance.attributes,
       'forcedFeatures': instance.forcedFeatures,
       'forcedVariations': instance.forcedVariations,
+      'url': instance.url,
     };

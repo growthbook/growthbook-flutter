@@ -9,11 +9,16 @@ class RemoteEvalModel {
     this.attributes,
     this.forcedFeatures,
     this.forcedVariations,
+    this.url,
   });
 
   final Map<String, dynamic>? attributes;
   final List<dynamic>? forcedFeatures;
   final Map<String, dynamic>? forcedVariations;
+
+  /// The current page or screen URL, which URL-targeting rules are evaluated
+  /// against on the server.
+  final String? url;
 
   factory RemoteEvalModel.fromJson(Map<String, dynamic> json) =>
       _$RemoteEvalModelFromJson(json);
