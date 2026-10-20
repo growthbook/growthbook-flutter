@@ -426,6 +426,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// Replaces the Map of user attributes that are used to assign variations.
   ///
+  /// This is a full **replace**: any previously set attribute that is missing
+  /// from [attributes] is dropped. Use [updateAttributes] to merge into the
+  /// existing attributes instead.
+  ///
   /// Sticky bucket refresh runs in the background (fire-and-forget).
   /// If you use Sticky Bucketing and need to guarantee that assignments are
   /// loaded before evaluating experiments (e.g. after login or user switch),
@@ -456,6 +460,35 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _updateEvaluationContext();
     await refreshStickyBucketService(null);
     await refreshForRemoteEval();
+  }
+
+  /// Merges [attributes] into the existing user attributes instead of
+  /// replacing them, like `updateAttributes` in the JS SDK.
+  ///
+  /// New keys are added, existing keys are overwritten and keys that are not
+  /// present in [attributes] are preserved:
+  /// ```dart
+  /// sdk.setAttributes({'id': '1'});
+  /// sdk.updateAttributes({'plan': 'pro'}); // {'id': '1', 'plan': 'pro'}
+  /// ```
+  ///
+  /// The merge is shallow — a nested Map or List replaces the previous value of
+  /// that key instead of being merged recursively. A `null` value is stored as
+  /// `null`; it does not remove the key.
+  ///
+  /// Otherwise behaves like [setAttributes]; use [updateAttributesAsync] when
+  /// sticky bucket assignments or a remote evaluation must complete first.
+  void updateAttributes(Map<String, dynamic> attributes) {
+    setAttributes(_mergedAttributes(attributes));
+  }
+
+  /// Async version of [updateAttributes]. See [setAttributesAsync].
+  Future<void> updateAttributesAsync(Map<String, dynamic> attributes) {
+    return setAttributesAsync(_mergedAttributes(attributes));
+  }
+
+  Map<String, dynamic> _mergedAttributes(Map<String, dynamic> attributes) {
+    return <String, dynamic>{...?_context.attributes, ...attributes};
   }
 
   /// Gets the current attribute overrides
