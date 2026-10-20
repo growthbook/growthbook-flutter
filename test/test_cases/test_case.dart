@@ -3175,7 +3175,16 @@ const String gbTestCases = r'''
     ["89123klj", "8952klfjas09ujkasdf", 2, 0.124],
     ["90850943850283058242805", "123", 2, 0.7516],
     ["()**(%$##$%#$#", "___)((*\":&", 2, 0.0128],
-    ["abc", "def", 99, null]
+    ["abc", "def", 99, null],
+    ["bucket-range-rounding", "user-3436", 2, 0.22],
+    ["bucket-range-rounding", "user-1177", 2, 0.344],
+    ["bucket-range-rounding", "user-427", 2, 0.109],
+    ["bucket-range-rounding", "user-68525", 2, 0.818],
+    ["bucket-range-rounding", "user-866", 2, 0.172],
+    ["bucket-range-rounding", "user-74", 1, 0.287],
+    ["bucket-range-rounding", "user-549", 1, 0.344],
+    ["rollout-boundary", "user-16298", 2, 0.5],
+    ["rollout-boundary", "user-1778", 1, 0.2]
   ],
   "getBucketRange": [
     [
@@ -5025,6 +5034,66 @@ const String gbTestCases = r'''
         },
         "ruleId": ""
       }
+    ],
+    [
+      "rollout includes the user at exactly coverage - coverage 0.5, hash v2",
+      {
+        "attributes": {
+          "id": "user-16298"
+        },
+        "features": {
+          "rollout": {
+            "defaultValue": "off",
+            "rules": [
+              {
+                "force": "on",
+                "coverage": 0.5,
+                "hashVersion": 2,
+                "seed": "rollout-boundary",
+                "hashAttribute": "id"
+              }
+            ]
+          }
+        }
+      },
+      "rollout",
+      {
+        "value": "on",
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
+      }
+    ],
+    [
+      "rollout includes the user at exactly coverage - coverage 0.2, hash v1",
+      {
+        "attributes": {
+          "id": "user-1778"
+        },
+        "features": {
+          "rollout": {
+            "defaultValue": "off",
+            "rules": [
+              {
+                "force": "on",
+                "coverage": 0.2,
+                "hashVersion": 1,
+                "seed": "rollout-boundary",
+                "hashAttribute": "id"
+              }
+            ]
+          }
+        }
+      },
+      "rollout",
+      {
+        "value": "on",
+        "on": true,
+        "off": false,
+        "source": "force",
+        "ruleId": ""
+      }
     ]
   ],
   "run": [
@@ -5926,7 +5995,7 @@ const String gbTestCases = r'''
       true
     ],
     [
-      "user at a range end - product rounded before the sum",
+      "range end includes the user - 5 equal, coverage 0.1, hash v2",
       {
         "attributes": {
           "id": "user-3436"
