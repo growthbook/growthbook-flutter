@@ -89,8 +89,15 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
-            remoteEval: true, payload: payload);
+        // Covers the deprecated parameters, kept for callers that construct
+        // the view model without a remoteEvalRequestProvider.
+        await featureViewModel.fetchFeatures(
+          '',
+          // ignore: deprecated_member_use_from_same_package
+          remoteEval: true,
+          // ignore: deprecated_member_use_from_same_package
+          payload: payload,
+        );
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -117,11 +124,94 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
-            remoteEval: true, payload: payload);
+        // Covers the deprecated parameters, kept for callers that construct
+        // the view model without a remoteEvalRequestProvider.
+        await featureViewModel.fetchFeatures(
+          '',
+          // ignore: deprecated_member_use_from_same_package
+          remoteEval: true,
+          // ignore: deprecated_member_use_from_same_package
+          payload: payload,
+        );
 
         expect(dataSourceMock.isError, true);
       });
+
+      /// Remote-eval mode is set by supplying a request provider, so tests build
+      /// the same request the SDK would build for the current context.
+      RemoteEvalRequest remoteEvalRequest() {
+        return RemoteEvalRequest(
+          apiUrl: '',
+          payload: RemoteEvalModel(
+            attributes: <String, dynamic>{},
+            forcedFeatures: [
+              ['feature', 123]
+            ],
+            forcedVariations: {'feature': 123},
+          ),
+        );
+      }
+
+      test('Remote eval success test with a request provider', () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          remoteEvalRequestProvider: remoteEvalRequest,
+        );
+
+        await featureViewModel.fetchFeatures('');
+
+        expect(dataSourceMock.isSuccess, true);
+      });
+
+      /// The cached payload was evaluated for the inputs of an earlier round, so
+      /// replaying it once the SDK is running would surface features that do not
+      /// match the current attributes.
+      test('remote eval serves the cache only on the first round', () async {
+        final delegate = _CacheServeCountingDelegate();
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: delegate,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          remoteEvalRequestProvider: remoteEvalRequest,
+        );
+
+        // First round populates the cache from the response.
+        await featureViewModel.fetchFeatures('');
+        delegate.cachedServes = 0;
+
+        await featureViewModel.fetchFeatures('');
+
+        expect(delegate.cachedServes, 0);
+        expect(delegate.remoteServes, greaterThan(0));
+      });
+
+      /// A client that throws instead of calling onError must not leave the
+      /// failure unreported.
+      test('a remote-eval client that throws is reported as a failure',
+          () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const _ThrowingNetworkClient(),
+            context: context,
+          ),
+          remoteEvalRequestProvider: remoteEvalRequest,
+        );
+
+        await featureViewModel.fetchFeatures('');
+
+        expect(dataSourceMock.isError, true);
+      });
+
       test('Error test', () async {
         final viewModel = FeatureViewModel(
           delegate: dataSourceMock,
@@ -289,4 +379,29 @@ void main() {
       );
     },
   );
+}
+
+/// Delegate that tells apart features served from cache and from the network.
+class _CacheServeCountingDelegate extends DataSourceMock {
+  int cachedServes = 0;
+  int remoteServes = 0;
+
+  @override
+  void featuresFetchedSuccessfully(
+      {required GBFeatures gbFeatures, required bool isRemote}) {
+    isRemote ? remoteServes++ : cachedServes++;
+    super.featuresFetchedSuccessfully(
+        gbFeatures: gbFeatures, isRemote: isRemote);
+  }
+}
+
+/// Client whose remote-eval POST throws instead of calling onError.
+class _ThrowingNetworkClient extends MockNetworkClient {
+  const _ThrowingNetworkClient();
+
+  @override
+  Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
+      OnSuccess onSuccess, OnError onError) async {
+    throw StateError('send failed');
+  }
 }
