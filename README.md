@@ -470,6 +470,17 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+The evaluated features are personal, so the SDK caches only the latest evaluation and reuses it at startup only for the same attributes, forced variations and URL. If some attributes change on every launch (a session start time, for example), list the ones that identify the user in `cacheKeyAttributes`, or the cache will never be reused:
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  remoteEval: true,
+  attributes: {'id': userId, 'sessionStart': now},
+  cacheKeyAttributes: ['id'],
+).initialize();
+```
+
 ### Real-time Updates
 
 The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.
