@@ -89,8 +89,15 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
-            remoteEval: true, payload: payload);
+        // Covers the deprecated parameters, kept for callers that construct
+        // the view model without a remoteEvalRequestProvider.
+        await featureViewModel.fetchFeatures(
+          '',
+          // ignore: deprecated_member_use_from_same_package
+          remoteEval: true,
+          // ignore: deprecated_member_use_from_same_package
+          payload: payload,
+        );
         expect(dataSourceMock.isSuccess, true);
       });
 
@@ -117,8 +124,15 @@ void main() {
           forcedVariations: forcedVariation,
         );
 
-        await featureViewModel.fetchFeatures('',
-            remoteEval: true, payload: payload);
+        // Covers the deprecated parameters, kept for callers that construct
+        // the view model without a remoteEvalRequestProvider.
+        await featureViewModel.fetchFeatures(
+          '',
+          // ignore: deprecated_member_use_from_same_package
+          remoteEval: true,
+          // ignore: deprecated_member_use_from_same_package
+          payload: payload,
+        );
 
         expect(dataSourceMock.isError, true);
       });
