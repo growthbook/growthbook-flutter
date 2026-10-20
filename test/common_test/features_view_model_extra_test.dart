@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 import '../mocks/network_view_model_mock.dart';
@@ -18,6 +18,8 @@ class _ThrowingDelegate extends DataSourceMock {
 }
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
   group('FeatureViewModel — additional coverage', () {
     const testHostURL = '<HOST URL>';
     const testApiKey = '<SOME KEY>';
@@ -43,6 +45,7 @@ void main() {
       return FeatureViewModel(
         encryptionKey: encryptionKey,
         delegate: customDelegate ?? delegate,
+        manager: FileCacheStorage(cacheDirectory: testCacheDir),
         source: FeatureDataSource(
           client: MockNetworkClient(error: networkError),
           context: context,
@@ -64,7 +67,7 @@ void main() {
     });
 
     tearDown(() async {
-      await CachingManager().clearCache();
+      await FileCacheStorage(cacheDirectory: testCacheDir).clearCache();
     });
 
     // -------------------------------------------------------------------------
@@ -256,7 +259,7 @@ void main() {
         // Pre-populate cache with mock features JSON
         final cacheContent =
             Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        CachingManager().putData(
+        await FileCacheStorage(cacheDirectory: testCacheDir).saveContent(
           fileName: Constant.featureCache,
           content: cacheContent,
         );
@@ -264,6 +267,7 @@ void main() {
         final vm = FeatureViewModel(
           encryptionKey: '3tfeoyW0wlo47bDnbWDkxg==',
           delegate: delegate,
+          manager: FileCacheStorage(cacheDirectory: testCacheDir),
           source: FeatureDataSource(
             client: const MockNetworkClient(),
             context: context,

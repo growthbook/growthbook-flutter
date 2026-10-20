@@ -1,15 +1,18 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
   group('GrowthBookSDK — attribute & variation management', () {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage(cacheDirectory: testCacheDir);
 
     Future<GrowthBookSDK> buildSdk({Map<String, dynamic>? attributes}) async {
       return GBSDKBuilderApp(
