@@ -59,6 +59,19 @@ void main() {
         },
       );
 
+      test('manager is optional and defaults to FileCacheStorage', () {
+        final viewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+        );
+
+        expect(viewModel.manager, isA<FileCacheStorage>());
+      });
+
       test('Success for encrypted features test', () async {
         featureViewModel = FeatureViewModel(
           encryptionKey: "3tfeoyW0wlo47bDnbWDkxg==",

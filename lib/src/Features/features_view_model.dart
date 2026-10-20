@@ -16,10 +16,12 @@ class FeatureViewModel {
     required this.delegate,
     required this.source,
     required this.encryptionKey,
-    required this.manager,
+    // Optional so code constructing the view model directly keeps compiling;
+    // the un-namespaced default matches the storage it used before.
+    CacheStorage? manager,
     this.backgroundSync,
     this.ttlSeconds = 60,
-  });
+  }) : manager = manager ?? FileCacheStorage();
 
   final FeaturesFlowDelegate delegate;
   final FeatureDataSource source;
