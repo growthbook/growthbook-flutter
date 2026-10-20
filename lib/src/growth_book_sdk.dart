@@ -7,6 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/log_redaction.dart';
 
 typedef VoidCallback = void Function();
 
@@ -321,7 +322,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     if (_context.remoteEval) {
       await refreshForRemoteEval();
     } else {
-      log(context.getFeaturesURL().toString());
+      log('Fetching features from ${redactUrl(context.getFeaturesURL())}');
       await _featureViewModel.fetchFeatures(context.getFeaturesURL());
     }
   }
@@ -389,14 +390,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       // Fire and forget - don't block feature evaluation
 
       if (_context.remoteEval) {
-        refreshForRemoteEval().catchError((e) {
-          log('Background refresh failed: $e');
+        refreshForRemoteEval().catchError((Object e) {
+          log('Background refresh failed: ${describeRequestError(e)}');
         });
       } else {
         _featureViewModel
             .fetchFeatures(context.getFeaturesURL())
-            .catchError((e) {
-          log('Background refresh failed: $e');
+            .catchError((Object e) {
+          log('Background refresh failed: ${describeRequestError(e)}');
         });
       }
     }
