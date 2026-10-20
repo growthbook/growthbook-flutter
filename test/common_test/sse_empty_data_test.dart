@@ -178,5 +178,34 @@ void main() {
         expect(successCalls.first['status'], 200);
       },
     );
+
+    /// The GrowthBook Proxy sends this for remote-evaluation connections: no
+    /// payload, just a request to fetch again.
+    test(
+      'SSE features-updated event calls onSuccess with an empty map',
+      () async {
+        const ssePayload = 'event: features-updated\nid: 6\ndata: \n\n';
+        final client = DioClient();
+        client.client.httpClientAdapter = _MockSseAdapter(ssePayload);
+
+        Object? unhandledError;
+        final successCalls = <Map<String, dynamic>>[];
+
+        await runZonedGuarded(
+          () async {
+            await client.listenAndRetry(
+              url: 'http://test.local/sse',
+              onSuccess: (data) async => successCalls.add(data),
+              onError: (_, __) {},
+            );
+            await pumpEventQueue();
+          },
+          (e, _) => unhandledError = e,
+        );
+
+        expect(unhandledError, isNull);
+        expect(successCalls, [<String, dynamic>{}]);
+      },
+    );
   });
 }

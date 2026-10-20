@@ -71,6 +71,12 @@ class FeatureViewModel {
           await _fetchRemoteEval();
           return;
         }
+        if (data.features == null && data.encryptedFeatures == null) {
+          // A `features-updated` event: the features changed but the event
+          // carries none, so fetch them, bypassing the still-fresh cache.
+          await _fetchFromNetwork(hasCachedFeatures: true);
+          return;
+        }
         await prepareFeaturesData(data);
       },
       (e, s) => delegate.featuresFetchFailed(

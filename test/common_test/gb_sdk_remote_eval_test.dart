@@ -338,6 +338,31 @@ void main() {
         expect(sdk.features.keys, contains('streamed-unevaluated'));
         expect(client.postCount, 0);
       });
+
+      /// What the GrowthBook Proxy actually sends for a remote-eval connection.
+      test('a features-updated event triggers a remote evaluation', () async {
+        final client = _StreamingNetworkClient();
+        await buildStreamingSdk(client, remoteEval: true);
+
+        final postsBefore = client.postCount;
+        await client.emitFeaturesUpdated();
+        await _waitUntil(() => client.postCount > postsBefore);
+
+        expect(client.postCount, greaterThan(postsBefore));
+      });
+
+      test('a features-updated event refetches when remoteEval is off',
+          () async {
+        final client = _StreamingNetworkClient();
+        await buildStreamingSdk(client, remoteEval: false);
+
+        final getsBefore = client.getCount;
+        await client.emitFeaturesUpdated();
+        await _waitUntil(() => client.getCount > getsBefore);
+
+        expect(client.getCount, greaterThan(getsBefore));
+        expect(client.postCount, 0);
+      });
     });
 
     // -------------------------------------------------------------------------
@@ -380,6 +405,8 @@ class _StreamingNetworkClient extends MockNetworkClient {
     _sseCallback = onSuccess;
   }
 
+  int getCount = 0;
+
   /// Delivers an unevaluated payload, the way the streaming endpoint does.
   Future<void> emitStreamedFeatures() async {
     await _sseCallback?.call({
@@ -388,6 +415,19 @@ class _StreamingNetworkClient extends MockNetworkClient {
         'streamed-unevaluated': {'defaultValue': true}
       },
     });
+  }
+
+  /// Delivers a `features-updated` event, which `DioClient` reports as an
+  /// empty map. The GrowthBook Proxy sends it for remote-eval connections.
+  Future<void> emitFeaturesUpdated() async {
+    await _sseCallback?.call(<String, dynamic>{});
+  }
+
+  @override
+  Future<void> consumeGetRequest(
+      String url, OnSuccess onSuccess, OnError onError) async {
+    getCount++;
+    await super.consumeGetRequest(url, onSuccess, onError);
   }
 
   @override
