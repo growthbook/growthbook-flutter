@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/log_redaction.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Plugins/dedupe_cache.dart';
 
@@ -224,7 +225,8 @@ class GrowthBookTrackingPlugin extends GrowthBookPlugin {
       for (final key in dedupeKeys) {
         _dedupeCache.remove(key);
       }
-      log('GrowthBookTrackingPlugin: failed to send events: $e');
+      log('GrowthBookTrackingPlugin: failed to send events: '
+          '${describeRequestError(e)}');
     }
   }
 }

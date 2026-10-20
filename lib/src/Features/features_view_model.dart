@@ -8,6 +8,7 @@ import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/log_redaction.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
 import 'gb_features_converter.dart';
@@ -238,7 +239,7 @@ class FeatureViewModel {
           success = false;
           if (isSuperseded()) return;
           reportedFailure = true;
-          log('Remote Eval Error: $e');
+          log('Remote eval request failed: ${describeRequestError(e)}');
           delegate.featuresFetchFailed(
             error: GBError(error: e, stackTrace: s.toString()),
             isRemote: true,
@@ -284,7 +285,10 @@ class FeatureViewModel {
         return FeaturedDataModel.fromJson(receiveFeatureJsonMap).features ?? {};
       }
     } catch (e, s) {
-      log('Failed to parse cached features, clearing corrupt cache: $e');
+      // Only the error type: a FormatException stringifies with the offending
+      // payload attached.
+      log('Failed to parse cached features, clearing corrupt cache: '
+          '${e.runtimeType}');
       manager.removeContent(fileName: Constant.featureCache);
       handleException(e, s);
       return null;
