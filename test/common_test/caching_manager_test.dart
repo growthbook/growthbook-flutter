@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Caching manager test', () {
-    final manager = CachingManager();
+    final manager = FileCacheStorage(cacheDirectory: testCacheDir);
     test('Caching file name', () async {
       const String fileName = "gb-features.txt";
       final String filePath = await manager.getTargetFile(fileName);
