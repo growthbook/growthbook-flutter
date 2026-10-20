@@ -65,6 +65,7 @@ class FeatureDataSource {
       attributes: params?.attributes,
       forcedFeatures: params?.forcedFeatures,
       forcedVariations: params?.forcedVariations,
+      url: params?.url,
     ).toJson();
 
     await client.consumePostRequest(
