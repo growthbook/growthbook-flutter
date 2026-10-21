@@ -235,5 +235,131 @@ void main() {
       expect(result.value, 'default');
       expect(result.experimentResult, isNull);
     });
+
+    // The reported weights must be the ones the user was actually bucketed
+    // with; the bandit learns from them. These cases mirror the Kotlin SDK.
+    group('reported weights match the assignment', () {
+      GBFeature featureWith(
+              {List<double>? weights, List<List<double>>? ranges}) =>
+          GBFeature(
+            defaultValue: 'default',
+            rules: [
+              GBFeatureRule(
+                id: 'banner-bandit',
+                contextualBanditRef: 'bandit-1',
+                contextualVariations: ['control', 'treatment'],
+                hashAttribute: 'id',
+                coverage: 1.0,
+                weights: weights,
+                ranges: ranges,
+              ),
+            ],
+          );
+
+      Map<String, dynamic> payloadWithLeaf(Map<String, dynamic> leaf) => {
+            'bandit-1': {
+              'banditVersion': 3,
+              'contexts': [
+                {
+                  'condition': {'country': 'CA'},
+                  ...leaf
+                },
+              ],
+            },
+          };
+
+      GBExperimentResult evaluate(
+          {required Map<String, dynamic> contextualBandits,
+          GBFeature? feature}) {
+        final ctx = buildContext(
+          attributes: {'id': 'u1', 'country': 'CA'},
+          contextualBandits: contextualBandits,
+          features: {'banner': feature ?? banditFeature()},
+        );
+        return FeatureEvaluator()
+            .evaluateFeature(ctx, 'banner')
+            .experimentResult!;
+      }
+
+      test('explicit ranges bucket the user and report no bandit metadata', () {
+        // The ranges send everyone to control; the matching leaf would send
+        // everyone to treatment. Ranges win in the bucketer, so the leaf's
+        // weights describe nothing that happened.
+        final exp = evaluate(
+          contextualBandits: banditPayload(),
+          feature: featureWith(ranges: [
+            [0.0, 1.0],
+            [1.0, 1.0],
+          ]),
+        );
+
+        expect(exp.value, 'control');
+        expect(exp.leafId, isNull);
+        expect(exp.variationWeights, isNull);
+        expect(exp.banditVersion, isNull);
+      });
+
+      for (final entry in {
+        'too few weights': [1.0],
+        'weights not summing to 1': [0.6, 0.6],
+        'a negative weight': [1.5, -0.5],
+        'a non-finite weight': [double.nan, 1.0],
+      }.entries) {
+        test('a leaf with ${entry.key} falls back to the bucketed weights', () {
+          final exp = evaluate(
+            contextualBandits:
+                payloadWithLeaf({'leafId': 1, 'weights': entry.value}),
+          );
+
+          expect(exp.leafId, kContextualBanditFallbackLeafId);
+          expect(exp.variationWeights, [0.5, 0.5]);
+        });
+      }
+
+      test('a leaf without a leafId falls back', () {
+        final exp = evaluate(
+          contextualBandits: payloadWithLeaf({
+            'weights': [0.0, 1.0]
+          }),
+        );
+
+        expect(exp.leafId, kContextualBanditFallbackLeafId);
+        expect(exp.variationWeights, [0.5, 0.5]);
+      });
+
+      test(
+          'the fallback reports equal weights when the rule weights are invalid',
+          () {
+        // No leaf matches FR; the rule's own weights would be replaced by the
+        // bucketer, so equal weights are what actually applied.
+        final ctx = buildContext(
+          attributes: {'id': 'u1', 'country': 'FR'},
+          contextualBandits: banditPayload(),
+          features: {
+            'banner': featureWith(weights: [0.7, 0.7])
+          },
+        );
+        final exp =
+            FeatureEvaluator().evaluateFeature(ctx, 'banner').experimentResult!;
+
+        expect(exp.leafId, kContextualBanditFallbackLeafId);
+        expect(exp.variationWeights, [0.5, 0.5]);
+      });
+
+      test('the fallback keeps valid rule weights', () {
+        final ctx = buildContext(
+          attributes: {'id': 'u1', 'country': 'FR'},
+          contextualBandits: banditPayload(),
+          features: {
+            'banner': featureWith(weights: [0.2, 0.8])
+          },
+        );
+        final exp =
+            FeatureEvaluator().evaluateFeature(ctx, 'banner').experimentResult!;
+
+        expect(exp.leafId, kContextualBanditFallbackLeafId);
+        expect(exp.variationWeights, [0.2, 0.8]);
+      });
+    });
   });
 }

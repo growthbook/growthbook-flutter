@@ -317,6 +317,15 @@ class FeatureEvaluator {
       return;
     }
 
+    // Explicit ranges take precedence over weights in the bucketer, so no
+    // leaf's weights can describe this assignment: bucket on the ranges and
+    // report no bandit metadata, as the Kotlin and Python SDKs do.
+    if (experiment.ranges != null) {
+      logger.d('Contextual bandit rule has explicit ranges, bucketing by '
+          'ranges without bandit metadata: $contextualBanditRef');
+      return;
+    }
+
     ContextualBanditContext? leaf;
     final contexts = definition.contexts;
     if (contexts != null && contexts.isNotEmpty) {
@@ -329,24 +338,49 @@ class FeatureEvaluator {
       }
     }
 
-    if (leaf != null) {
-      experiment.weights = leaf.weights;
+    final variationCount = experiment.variations.length;
+    final leafId = leaf?.leafId;
+    final leafWeights = leaf?.weights;
+    if (leafId != null &&
+        leafWeights != null &&
+        _isValidWeightVector(leafWeights, variationCount)) {
+      experiment.weights = leafWeights;
       experiment.contextualBandit = ContextualBandit(
-        leafId: leaf.leafId,
-        variationWeights: leaf.weights,
+        leafId: leafId,
+        variationWeights: leafWeights,
         banditVersion: definition.banditVersion,
       );
       return;
     }
 
-    final variationCount = experiment.variations.length;
+    // No leaf matched, or the matched one is malformed (no leafId, or weights
+    // the bucketer would replace). Both fall back to the weights the bucketer
+    // will actually use, so the reported weights never disagree with the
+    // assignment.
+    if (leaf != null) {
+      logger.d('Contextual bandit matched a malformed leaf, using fallback '
+          'weights: $contextualBanditRef');
+    }
+    final ruleWeights = experiment.weights;
     final fallbackWeights =
-        experiment.weights ?? GBUtils.getEqualWeights(variationCount);
+        ruleWeights != null && _isValidWeightVector(ruleWeights, variationCount)
+            ? ruleWeights
+            : GBUtils.getEqualWeights(variationCount);
     experiment.contextualBandit = ContextualBandit(
       leafId: kContextualBanditFallbackLeafId,
       variationWeights: fallbackWeights,
       banditVersion: definition.banditVersion,
     );
+  }
+
+  /// Whether the bucketer would use [weights] as given: [GBUtils.getBucketRanges]
+  /// replaces a wrong-length vector or one whose sum is outside [0.99, 1.01]
+  /// with equal weights. Negative and non-finite weights are rejected too.
+  bool _isValidWeightVector(List<double> weights, int variationCount) {
+    if (weights.length != variationCount) return false;
+    if (weights.any((w) => !w.isFinite || w < 0)) return false;
+    final sum = weights.fold<double>(0, (total, w) => total + w);
+    return sum >= 0.99 && sum <= 1.01;
   }
 
   ContextualBanditContext? _selectContextualBanditLeaf(
