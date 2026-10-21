@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_evaluator.dart';
 import 'package:growthbook_sdk_flutter/src/Model/context.dart';
@@ -752,6 +753,75 @@ class GBUtils {
     );
 
     return evalContext;
+  }
+
+  /// String conversion matching JavaScript's `String(value)`.
+  static String jsString(dynamic value) {
+    if (value == null) return 'null';
+    if (value is num) return _jsNumberString(value);
+    if (value is List) {
+      return value.map((e) => e == null ? '' : jsString(e)).join(',');
+    }
+    if (value is Map) return '[object Object]';
+    return value.toString();
+  }
+
+  /// Number coercion matching JavaScript's `Number(value)`.
+  static num jsNumber(dynamic value) {
+    if (value == null) return 0;
+    if (value is num) return value;
+    if (value is bool) return value ? 1 : 0;
+    if (value is String) return _jsParseNumber(value);
+    if (value is List) return _jsParseNumber(jsString(value));
+    return double.nan;
+  }
+
+  /// Truthiness matching JavaScript's `!!value`.
+  static bool jsTruthy(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value != 0 && !value.isNaN;
+    if (value is String) return value.isNotEmpty;
+    return true;
+  }
+
+  /// Serialization matching JavaScript's `JSON.stringify(value)`.
+  static String jsJsonStringify(dynamic value) {
+    if (value == null) return 'null';
+    if (value is num) return value.isFinite ? _jsNumberString(value) : 'null';
+    if (value is List) return '[${value.map(jsJsonStringify).join(',')}]';
+    if (value is Map) {
+      final entries = value.entries.map(
+          (e) => '${jsonEncode(e.key.toString())}:${jsJsonStringify(e.value)}');
+      return '{${entries.join(',')}}';
+    }
+    return jsonEncode(value);
+  }
+
+  static String _jsNumberString(num value) {
+    if (value == 0) return '0';
+    final str = value.toString();
+    return str.endsWith('.0') ? str.substring(0, str.length - 2) : str;
+  }
+
+  static num _jsParseNumber(String input) {
+    final str = input.trim();
+    if (str.isEmpty) return 0;
+    final radixMatch = RegExp(r'^0([xXoObB])([0-9a-zA-Z]+)$').firstMatch(str);
+    if (radixMatch != null) {
+      final radix = const {'x': 16, 'o': 8, 'b': 2}[
+          radixMatch.group(1)!.toLowerCase()]!;
+      return BigInt.tryParse(radixMatch.group(2)!, radix: radix)?.toDouble() ??
+          double.nan;
+    }
+    final decimalMatch =
+        RegExp(r'^([+-]?)(Infinity|(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?)$')
+            .firstMatch(str);
+    if (decimalMatch == null) return double.nan;
+    final magnitude = decimalMatch.group(2) == 'Infinity'
+        ? double.infinity
+        : double.parse(decimalMatch.group(2)!);
+    return decimalMatch.group(1) == '-' ? -magnitude : magnitude;
   }
 }
 

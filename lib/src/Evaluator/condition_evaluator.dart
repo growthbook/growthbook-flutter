@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Both experiments and features can define targeting conditions using a syntax modeled after MongoDB queries.
@@ -194,55 +193,42 @@ class GBConditionEvaluator {
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
-    // Case-insensitive equality short-circuit for strings.
-    if (inSensitive && conditionValue is String && attributeValue is String) {
-      return conditionValue.toLowerCase() == attributeValue.toLowerCase();
+    // Plain equality uses JavaScript coercion rules, matching the JS SDK.
+    // A missing attribute is null here, as in the JS SDK.
+    if (conditionValue is String) {
+      if (inSensitive) {
+        return GBUtils.jsString(attributeValue).toLowerCase() ==
+            conditionValue.toLowerCase();
+      }
+      return GBUtils.jsString(attributeValue) == conditionValue;
     }
-    // If conditionValue is a string, number, boolean, return true if it's
-    // "equal" to attributeValue and false if not.
-    if ((conditionValue as Object?).isPrimitive &&
-        (attributeValue as Object?).isPrimitive) {
-      return conditionValue == attributeValue;
+    if (conditionValue is num) {
+      return GBUtils.jsNumber(attributeValue) == conditionValue;
+    }
+    if (conditionValue is bool) {
+      return attributeValue != null &&
+          GBUtils.jsTruthy(attributeValue) == conditionValue;
+    }
+    if (conditionValue == null) {
+      return attributeValue == null;
     }
 
-    // Evaluate to false if attributeValue is null.
-    if (conditionValue.isPrimitive && attributeValue == null) {
-      return false;
+    // Arrays and non-operator objects compare by their JSON serialization.
+    if (conditionValue is List ||
+        (conditionValue is Map && !isOperatorObject(conditionValue))) {
+      return GBUtils.jsJsonStringify(attributeValue) ==
+          GBUtils.jsJsonStringify(conditionValue);
     }
 
-    // If conditionValue is array, return true if it's "equal" - "equal" should
-    // do a deep comparison for arrays.
-    if (conditionValue is List) {
-      if (attributeValue is List) {
-        if (conditionValue.length == attributeValue.length) {
-          return listEquals(conditionValue, attributeValue);
-        } else {
+    // If conditionValue is an operator object, loop over each key/value pair:
+    if (conditionValue is Map) {
+      for (var key in conditionValue.keys) {
+        // If evalOperatorCondition(key, attributeValue, value)
+        // is false, return false
+        if (!evalOperatorCondition(
+            key, attributeValue, conditionValue[key], savedGroups)) {
           return false;
         }
-      } else {
-        return false;
-      }
-    }
-
-    // If conditionValue is an object, loop over each key/value pair:
-    if (conditionValue is Map) {
-      if (isOperatorObject(conditionValue)) {
-        for (var key in conditionValue.keys) {
-          // If evalOperatorCondition(key, attributeValue, value)
-          // is false, return false
-          if (!evalOperatorCondition(
-              key, attributeValue, conditionValue[key], savedGroups)) {
-            return false;
-          }
-        }
-      } else if (attributeValue != null) {
-        if (attributeValue is Map) {
-          return mapEquals(conditionValue, attributeValue);
-        } else {
-          return attributeValue == conditionValue;
-        }
-      } else {
-        return false;
       }
     }
 
