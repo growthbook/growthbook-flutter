@@ -809,8 +809,8 @@ class GBUtils {
     if (str.isEmpty) return 0;
     final radixMatch = RegExp(r'^0([xXoObB])([0-9a-zA-Z]+)$').firstMatch(str);
     if (radixMatch != null) {
-      final radix = const {'x': 16, 'o': 8, 'b': 2}[
-          radixMatch.group(1)!.toLowerCase()]!;
+      final radix =
+          const {'x': 16, 'o': 8, 'b': 2}[radixMatch.group(1)!.toLowerCase()]!;
       return BigInt.tryParse(radixMatch.group(2)!, radix: radix)?.toDouble() ??
           double.nan;
     }

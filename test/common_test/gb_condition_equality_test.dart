@@ -81,19 +81,25 @@ void main() {
     expectCase(
       'string condition vs array attribute',
       'a,b',
-      <String, dynamic>{'a': ['a', 'b']},
+      <String, dynamic>{
+        'a': ['a', 'b']
+      },
       true,
     );
     expectCase(
       'string condition vs single-element array',
       'a',
-      <String, dynamic>{'a': ['a']},
+      <String, dynamic>{
+        'a': ['a']
+      },
       true,
     );
     expectCase(
       'string condition vs object attribute',
       '[object Object]',
-      <String, dynamic>{'a': <String, dynamic>{'x': 1}},
+      <String, dynamic>{
+        'a': <String, dynamic>{'x': 1}
+      },
       true,
     );
     expectCase(
@@ -195,13 +201,17 @@ void main() {
     expectCase(
       'number condition vs single-element array',
       5,
-      <String, dynamic>{'a': [5]},
+      <String, dynamic>{
+        'a': [5]
+      },
       true,
     );
     expectCase(
       'number condition vs two-element array',
       5,
-      <String, dynamic>{'a': [5, 6]},
+      <String, dynamic>{
+        'a': [5, 6]
+      },
       false,
     );
     expectCase(
@@ -315,19 +325,25 @@ void main() {
     expectCase(
       'array condition vs equal array',
       [1, 2],
-      <String, dynamic>{'a': [1, 2]},
+      <String, dynamic>{
+        'a': [1, 2]
+      },
       true,
     );
     expectCase(
       'array condition vs float array',
       [1, 2],
-      <String, dynamic>{'a': [1.0, 2.0]},
+      <String, dynamic>{
+        'a': [1.0, 2.0]
+      },
       true,
     );
     expectCase(
       'array condition vs reordered array',
       [1, 2],
-      <String, dynamic>{'a': [2, 1]},
+      <String, dynamic>{
+        'a': [2, 1]
+      },
       false,
     );
     expectCase(
@@ -338,32 +354,60 @@ void main() {
     );
     expectCase(
       'array condition vs nested array',
-      [[1], <String, dynamic>{'x': 'y'}],
-      <String, dynamic>{'a': [[1], <String, dynamic>{'x': 'y'}]},
+      [
+        [1],
+        <String, dynamic>{'x': 'y'}
+      ],
+      <String, dynamic>{
+        'a': [
+          [1],
+          <String, dynamic>{'x': 'y'}
+        ]
+      },
       true,
     );
     expectCase(
       'object condition vs equal object',
       <String, dynamic>{'x': 1, 'y': 2},
-      <String, dynamic>{'a': <String, dynamic>{'x': 1, 'y': 2}},
+      <String, dynamic>{
+        'a': <String, dynamic>{'x': 1, 'y': 2}
+      },
       true,
     );
     expectCase(
       'object condition vs reordered keys',
       <String, dynamic>{'x': 1, 'y': 2},
-      <String, dynamic>{'a': <String, dynamic>{'y': 2, 'x': 1}},
+      <String, dynamic>{
+        'a': <String, dynamic>{'y': 2, 'x': 1}
+      },
       false,
     );
     expectCase(
       'object condition vs nested object',
-      <String, dynamic>{'x': <String, dynamic>{'y': [1, 'a']}},
-      <String, dynamic>{'a': <String, dynamic>{'x': <String, dynamic>{'y': [1, 'a']}}},
+      <String, dynamic>{
+        'x': <String, dynamic>{
+          'y': [1, 'a']
+        }
+      },
+      <String, dynamic>{
+        'a': <String, dynamic>{
+          'x': <String, dynamic>{
+            'y': [1, 'a']
+          }
+        }
+      },
       true,
     );
     expectCase(
       'object condition vs nested float',
-      <String, dynamic>{'x': <String, dynamic>{'y': 1}},
-      <String, dynamic>{'a': {'x': {'y': 1.0}}},
+      <String, dynamic>{
+        'x': <String, dynamic>{'y': 1}
+      },
+      <String, dynamic>{
+        'a': {
+          'x': {'y': 1.0}
+        }
+      },
       true,
     );
     expectCase(
@@ -387,19 +431,29 @@ void main() {
     expectCase(
       '\$size with string condition',
       <String, dynamic>{'\$size': '2'},
-      <String, dynamic>{'a': [1, 2]},
+      <String, dynamic>{
+        'a': [1, 2]
+      },
       true,
     );
     expectCase(
       '\$all with number condition vs numeric strings',
-      <String, dynamic>{'\$all': [1]},
-      <String, dynamic>{'a': ['1', '2']},
+      <String, dynamic>{
+        '\$all': [1]
+      },
+      <String, dynamic>{
+        'a': ['1', '2']
+      },
       true,
     );
     expectCase(
       '\$alli with string condition vs number element',
-      <String, dynamic>{'\$alli': ['ABC']},
-      <String, dynamic>{'a': ['abc', 2]},
+      <String, dynamic>{
+        '\$alli': ['ABC']
+      },
+      <String, dynamic>{
+        'a': ['abc', 2]
+      },
       true,
     );
   });
