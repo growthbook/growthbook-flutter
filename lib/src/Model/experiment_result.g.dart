@@ -20,6 +20,11 @@ GBExperimentResult _$GBExperimentResultFromJson(Map<String, dynamic> json) =>
       variationID: (json['variationID'] as num?)?.toInt(),
       name: json['name'] as String?,
       passthrough: json['passthrough'] as bool?,
+      leafId: (json['leafId'] as num?)?.toInt(),
+      variationWeights: (json['variationWeights'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList(),
+      banditVersion: (json['banditVersion'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$GBExperimentResultToJson(GBExperimentResult instance) =>
@@ -36,4 +41,7 @@ Map<String, dynamic> _$GBExperimentResultToJson(GBExperimentResult instance) =>
       'variationID': instance.variationID,
       'name': instance.name,
       'passthrough': instance.passthrough,
+      'leafId': instance.leafId,
+      'variationWeights': instance.variationWeights,
+      'banditVersion': instance.banditVersion,
     };

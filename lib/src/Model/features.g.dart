@@ -58,6 +58,8 @@ GBFeatureRule _$GBFeatureRuleFromJson(Map<String, dynamic> json) =>
       parentConditions: (json['parentConditions'] as List<dynamic>?)
           ?.map((e) => GBParentCondition.fromJson(e as Map<String, dynamic>))
           .toList(),
+      contextualBanditRef: json['contextualBanditRef'] as String?,
+      contextualVariations: json['contextualVariations'] as List<dynamic>?,
     );
 
 Map<String, dynamic> _$GBFeatureRuleToJson(GBFeatureRule instance) =>
@@ -85,6 +87,8 @@ Map<String, dynamic> _$GBFeatureRuleToJson(GBFeatureRule instance) =>
       'name': instance.name,
       'phase': instance.phase,
       'tracks': instance.tracks,
+      'contextualBanditRef': instance.contextualBanditRef,
+      'contextualVariations': instance.contextualVariations,
     };
 
 GBFeatureResult _$GBFeatureResultFromJson(Map<String, dynamic> json) =>

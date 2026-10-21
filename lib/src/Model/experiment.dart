@@ -109,6 +109,13 @@ class GBExperiment {
   /// Custom fields defined in the GrowthBook UI
   Map<String, dynamic>? customFields;
 
+  /// When this experiment was produced from a contextual-bandit rule, the
+  /// resolved leaf and the weights applied for the current user. `null` for
+  /// ordinary experiments. Not serialized — the SDK computes this locally
+  /// during evaluation and clears it if the user is not hash-bucketed in.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  ContextualBandit? contextualBandit;
+
   factory GBExperiment.fromJson(Map<String, dynamic> value) =>
       _$GBExperimentFromJson(value);
 

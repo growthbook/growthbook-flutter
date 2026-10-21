@@ -21,6 +21,9 @@ class GBExperimentResult {
     this.variationID,
     this.name,
     this.passthrough,
+    this.leafId,
+    this.variationWeights,
+    this.banditVersion,
   });
 
   /// The hash value used to assign a variation (double from 0 to 1)
@@ -61,6 +64,20 @@ class GBExperimentResult {
 
   /// Used for holdout groups
   bool? passthrough;
+
+  /// When the assignment came from a contextual-bandit rule, the id of the
+  /// matched leaf (`-1` if no leaf matched and fallback weights were used).
+  /// `null` otherwise.
+  int? leafId;
+
+  /// When the assignment came from a contextual-bandit rule, the weights that
+  /// were applied. `null` otherwise.
+  List<double>? variationWeights;
+
+  /// When the assignment came from a contextual-bandit rule, the version of
+  /// the backend-computed weights that produced this assignment. `null`
+  /// otherwise.
+  int? banditVersion;
 
   factory GBExperimentResult.fromJson(Map<String, dynamic> value) =>
       _$GBExperimentResultFromJson(value);

@@ -14,4 +14,10 @@ class GlobalContext {
   SavedGroupsValues? savedGroups;
 
   List<GBExperiment>? experiments;
+
+  /// Contextual-bandit definitions from the feature payload, keyed by the
+  /// `contextualBanditRef` a feature rule points at. Each value is raw JSON
+  /// that the evaluator deserializes into a [ContextualBanditDefinition] on
+  /// demand.
+  Map<String, dynamic>? contextualBandits;
 }

@@ -121,6 +121,13 @@ class Crypto implements CryptoProtocol {
       String encryptedString, String encryptionKey) {
     return _decryptString(encryptedString, encryptionKey);
   }
+
+  /// Decrypt a JSON blob shipped in `encryptedContextualBandits`. Returns the
+  /// raw definitions map (ref → definition) or `null` on any failure.
+  Map<String, dynamic>? getContextualBanditsFromEncrypted(
+      String encryptedString, String encryptionKey) {
+    return _decryptString(encryptedString, encryptionKey);
+  }
 }
 
 class CryptoError implements Exception {
