@@ -264,6 +264,8 @@ class GBUtils {
   }
 
   static String paddedVersionString(String input) {
+    // An empty version is version 0
+    if (input.isEmpty) input = '0';
     // "v1.2.3-rc.1+build123" -> ["1","2","3","rc","1"]
     List<String> parts =
         input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));

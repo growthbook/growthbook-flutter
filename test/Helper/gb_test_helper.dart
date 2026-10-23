@@ -2,18 +2,20 @@ import 'dart:convert';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
+import '../test_cases/sdk_test_cases.dart';
 import '../test_cases/test_case.dart';
 
 /// Test helper class.
 class GBTestHelper {
   static final testData = jsonDecode(gbTestCases);
+  static final sdkTestData = jsonDecode(gbSdkTestCases);
 
   static List getStickyBucketingData() {
     return testData['stickyBucket'];
   }
 
   static List getEvalConditionData() {
-    return testData['evalCondition'];
+    return [...testData['evalCondition'], ...sdkTestData['evalCondition']];
   }
 
   static List getRunExperimentData() {
