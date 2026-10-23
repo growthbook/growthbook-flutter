@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Both experiments and features can define targeting conditions using a syntax modeled after MongoDB queries.
@@ -194,58 +194,44 @@ class GBConditionEvaluator {
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
-    // Case-insensitive equality short-circuit for strings.
-    if (inSensitive && conditionValue is String && attributeValue is String) {
-      return conditionValue.toLowerCase() == attributeValue.toLowerCase();
-    }
-    // If conditionValue is a string, number, boolean, return true if it's
-    // "equal" to attributeValue and false if not.
-    if ((conditionValue as Object?).isPrimitive &&
-        (attributeValue as Object?).isPrimitive) {
-      return conditionValue == attributeValue;
+    // Simple equality: the attribute must have the same type as the
+    // condition, with no coercion ("10" does not equal 10).
+    if (conditionValue is String ||
+        conditionValue is num ||
+        conditionValue is bool) {
+      if (getType(attributeValue) != getType(conditionValue)) {
+        return false;
+      }
+      if (inSensitive && conditionValue is String) {
+        return (attributeValue as String).toLowerCase() ==
+            conditionValue.toLowerCase();
+      }
+      return attributeValue == conditionValue;
     }
 
-    // Evaluate to false if attributeValue is null.
-    if (conditionValue.isPrimitive && attributeValue == null) {
-      return false;
+    if (conditionValue == null) {
+      return attributeValue == null;
     }
 
-    // If conditionValue is array, return true if it's "equal" - "equal" should
-    // do a deep comparison for arrays.
-    if (conditionValue is List) {
-      if (attributeValue is List) {
-        if (conditionValue.length == attributeValue.length) {
-          return listEquals(conditionValue, attributeValue);
-        } else {
-          return false;
-        }
-      } else {
+    // Arrays and plain objects are compared deeply.
+    if (conditionValue is List || !isOperatorObject(conditionValue)) {
+      if (getType(attributeValue) != getType(conditionValue)) {
+        return false;
+      }
+      try {
+        return jsonEncode(attributeValue) == jsonEncode(conditionValue);
+      } catch (_) {
         return false;
       }
     }
 
-    // If conditionValue is an object, loop over each key/value pair:
-    if (conditionValue is Map) {
-      if (isOperatorObject(conditionValue)) {
-        for (var key in conditionValue.keys) {
-          // If evalOperatorCondition(key, attributeValue, value)
-          // is false, return false
-          if (!evalOperatorCondition(
-              key, attributeValue, conditionValue[key], savedGroups)) {
-            return false;
-          }
-        }
-      } else if (attributeValue != null) {
-        if (attributeValue is Map) {
-          return mapEquals(conditionValue, attributeValue);
-        } else {
-          return attributeValue == conditionValue;
-        }
-      } else {
+    // An operator object: every operator must pass.
+    for (var key in (conditionValue as Map).keys) {
+      if (!evalOperatorCondition(
+          key, attributeValue, conditionValue[key], savedGroups)) {
         return false;
       }
     }
-
     return true;
   }
 
@@ -278,187 +264,191 @@ class GBConditionEvaluator {
   /// This function is just a case statement that handles all the possible operators
   /// There are basic comparison operators in the form attributeValue {op}
   ///  conditionValue.
+  ///
+  /// When the attribute's type differs from the condition's, the positive
+  /// operator fails and its negation matches.
   bool evalOperatorCondition(
     String operator,
     dynamic attributeValue,
     dynamic conditionValue,
     SavedGroupsValues savedGroups,
   ) {
-    /// Evaluate TYPE operator - whether both are of the same type
-    if (operator == "\$type") {
-      return getType(attributeValue).name == conditionValue;
-    }
-
-    /// Evaluate NOT operator - whether condition doesn't contain attribute
-    if (operator == "\$not") {
-      return !isEvalConditionValue(conditionValue, attributeValue, savedGroups);
-    }
-
-    /// Evaluate EXISTS operator - whether condition contains attribute
-    if (operator == "\$exists") {
-      if (conditionValue.toString() == 'false' && attributeValue == null) {
-        return true;
-      } else if (conditionValue.toString() == 'true' &&
-          attributeValue != null) {
-        return true;
-      }
-    }
-
     switch (operator) {
+      case "\$veq":
+      case "\$vne":
+      case "\$vgt":
+      case "\$vgte":
+      case "\$vlt":
+      case "\$vlte":
+        return _evalVersion(operator, attributeValue, conditionValue);
+
+      case "\$eq":
+        return attributeValue == conditionValue;
+      case "\$ne":
+        return attributeValue != conditionValue;
+
+      /// Only two numbers or two strings are ordered; strings compare as text.
+      case '\$lt':
+      case '\$lte':
+      case '\$gt':
+      case '\$gte':
+        if (!_isOrderable(attributeValue, conditionValue)) return false;
+        final comparison =
+            (attributeValue as Comparable).compareTo(conditionValue);
+        switch (operator) {
+          case '\$lt':
+            return comparison < 0;
+          case '\$lte':
+            return comparison <= 0;
+          case '\$gt':
+            return comparison > 0;
+          default:
+            return comparison >= 0;
+        }
+
+      /// Evaluate EXISTS operator - whether condition contains attribute
+      case "\$exists":
+        return _isTruthy(conditionValue)
+            ? attributeValue != null
+            : attributeValue == null;
+
+      /// Evaluate TYPE operator - whether both are of the same type
+      case "\$type":
+        return getType(attributeValue).name == conditionValue;
+
+      /// Evaluate NOT operator - whether condition doesn't contain attribute
+      case "\$not":
+        return !isEvalConditionValue(
+            conditionValue, attributeValue, savedGroups);
+
       case "\$inGroup":
         return isIn(attributeValue, savedGroups[conditionValue] ?? []);
       case "\$notInGroup":
         return !isIn(attributeValue, savedGroups[conditionValue] ?? []);
+
+      case '\$in':
+        if (conditionValue is! List) return false;
+        return isIn(attributeValue, conditionValue);
+
+      /// Evaluate INI operator - case-insensitive version of $in
+      case '\$ini':
+        if (conditionValue is! List) return false;
+        return isIn(attributeValue, conditionValue, inSensitive: true);
+
+      /// Evaluate NIN operator - attributeValue not in the conditionValue
+      /// array.
+      case '\$nin':
+        if (conditionValue is! List) return false;
+        return !isIn(attributeValue, conditionValue);
+
+      /// Evaluate NINI operator - case-insensitive version of $nin
+      case '\$nini':
+        if (conditionValue is! List) return false;
+        return !isIn(attributeValue, conditionValue, inSensitive: true);
+
+      /// Evaluate ALL operator - whether condition contains all attribute
+      case '\$all':
+        if (conditionValue is! List) return false;
+        return _isInAll(attributeValue, conditionValue, savedGroups);
+
+      /// Evaluate ALLI operator - case-insensitive version of $all
+      case '\$alli':
+        if (conditionValue is! List) return false;
+        return _isInAll(attributeValue, conditionValue, savedGroups,
+            inSensitive: true);
+
+      /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
+      case "\$elemMatch":
+        return elemMatch(attributeValue, conditionValue, savedGroups);
+
+      /// Evaluate SIZE operator - whether condition size is same as that
+      /// of attribute
+      case "\$size":
+        if (attributeValue is! List) return false;
+        return isEvalConditionValue(
+            conditionValue, attributeValue.length, savedGroups);
+
+      case '\$regex':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: true,
+          negate: false,
+        );
+
+      case '\$regexi':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: false,
+          negate: false,
+        );
+
+      case '\$notRegex':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: true,
+          negate: true,
+        );
+
+      case '\$notRegexi':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: false,
+          negate: true,
+        );
+
+      default:
+        return false;
     }
+  }
 
-    /// There are three operators where conditionValue is an array
-    if (conditionValue is List) {
-      switch (operator) {
-        case '\$in':
-          return isIn(attributeValue, conditionValue);
-
-        /// Evaluate INI operator - case-insensitive version of $in
-        case '\$ini':
-          return isIn(attributeValue, conditionValue, inSensitive: true);
-
-        /// Evaluate NIN operator - attributeValue not in the conditionValue
-        /// array.
-        case '\$nin':
-          return !isIn(attributeValue, conditionValue);
-
-        /// Evaluate NINI operator - case-insensitive version of $nin
-        case '\$nini':
-          return !isIn(attributeValue, conditionValue, inSensitive: true);
-
-        /// Evaluate ALL operator - whether condition contains all attribute
-        case '\$all':
-          return _isInAll(attributeValue, conditionValue, savedGroups);
-
-        /// Evaluate ALLI operator - case-insensitive version of $all
-        case '\$alli':
-          return _isInAll(attributeValue, conditionValue, savedGroups,
-              inSensitive: true);
-        default:
-          return false;
-      }
-    } else if (attributeValue is List) {
-      switch (operator) {
-        /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
-        case "\$elemMatch":
-          return elemMatch(attributeValue, conditionValue, savedGroups);
-
-        /// Evaluate SIE operator - whether condition size is same as that
-        /// of attribute
-        case "\$size":
-          return isEvalConditionValue(
-              conditionValue, attributeValue.length, savedGroups);
-
-        default:
-      }
-    } else if ((attributeValue as Object?).isPrimitive &&
-        (conditionValue as Object?).isPrimitive) {
-      final targetPrimitiveValue = double.tryParse(conditionValue.toString());
-      final sourcePrimitiveValue = double.tryParse(attributeValue.toString());
-      final paddedVersionTarget =
-          GBUtils.paddedVersionString(conditionValue.toString());
-      final paddedVersionSource =
-          GBUtils.paddedVersionString(attributeValue?.toString() ?? '0.0');
-
-      /// If condition is bool.
-      bool evaluatedValue = false;
-      switch (operator) {
-        case "\$eq":
-          evaluatedValue = conditionValue == attributeValue;
-          break;
-        case "\$ne":
-          evaluatedValue = conditionValue != attributeValue;
-          break;
-        case "\$veq":
-          return paddedVersionSource == paddedVersionTarget;
-        case "\$vne":
-          return paddedVersionSource != paddedVersionTarget;
-        case "\$vgt":
-          return paddedVersionSource > paddedVersionTarget;
-        case "\$vgte":
-          return paddedVersionSource >= paddedVersionTarget;
-        case "\$vlt":
-          return paddedVersionSource < paddedVersionTarget;
-        case "\$vlte":
-          return paddedVersionSource <= paddedVersionTarget;
-
-        /// Evaluate LT operator - whether attribute less than to condition
-        case '\$lt':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) < 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) < (targetPrimitiveValue ?? 0);
-          break;
-
-        /// Evaluate LTE operator - whether attribute less than or equal to condition
-        case '\$lte':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) <= 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) <= (targetPrimitiveValue ?? 0);
-          break;
-
-        /// Evaluate GT operator - whether attribute greater than to condition
-        case '\$gt':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) > 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) > (targetPrimitiveValue ?? 0);
-          break;
-
-        case '\$gte':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) >= 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) >= (targetPrimitiveValue ?? 0);
-          break;
-
-        case '\$regex':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: true,
-            negate: false,
-          );
-
-        case '\$regexi':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: false,
-            negate: false,
-          );
-
-        case '\$notRegex':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: true,
-            negate: true,
-          );
-
-        case '\$notRegexi':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: false,
-            negate: true,
-          );
-
-        default:
-          conditionValue = false;
-      }
-      return evaluatedValue;
+  /// Version operators need both sides to be strings, or both numbers.
+  /// `$vne` is the opposite of `$veq`, so it matches on a type mismatch.
+  bool _evalVersion(
+      String operator, dynamic attributeValue, dynamic conditionValue) {
+    if (!_isOrderable(attributeValue, conditionValue)) {
+      return operator == "\$vne";
     }
-    return false;
+    final source = GBUtils.paddedVersionString(_versionInput(attributeValue));
+    final target = GBUtils.paddedVersionString(_versionInput(conditionValue));
+    switch (operator) {
+      case "\$veq":
+        return source == target;
+      case "\$vne":
+        return source != target;
+      case "\$vgt":
+        return source > target;
+      case "\$vgte":
+        return source >= target;
+      case "\$vlt":
+        return source < target;
+      default:
+        return source <= target;
+    }
+  }
+
+  /// Formats a number the way JavaScript does (`2.0` -> `"2"`).
+  String _versionInput(dynamic value) {
+    if (value is double && value.isFinite && value == value.truncate()) {
+      return value.toInt().toString();
+    }
+    return value.toString();
+  }
+
+  bool _isOrderable(dynamic attributeValue, dynamic conditionValue) {
+    return (attributeValue is num && conditionValue is num) ||
+        (attributeValue is String && conditionValue is String);
+  }
+
+  bool _isTruthy(dynamic value) {
+    return value != null &&
+        value != false &&
+        value != 0 &&
+        value != '' &&
+        !(value is double && value.isNaN);
   }
 
   bool isIn(dynamic actualValue, List<dynamic> conditionValue,
@@ -510,11 +500,12 @@ class GBConditionEvaluator {
     required bool isCaseSensitive,
     required bool negate,
   }) {
-    if (conditionValue == null || attributeValue == null) return false;
+    if (attributeValue is! String) return negate;
+    if (conditionValue == null) return false;
     try {
       final regex =
           RegExp(conditionValue.toString(), caseSensitive: isCaseSensitive);
-      final matches = regex.hasMatch(attributeValue.toString());
+      final matches = regex.hasMatch(attributeValue);
       return negate != matches;
     } catch (_) {
       return false;

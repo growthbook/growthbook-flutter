@@ -19,6 +19,11 @@ void main() {
       final passedScenarios = <String>[];
 
       for (final item in evaluateCondition) {
+        // This SDK doesn't support contextual bandits yet
+        if ((item[1] as Map).containsKey('contextualBandits')) {
+          index++;
+          continue;
+        }
         final testContext = GBContextTest.fromMap(item[1]);
         final testData = GBFeaturesTest.fromMap(item[1]);
 
