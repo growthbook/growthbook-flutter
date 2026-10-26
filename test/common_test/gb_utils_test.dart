@@ -266,13 +266,17 @@ bool isCompareBucket(
     GBBucketRange source = pairExpectedResults[i];
     GBBucketRange target = calculatedResults[i];
 
-    if (source[0] != target[0] || source[1] != target[1]) {
+    if (roundForCompare(source[0]) != roundForCompare(target[0]) ||
+        roundForCompare(source[1]) != roundForCompare(target[1])) {
       return false;
     }
   }
 
   return true;
 }
+
+// Mirrors the JS SDK spec test: compare ranges at 8 decimals, floored.
+double roundForCompare(double n) => (n * 1e8).floorToDouble() / 1e8;
 
 List<GBBucketRange> getPairedData(List<List<double>> items) {
   List<GBBucketRange> pairExpectedResults = [];
