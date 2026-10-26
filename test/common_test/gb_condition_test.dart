@@ -96,6 +96,13 @@ void main() {
       expect(check({'b': 1, '1': 2}, {'1': 2, 'b': 1}), true);
       // JSON.stringify writes NaN as null
       expect(check([double.nan], [null]), true);
+      // Large numbers compare as JS binary64 values
+      expect(
+          check(jsonDecode('[1000000000000000100.0]'),
+              jsonDecode('[1000000000000000100]')),
+          true);
+      expect(check([1e18], [1000000000000000001]), true);
+      expect(check([1e18], [1000000000000000200]), false);
     });
 
     test('jsNumberToString matches JavaScript', () {
@@ -112,6 +119,14 @@ void main() {
       expect(jsNumberToString(-2.5), '-2.5');
       expect(jsNumberToString(double.nan), 'NaN');
       expect(jsNumberToString(double.negativeInfinity), '-Infinity');
+      // Shortest round-trip digits, not the exact binary value
+      expect(jsNumberToString(1000000000000000100.0), '1000000000000000100');
+      expect(jsNumberToString(1000000000000000128), '1000000000000000100');
+      expect(
+          jsNumberToString(123456789012345680000.0), '123456789012345680000');
+      expect(jsNumberToString(9007199254740993), '9007199254740992');
+      expect(jsNumberToString(-1e15), '-1000000000000000');
+      expect(jsNumberToString(9223372036854775807), '9223372036854776000');
     });
 
     test('Test valid condition obj', () {

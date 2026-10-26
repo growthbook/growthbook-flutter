@@ -2,17 +2,17 @@ import 'dart:convert';
 
 /// Formats [value] the way JavaScript's `String(number)` does.
 ///
-/// Dart already matches JavaScript for most doubles, but writes integral
-/// doubles with a trailing `.0` (`2.0`) and keeps the sign of `-0.0`.
-/// JavaScript writes `2` and `0`.
+/// JavaScript numbers are doubles, so [value] is converted to a double first
+/// (large integers round as they would in JavaScript). Dart's
+/// `double.toString` already writes the shortest round-trip digits with the
+/// same fixed/exponent thresholds as JavaScript, but adds a trailing `.0` to
+/// integral values (`2.0`) and keeps the sign of `-0.0`. JavaScript writes
+/// `2` and `0`.
 String jsNumberToString(num value) {
-  if (value is double &&
-      value.isFinite &&
-      value == value.truncateToDouble() &&
-      value.abs() < 1e21) {
-    return BigInt.from(value).toString();
-  }
-  return value.toString();
+  final number = value.toDouble();
+  if (number == 0) return '0';
+  final text = number.toString();
+  return text.endsWith('.0') ? text.substring(0, text.length - 2) : text;
 }
 
 /// Encodes [value] the way JavaScript's `JSON.stringify` does, so two values
