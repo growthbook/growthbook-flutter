@@ -67,7 +67,7 @@ void main() {
       }
       logger.i(
           'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
-      expect(failedScenarios.length, 0);
+      expect(failedScenarios, isEmpty);
     });
 
     test('Whether featureUsageCallback is called', () async {

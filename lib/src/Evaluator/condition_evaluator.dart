@@ -1,5 +1,13 @@
 import 'dart:convert';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
+
+/// Keys a condition can have that aren't attributes, besides `$not`, which is
+/// also an operator on a value.
+const _conditionOperators = {'\$or', '\$nor', '\$and', '\$savedGroup'};
+
+/// Negates a result, keeping "unsupported" (`null`) as it is.
+bool? _not(bool? result) => result == null ? null : !result;
 
 /// Both experiments and features can define targeting conditions using a syntax modeled after MongoDB queries.
 /// These conditions can have arbitrary nesting levels and evaluating them requires recursion.
@@ -40,94 +48,116 @@ class GBConditionEvaluator {
   /// This is the main function used to evaluate a condition. It loops through the condition key/value pairs and checks each entry:
   /// - attributes : User Attributes
   /// - condition : to be evaluated
+  ///
+  /// A condition that depends on an operator or saved group type this SDK
+  /// doesn't support fails, even under `$not` or `$nor`. A malformed condition
+  /// fails instead of throwing.
   bool isEvalCondition(
     Map<String, dynamic> attributes,
     dynamic conditionObj,
     // Must be included for `condition` to correctly evaluate group Operators
     SavedGroupsValues? savedGroups,
   ) {
-    savedGroups ??= {};
+    // No condition at all passes
+    if (conditionObj == null) return true;
+    try {
+      return _evalCondition(attributes, conditionObj, savedGroups ?? {}) ==
+          true;
+    } catch (e) {
+      logger.w('Condition evaluation failed: $e');
+      return false;
+    }
+  }
+
+  /// Evaluates a condition. Returns `null` when the result depends on an
+  /// operator or saved group type this SDK doesn't support.
+  bool? _evalCondition(
+    dynamic attributes,
+    dynamic conditionObj,
+    SavedGroupsValues savedGroups,
+  ) {
     if (conditionObj is List) {
       return false;
     }
-    if (conditionObj is Map<String, dynamic>) {
+    if (conditionObj == null) {
+      throw const FormatException('Malformed condition: null');
+    }
+    bool? result = true;
+    if (conditionObj is Map) {
       for (var key in conditionObj.keys) {
         var value = conditionObj[key];
+        bool? r;
         switch (key) {
           case "\$or":
-            if (!isEvalOr(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _evalOr(attributes, value, savedGroups);
             break;
           case "\$nor":
-            if (isEvalOr(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _not(_evalOr(attributes, value, savedGroups));
             break;
           case "\$and":
-            if (!isEvalAnd(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _evalAnd(attributes, value, savedGroups);
             break;
           case "\$not":
-            if (isEvalCondition(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _not(_evalCondition(attributes, value, savedGroups));
+            break;
+          case "\$savedGroup":
+            // Saved group references aren't supported by this SDK yet
+            r = null;
             break;
           default:
-            var element = getPath(attributes, key);
-            if (!isEvalConditionValue(value, element, savedGroups)) {
-              return false;
-            }
+            r = _evalConditionValue(
+                value, getPath(attributes, key), savedGroups);
         }
+        // One failing entry decides it, wherever an unsupported one is
+        if (r == false) return false;
+        if (r == null) result = null;
       }
     }
-    // If none of the entries failed their checks, `evalCondition` returns true
-    return true;
+    return result;
   }
 
   /// Evaluate OR conditions against given attributes
   bool isEvalOr(Map<String, dynamic> attributes, List conditionObj,
       SavedGroupsValues savedGroups) {
+    return _evalOr(attributes, conditionObj, savedGroups) == true;
+  }
+
+  bool? _evalOr(
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
     // If conditionObj is empty, return true
-    if (conditionObj.isEmpty) {
-      return true;
-    } else {
-      // Loop through the conditionObjects
-      for (var item in conditionObj) {
-        // If evalCondition(attributes, conditionObj[i]) is true, break out of
-        // the loop and return true
-        if (isEvalCondition(attributes, item, savedGroups)) {
-          return true;
-        }
-      }
+    if (conditionObj.isEmpty) return true;
+    bool? result = false;
+    for (var item in conditionObj) {
+      final r = _evalCondition(attributes, item, savedGroups);
+      if (r == true) return true;
+      if (r == null) result = null;
     }
-    // Return false
-    return false;
+    return result;
   }
 
   /// Evaluate AND conditions against given attributes
   bool isEvalAnd(
       dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
-    // Loop through the conditionObjects
+    return _evalAnd(attributes, conditionObj, savedGroups) == true;
+  }
 
-    // Loop through the conditionObjects
+  bool? _evalAnd(
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
+    bool? result = true;
     for (var item in conditionObj) {
-      // If evalCondition(attributes, conditionObj[i]) is true, break out of
-      // the loop and return false
-      if (!isEvalCondition(attributes, item, savedGroups)) {
-        return false;
-      }
+      final r = _evalCondition(attributes, item, savedGroups);
+      if (r == false) return false;
+      if (r == null) result = null;
     }
-    // Return true
-    return true;
+    return result;
   }
 
   /// This accepts a parsed JSON object as input and returns true if every key
-  /// in the object starts with $
+  /// in the object starts with $. An empty object has no operators, so it is
+  /// an operator object that always passes.
   bool isOperatorObject(dynamic obj) {
-    if (obj is Map<String, dynamic> && obj.isNotEmpty) {
-      return obj.keys.every((key) => key.startsWith('\$'));
+    if (obj is Map) {
+      return obj.keys.every((key) => key.toString().startsWith('\$'));
     }
     return false;
   }
@@ -194,6 +224,17 @@ class GBConditionEvaluator {
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
+    return _evalConditionValue(conditionValue, attributeValue, savedGroups,
+            inSensitive: inSensitive) ==
+        true;
+  }
+
+  bool? _evalConditionValue(
+    dynamic conditionValue,
+    dynamic attributeValue,
+    SavedGroupsValues savedGroups, {
+    bool inSensitive = false,
+  }) {
     // Simple equality: the attribute must have the same type as the
     // condition, with no coercion ("10" does not equal 10).
     if (conditionValue is String ||
@@ -226,39 +267,42 @@ class GBConditionEvaluator {
     }
 
     // An operator object: every operator must pass.
+    bool? result = true;
     for (var key in (conditionValue as Map).keys) {
-      if (!evalOperatorCondition(
-          key, attributeValue, conditionValue[key], savedGroups)) {
-        return false;
-      }
+      final r = _evalOperator(
+          key.toString(), attributeValue, conditionValue[key], savedGroups);
+      if (r == false) return false;
+      if (r == null) result = null;
     }
-    return true;
+    return result;
   }
 
   /// This checks if attributeValue is an array, and if so at least one of the
   /// array items must match the condition
   bool elemMatch(dynamic attributeValue, dynamic condition,
       SavedGroupsValues savedGroups) {
-    // Loop through items in attributeValue
-    if (attributeValue is List) {
-      for (final item in attributeValue) {
-        // If isOperatorObject(condition)
-        if (isOperatorObject(condition)) {
-          // If evalConditionValue(condition, item), break out of loop and
-          //return true
-          if (isEvalConditionValue(condition, item, savedGroups)) {
-            return true;
-          }
-        }
-        // Else if evalCondition(item, condition), break out of loop and
-        //return true
-        else if (isEvalCondition(item, condition, savedGroups)) {
-          return true;
-        }
-      }
-    }
+    return _elemMatch(attributeValue, condition, savedGroups) == true;
+  }
+
+  bool? _elemMatch(dynamic attributeValue, dynamic condition,
+      SavedGroupsValues savedGroups) {
     // If attributeValue is not an array, return false
-    return false;
+    if (attributeValue is! List) return false;
+    // Operators test each element itself. A condition, including one that only
+    // uses $or, $and, $nor, or $savedGroup, tests each element's fields.
+    final testsItself = isOperatorObject(condition) &&
+        !(condition as Map).keys.any(_conditionOperators.contains);
+    bool? result = false;
+    for (final item in attributeValue) {
+      // Only skip null elements; 0, "" and false are still tested
+      if (item == null) continue;
+      final r = testsItself
+          ? _evalConditionValue(condition, item, savedGroups)
+          : _evalCondition(item, condition, savedGroups);
+      if (r == true) return true;
+      if (r == null) result = null;
+    }
+    return result;
   }
 
   /// This function is just a case statement that handles all the possible operators
@@ -268,6 +312,18 @@ class GBConditionEvaluator {
   /// When the attribute's type differs from the condition's, the positive
   /// operator fails and its negation matches.
   bool evalOperatorCondition(
+    String operator,
+    dynamic attributeValue,
+    dynamic conditionValue,
+    SavedGroupsValues savedGroups,
+  ) {
+    return _evalOperator(
+            operator, attributeValue, conditionValue, savedGroups) ==
+        true;
+  }
+
+  /// Returns `null` for an operator this SDK doesn't support.
+  bool? _evalOperator(
     String operator,
     dynamic attributeValue,
     dynamic conditionValue,
@@ -318,13 +374,26 @@ class GBConditionEvaluator {
 
       /// Evaluate NOT operator - whether condition doesn't contain attribute
       case "\$not":
-        return !isEvalConditionValue(
-            conditionValue, attributeValue, savedGroups);
+        return _not(
+            _evalConditionValue(conditionValue, attributeValue, savedGroups));
 
       case "\$inGroup":
-        return isIn(attributeValue, savedGroups[conditionValue] ?? []);
       case "\$notInGroup":
-        return !isIn(attributeValue, savedGroups[conditionValue] ?? []);
+        final group = savedGroups[conditionValue];
+        // A saved group type added after this SDK was built
+        if (group is Map &&
+            group['type'] != 'list' &&
+            group['type'] != 'condition') {
+          return null;
+        }
+        final values = savedGroups.containsKey(conditionValue)
+            ? _savedGroupValues(group)
+            // An unknown id has always behaved like an empty list
+            : const <dynamic>[];
+        // No values means matching nobody. An empty list would pass everyone.
+        if (values == null) return false;
+        final found = isIn(attributeValue, values);
+        return operator == "\$inGroup" ? found : !found;
 
       case '\$in':
         if (conditionValue is! List) return false;
@@ -359,13 +428,13 @@ class GBConditionEvaluator {
 
       /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
       case "\$elemMatch":
-        return elemMatch(attributeValue, conditionValue, savedGroups);
+        return _elemMatch(attributeValue, conditionValue, savedGroups);
 
       /// Evaluate SIZE operator - whether condition size is same as that
       /// of attribute
       case "\$size":
         if (attributeValue is! List) return false;
-        return isEvalConditionValue(
+        return _evalConditionValue(
             conditionValue, attributeValue.length, savedGroups);
 
       case '\$regex':
@@ -401,8 +470,23 @@ class GBConditionEvaluator {
         );
 
       default:
-        return false;
+        // Keys this SDK knows, but on a condition rather than on a value,
+        // where they never match
+        if (_conditionOperators.contains(operator)) return false;
+        logger.w('Unknown operator: $operator');
+        return null;
     }
+  }
+
+  /// The values of a saved group: a bare list, or a typed `list` entry.
+  /// Returns `null` for a condition group or a malformed entry, so
+  /// `$notInGroup` doesn't pass everyone.
+  List<dynamic>? _savedGroupValues(dynamic group) {
+    if (group is List) return group;
+    if (group is Map && group['type'] == 'list' && group['values'] is List) {
+      return group['values'] as List;
+    }
+    return null;
   }
 
   /// Version operators need both sides to be strings, or both numbers.
@@ -473,25 +557,29 @@ class GBConditionEvaluator {
     );
   }
 
-  bool _isInAll(
+  bool? _isInAll(
     dynamic attributeValue,
     List<dynamic> conditionValue,
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
     if (attributeValue is! List) return false;
+    bool? result = true;
     for (final condition in conditionValue) {
-      var passed = false;
+      bool? passed = false;
       for (final attribute in attributeValue) {
-        if (isEvalConditionValue(condition, attribute, savedGroups,
-            inSensitive: inSensitive)) {
+        final r = _evalConditionValue(condition, attribute, savedGroups,
+            inSensitive: inSensitive);
+        if (r == true) {
           passed = true;
           break;
         }
+        if (r == null) passed = null;
       }
-      if (!passed) return false;
+      if (passed == false) return false;
+      if (passed == null) result = null;
     }
-    return true;
+    return result;
   }
 
   bool _evalRegex({

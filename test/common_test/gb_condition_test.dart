@@ -31,9 +31,24 @@ void main() {
         }
         index++;
       }
-      expect(failedScenarios.length, 0);
+      expect(failedScenarios, isEmpty);
       logger.i(
           'Passed Test ${passedScenarios.length} out of ${evaluateCondition.length}');
+    });
+
+    test('A malformed condition fails instead of throwing', () {
+      final evaluator = GBConditionEvaluator();
+      expect(evaluator.isEvalCondition({}, {'\$or': null}, {}), false);
+      expect(
+          evaluator.isEvalCondition({}, {
+            '\$and': [null]
+          }, {}),
+          false);
+      expect(
+          evaluator.isEvalCondition({}, {
+            '\$not': {'\$or': null}
+          }, {}),
+          false);
     });
 
     test('Test valid condition obj', () {
@@ -41,12 +56,13 @@ void main() {
 
       expect(evaluator.isEvalCondition({}, [], {}), false);
 
-      expect(evaluator.isOperatorObject({}), false);
+      // An empty object has no operators, so it always passes
+      expect(evaluator.isOperatorObject({}), true);
 
       expect(evaluator.getPath('test', 'key'), null);
 
       expect(
-          evaluator.isEvalConditionValue(<String, dynamic>{}, null, {}), false);
+          evaluator.isEvalConditionValue(<String, dynamic>{}, null, {}), true);
 
       expect(evaluator.evalOperatorCondition("\$lte", "abc", "abc", {}), true);
 
