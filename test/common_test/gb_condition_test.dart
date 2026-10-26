@@ -51,6 +51,25 @@ void main() {
           false);
     });
 
+    test('NaN and negative zero compare like JavaScript numbers', () {
+      final evaluator = GBConditionEvaluator();
+      bool check(String op, dynamic attribute, dynamic value) =>
+          evaluator.isEvalCondition({
+            'a': attribute
+          }, {
+            'a': {op: value}
+          }, {});
+
+      for (final op in ['\$gt', '\$gte', '\$lt', '\$lte']) {
+        expect(check(op, double.nan, 1), false, reason: 'NaN $op 1');
+        expect(check(op, 1, double.nan), false, reason: '1 $op NaN');
+      }
+      expect(check('\$lt', -0.0, 0), false);
+      expect(check('\$gt', 0, -0.0), false);
+      expect(check('\$gte', -0.0, 0), true);
+      expect(check('\$lte', 0, -0.0), true);
+    });
+
     test('Test valid condition obj', () {
       final evaluator = GBConditionEvaluator();
 

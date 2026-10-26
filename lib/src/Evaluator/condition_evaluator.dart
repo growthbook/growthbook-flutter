@@ -349,6 +349,20 @@ class GBConditionEvaluator {
       case '\$gt':
       case '\$gte':
         if (!_isOrderable(attributeValue, conditionValue)) return false;
+        // Numbers use Dart's operators: NaN is unordered and -0.0 equals 0,
+        // as in JavaScript. compareTo would order both.
+        if (attributeValue is num && conditionValue is num) {
+          switch (operator) {
+            case '\$lt':
+              return attributeValue < conditionValue;
+            case '\$lte':
+              return attributeValue <= conditionValue;
+            case '\$gt':
+              return attributeValue > conditionValue;
+            default:
+              return attributeValue >= conditionValue;
+          }
+        }
         final comparison =
             (attributeValue as Comparable).compareTo(conditionValue);
         switch (operator) {
