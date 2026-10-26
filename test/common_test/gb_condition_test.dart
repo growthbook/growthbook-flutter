@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/condition_evaluator.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/js_json.dart';
 
 import '../Helper/gb_test_helper.dart';
 
@@ -68,6 +69,49 @@ void main() {
       expect(check('\$gt', 0, -0.0), false);
       expect(check('\$gte', -0.0, 0), true);
       expect(check('\$lte', 0, -0.0), true);
+    });
+
+    test('Integer and double values in arrays and objects are equal', () {
+      final evaluator = GBConditionEvaluator();
+      bool check(dynamic attribute, dynamic condition) =>
+          evaluator.isEvalCondition({'a': attribute}, {'a': condition}, {});
+
+      expect(check([1.0], [1]), true);
+      expect(check([1], [1.0]), true);
+      expect(check({'b': 1.0}, {'b': 1}), true);
+      expect(
+          check([
+            {
+              'b': [2.0, -0.0]
+            }
+          ], [
+            {
+              'b': [2, 0]
+            }
+          ]),
+          true);
+      expect(check([1.5], [1]), false);
+      // Key order still matters, except integer keys sort first as in JS
+      expect(check({'b': 1, 'c': 2}, {'c': 2, 'b': 1}), false);
+      expect(check({'b': 1, '1': 2}, {'1': 2, 'b': 1}), true);
+      // JSON.stringify writes NaN as null
+      expect(check([double.nan], [null]), true);
+    });
+
+    test('jsNumberToString matches JavaScript', () {
+      expect(jsNumberToString(1), '1');
+      expect(jsNumberToString(1.0), '1');
+      expect(jsNumberToString(1.5), '1.5');
+      expect(jsNumberToString(1e21), '1e+21');
+      expect(jsNumberToString(1e-7), '1e-7');
+      expect(jsNumberToString(0.000002), '0.000002');
+      expect(jsNumberToString(123e-20), '1.23e-18');
+      expect(jsNumberToString(1e23), '1e+23');
+      expect(jsNumberToString(-0.0), '0');
+      expect(jsNumberToString(1e20), '100000000000000000000');
+      expect(jsNumberToString(-2.5), '-2.5');
+      expect(jsNumberToString(double.nan), 'NaN');
+      expect(jsNumberToString(double.negativeInfinity), '-Infinity');
     });
 
     test('Test valid condition obj', () {

@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/js_json.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 /// Keys a condition can have that aren't attributes, besides `$not`, which is
@@ -254,13 +254,13 @@ class GBConditionEvaluator {
       return attributeValue == null;
     }
 
-    // Arrays and plain objects are compared deeply.
+    // Arrays and plain objects are compared by their JSON.stringify output.
     if (conditionValue is List || !isOperatorObject(conditionValue)) {
       if (getType(attributeValue) != getType(conditionValue)) {
         return false;
       }
       try {
-        return jsonEncode(attributeValue) == jsonEncode(conditionValue);
+        return jsJsonEncode(attributeValue) == jsJsonEncode(conditionValue);
       } catch (_) {
         return false;
       }
@@ -530,10 +530,7 @@ class GBConditionEvaluator {
 
   /// Formats a number the way JavaScript does (`2.0` -> `"2"`).
   String _versionInput(dynamic value) {
-    if (value is double && value.isFinite && value == value.truncate()) {
-      return value.toInt().toString();
-    }
-    return value.toString();
+    return value is num ? jsNumberToString(value) : value.toString();
   }
 
   bool _isOrderable(dynamic attributeValue, dynamic conditionValue) {
