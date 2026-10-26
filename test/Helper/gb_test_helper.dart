@@ -49,6 +49,10 @@ class GBTestHelper {
   static List getEqualWeightsData() {
     return testData['getEqualWeights'];
   }
+
+  static List getQueryStringOverrideData() {
+    return testData['getQueryStringOverride'];
+  }
 }
 
 class GBFeaturesTest {
