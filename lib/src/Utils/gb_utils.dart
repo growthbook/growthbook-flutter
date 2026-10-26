@@ -257,7 +257,8 @@ class GBUtils {
     if (range != null) {
       return inRange(hash, range);
     } else if (coverage != null) {
-      return hash <= coverage;
+      // Half-open like inRange, so a coverage of k/10000 includes k buckets
+      return hash < coverage;
     } else {
       return true;
     }
