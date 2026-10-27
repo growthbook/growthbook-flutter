@@ -7154,6 +7154,173 @@ const String gbTestCases = r'''
       }
     ],
     [
+      "keeps a condition group referenced through another group under $elemMatch as written",
+      {
+        "payload": {
+          "features": {
+            "f": {
+              "defaultValue": false,
+              "rules": [
+                {
+                  "condition": {
+                    "items": {
+                      "$elemMatch": { "$savedGroup": { "id": "outer" } }
+                    }
+                  },
+                  "force": true
+                }
+              ]
+            }
+          },
+          "savedGroups": {
+            "outer": {
+              "type": "condition",
+              "condition": { "$savedGroup": { "id": "inner" } }
+            },
+            "inner": {
+              "type": "condition",
+              "condition": { "active": true, "plan": "pro" }
+            }
+          }
+        },
+        "attributes": { "active": true }
+      },
+      {
+        "features": {
+          "f": {
+            "defaultValue": false,
+            "rules": [
+              {
+                "condition": {
+                  "items": {
+                    "$elemMatch": { "$savedGroup": { "id": "outer" } }
+                  }
+                },
+                "force": true
+              }
+            ]
+          }
+        },
+        "savedGroups": {
+          "outer": {
+            "type": "condition",
+            "condition": { "$savedGroup": { "id": "inner" } }
+          },
+          "inner": {
+            "type": "condition",
+            "condition": { "active": true, "plan": "pro" }
+          }
+        },
+        "experiments": []
+      }
+    ],
+    [
+      "keeps condition groups on a 3-cycle as written",
+      {
+        "payload": {
+          "features": {
+            "f": {
+              "defaultValue": false,
+              "rules": [
+                { "condition": { "$savedGroup": { "id": "c" } }, "force": true }
+              ]
+            }
+          },
+          "savedGroups": {
+            "a": {
+              "type": "condition",
+              "condition": {
+                "$or": [{ "$savedGroup": { "id": "b" } }, { "x": true }],
+                "y": true
+              }
+            },
+            "b": {
+              "type": "condition",
+              "condition": { "$savedGroup": { "id": "c" } }
+            },
+            "c": {
+              "type": "condition",
+              "condition": { "$not": { "$savedGroup": { "id": "a" } } }
+            }
+          }
+        },
+        "attributes": {}
+      },
+      {
+        "features": {
+          "f": {
+            "defaultValue": false,
+            "rules": [
+              { "condition": { "$savedGroup": { "id": "c" } }, "force": true }
+            ]
+          }
+        },
+        "savedGroups": {
+          "c": {
+            "type": "condition",
+            "condition": { "$not": { "$savedGroup": { "id": "a" } } }
+          },
+          "a": {
+            "type": "condition",
+            "condition": {
+              "$or": [{ "$savedGroup": { "id": "b" } }, { "x": true }],
+              "y": true
+            }
+          },
+          "b": {
+            "type": "condition",
+            "condition": { "$savedGroup": { "id": "c" } }
+          }
+        },
+        "experiments": []
+      }
+    ],
+    [
+      "keeps a condition group that references itself as written",
+      {
+        "payload": {
+          "features": {
+            "f": {
+              "defaultValue": false,
+              "rules": [
+                { "condition": { "$savedGroup": { "id": "a" } }, "force": true }
+              ]
+            }
+          },
+          "savedGroups": {
+            "a": {
+              "type": "condition",
+              "condition": {
+                "$or": [{ "$savedGroup": { "id": "a" } }, { "x": true }],
+                "y": true
+              }
+            }
+          }
+        },
+        "attributes": {}
+      },
+      {
+        "features": {
+          "f": {
+            "defaultValue": false,
+            "rules": [
+              { "condition": { "$savedGroup": { "id": "a" } }, "force": true }
+            ]
+          }
+        },
+        "savedGroups": {
+          "a": {
+            "type": "condition",
+            "condition": {
+              "$or": [{ "$savedGroup": { "id": "a" } }, { "x": true }],
+              "y": true
+            }
+          }
+        },
+        "experiments": []
+      }
+    ],
+    [
       "keeps the forced variation of an auto experiment that never matches, since a sticky bucket skips its condition",
       {
         "payload": {
@@ -7163,6 +7330,7 @@ const String gbTestCases = r'''
               "key": "exp",
               "changeId": "c",
               "variations": ["a", "b"],
+              "meta": [{ "key": "a" }, { "key": "b" }],
               "hashAttribute": "id",
               "condition": { "country": "US" },
               "force": 1
@@ -7178,6 +7346,7 @@ const String gbTestCases = r'''
             "key": "exp",
             "changeId": "c",
             "variations": ["a", "b"],
+            "meta": [{ "key": "a" }, { "key": "b" }],
             "hashAttribute": "id",
             "condition": { "$not": {} },
             "force": 1
