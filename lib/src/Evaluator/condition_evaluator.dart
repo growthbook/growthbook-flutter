@@ -514,8 +514,9 @@ class GBConditionEvaluator {
   ///
   /// [reference] is `{"id": ..., "attributeKey"?: ...}`. Unlike `$inGroup`, the
   /// operator has no attribute of its own, so the entry decides what membership
-  /// means — a `list` entry names the attribute to test, and a `condition` entry
-  /// is evaluated in full and may itself reference further groups.
+  /// means — a `list` entry names the attribute to test, a `condition` entry
+  /// is evaluated in full and may itself reference further groups, and a
+  /// `remote` entry checks the user's resolved remote group ids.
   ///
   /// Anything this SDK cannot make sense of matches nobody rather than
   /// throwing, and a group type added after this SDK was built is undecided
@@ -564,6 +565,16 @@ class GBConditionEvaluator {
         // `const {}` is unmodifiable
         return _evalCondition(attributes, condition, savedGroups,
             visited: {...visited, id});
+
+      // The ids live outside the payload: the user's groups arrive resolved,
+      // in `Constant.remoteGroupIdsAttribute`
+      case 'remote':
+        // Another attribute needs a derived group, which isn't supported yet
+        if (overrideKey != null && overrideKey != entry['attributeKey']) {
+          return false;
+        }
+        final groupIds = getPath(attributes, Constant.remoteGroupIdsAttribute);
+        return groupIds is List && groupIds.contains(id);
 
       // A group type added after this SDK was built
       default:
