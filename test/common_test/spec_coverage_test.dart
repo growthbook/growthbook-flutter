@@ -32,6 +32,10 @@ const _excludedSections = {
       'Saved group references (\$savedGroup) are not implemented yet',
   'savedGroupReferencesV2.run':
       'Saved group references (\$savedGroup) are not implemented yet',
+  'savedGroupReferencesRemote.evalCondition':
+      'Remote saved groups (\$savedGroup) are not implemented yet',
+  'savedGroupReferencesRemote.feature':
+      'Remote saved groups (\$savedGroup) are not implemented yet',
 };
 
 /// Every case section in the spec, with nested sections as `parent.child`.

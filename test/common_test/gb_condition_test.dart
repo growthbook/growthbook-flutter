@@ -105,6 +105,102 @@ void main() {
       expect(check([1e18], [1000000000000000200]), false);
     });
 
+    test('Array and object operands are never equal, like JS references', () {
+      final evaluator = GBConditionEvaluator();
+      bool check(dynamic attribute, dynamic condition) =>
+          evaluator.isEvalCondition({'a': attribute}, {'a': condition}, {});
+
+      expect(
+          check([
+            1
+          ], {
+            '\$eq': [1]
+          }),
+          false);
+      expect(
+          check([
+            1
+          ], {
+            '\$ne': [1]
+          }),
+          true);
+      expect(
+          check({
+            'b': 1
+          }, {
+            '\$eq': {'b': 1}
+          }),
+          false);
+      expect(
+          check({
+            'b': 1
+          }, {
+            '\$ne': {'b': 1}
+          }),
+          true);
+      expect(
+          check([
+            1
+          ], {
+            '\$in': [
+              [1]
+            ]
+          }),
+          false);
+      expect(
+          check([
+            1
+          ], {
+            '\$nin': [
+              [1]
+            ]
+          }),
+          true);
+      expect(
+          check({
+            'b': 1
+          }, {
+            '\$in': [
+              {'b': 1}
+            ]
+          }),
+          false);
+    });
+
+    test('A non-string regex pattern never matches', () {
+      final evaluator = GBConditionEvaluator();
+      bool check(String op, dynamic pattern, dynamic attribute) =>
+          evaluator.isEvalCondition({
+            'a': attribute
+          }, {
+            'a': {op: pattern}
+          }, {});
+
+      expect(check('\$regex', 1, '10'), false);
+      expect(check('\$regexi', 1, '10'), false);
+      expect(check('\$regex', true, 'true'), false);
+      expect(check('\$regex', ['a'], 'a'), false);
+      expect(check('\$regex', '1', '10'), true);
+    });
+
+    test('A path segment indexes into a list', () {
+      final evaluator = GBConditionEvaluator();
+      final attributes = {
+        'tags': ['a', 'b'],
+        'items': [
+          {'id': 1}
+        ],
+      };
+      expect(evaluator.getPath(attributes, 'tags.0'), 'a');
+      expect(evaluator.getPath(attributes, 'tags.1'), 'b');
+      expect(evaluator.getPath(attributes, 'tags.2'), null);
+      expect(evaluator.getPath(attributes, 'tags.01'), null);
+      expect(evaluator.getPath(attributes, 'tags.-1'), null);
+      expect(evaluator.getPath(attributes, 'tags.length'), 2);
+      expect(evaluator.getPath(attributes, 'items.0.id'), 1);
+      expect(evaluator.getPath(attributes, 'tags.0.x'), null);
+    });
+
     test('jsNumberToString matches JavaScript', () {
       expect(jsNumberToString(1), '1');
       expect(jsNumberToString(1.0), '1');

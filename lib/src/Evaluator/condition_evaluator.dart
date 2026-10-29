@@ -192,23 +192,28 @@ class GBConditionEvaluator {
   }
 
   /// Given attributes and a dot-separated path string, return the value at
-  /// that path (or null/undefined if the path doesn't exist)
+  /// that path (or null if the path doesn't exist). A segment can index into
+  /// a list (`"tags.0"`), as in JavaScript.
   dynamic getPath(dynamic obj, String key) {
-    var paths = <String>[];
-
-    if (key.contains(".")) {
-      paths = key.split('.');
-    } else {
-      paths.add(key);
-    }
-
     dynamic element = obj;
-    for (final path in paths) {
-      if (element == null || (element as Object).isArray) {
-        return null;
-      }
-      if ((element is Map)) {
+    for (final path in key.split('.')) {
+      if (element is Map) {
+        if (!element.containsKey(path)) return null;
         element = element[path];
+      } else if (element is List) {
+        if (path == 'length') {
+          element = element.length;
+          continue;
+        }
+        // Only canonical indexes ("0", "12"), like JavaScript's own keys
+        final index = int.tryParse(path);
+        if (index == null ||
+            index < 0 ||
+            index >= element.length ||
+            index.toString() != path) {
+          return null;
+        }
+        element = element[index];
       } else {
         return null;
       }
@@ -600,10 +605,10 @@ class GBConditionEvaluator {
     required bool negate,
   }) {
     if (attributeValue is! String) return negate;
-    if (conditionValue == null) return false;
+    // A non-string pattern never matches
+    if (conditionValue is! String) return false;
     try {
-      final regex =
-          RegExp(conditionValue.toString(), caseSensitive: isCaseSensitive);
+      final regex = RegExp(conditionValue, caseSensitive: isCaseSensitive);
       final matches = regex.hasMatch(attributeValue);
       return negate != matches;
     } catch (_) {

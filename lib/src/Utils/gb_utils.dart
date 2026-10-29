@@ -13,6 +13,7 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart
 import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/js_json.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit
@@ -202,6 +203,7 @@ class GBUtils {
         attributes: attributes,
       );
       final hashValue = hashAttributeAndValue[1];
+      if (hashValue.isEmpty) return true;
 
       final hash = GBUtils.hash(
         seed: filter.seed,
@@ -291,6 +293,10 @@ class GBUtils {
   }
 
   /// Returns a tuple of two elements: the attribute itself and its hash value.
+  ///
+  /// Only non-empty strings and finite, non-zero numbers identify a user.
+  /// Anything else (`0`, `""`, booleans, `null`, lists, maps) counts as
+  /// missing, so the hash value is `""` and the fallback attribute is tried.
   static List<String> getHashAttribute({
     String? attr,
     String? fallback,
@@ -298,29 +304,35 @@ class GBUtils {
     Map<String, dynamic>? attributeOverrides,
   }) {
     String hashAttribute = attr ?? 'id';
-    String hashValue = '';
 
-    if (attributeOverrides != null &&
-        attributeOverrides[hashAttribute] != null) {
-      hashValue = attributeOverrides[hashAttribute].toString();
-    } else if (attributes[hashAttribute] != null) {
-      hashValue = attributes[hashAttribute].toString();
-    }
+    dynamic lookup(String key) =>
+        attributeOverrides != null && attributeOverrides[key] != null
+            ? attributeOverrides[key]
+            : attributes[key];
+
+    String hashValue = hashableString(lookup(hashAttribute)) ?? '';
 
     // If no match, try fallback
     if (hashValue.isEmpty && fallback != null) {
-      if (attributeOverrides != null && attributeOverrides[fallback] != null) {
-        hashValue = attributeOverrides[fallback].toString();
-      } else if (attributes[fallback] != null) {
-        hashValue = attributes[fallback].toString();
-      }
-
-      if (hashValue.isNotEmpty) {
+      final fallbackValue = hashableString(lookup(fallback));
+      if (fallbackValue != null) {
+        hashValue = fallbackValue;
         hashAttribute = fallback;
       }
     }
 
     return [hashAttribute, hashValue];
+  }
+
+  /// Returns [value] as a hash input like JavaScript's `String(value)`, or
+  /// `null` when [value] can't identify a user.
+  static String? hashableString(dynamic value) {
+    if (value is String) return value.isEmpty ? null : value;
+    if (value is num) {
+      if (value == 0 || !value.isFinite) return null;
+      return jsNumberToString(value);
+    }
+    return null;
   }
 
   static double? hashFunction(
