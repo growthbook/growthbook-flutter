@@ -171,6 +171,28 @@ void main() {
       expect(attributes?['account_id'], 'a1');
     });
 
+    /// The flag is cached on `savedGroups` changes, so every read doesn't
+    /// rescan the payload
+    test('hasRemoteSavedGroups follows savedGroups changes', () {
+      final context = GBContext(savedGroups: savedGroups);
+      expect(context.hasRemoteSavedGroups, isTrue, reason: 'set from init');
+
+      context.savedGroups = {
+        'admins': {
+          'type': 'list',
+          'attributeKey': 'id',
+          'values': ['u_1']
+        }
+      };
+      expect(context.hasRemoteSavedGroups, isFalse);
+
+      context.savedGroups = savedGroups;
+      expect(context.hasRemoteSavedGroups, isTrue);
+
+      context.savedGroups = null;
+      expect(context.hasRemoteSavedGroups, isFalse);
+    });
+
     test('\$inGroup on a remote entry is undecided', () {
       final attributes = {
         'account_id': 'a1',

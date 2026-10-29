@@ -511,9 +511,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// attribute values.
   void _warnIfRemoteGroupIdsMissing() {
     if (_warnedMissingRemoteGroupIds) return;
-    if (_context.remoteGroupIds != null ||
-        _context.attributes?[Constant.remoteGroupIdsAttribute] is List ||
-        !_context.hasRemoteSavedGroups) {
+    // The cached flag first: a payload without remote groups is the common case
+    if (!_context.hasRemoteSavedGroups ||
+        _context.remoteGroupIds != null ||
+        _context.attributes?[Constant.remoteGroupIdsAttribute] is List) {
       return;
     }
     _warnedMissingRemoteGroupIds = true;
