@@ -18,10 +18,11 @@ class GBContext {
     this.featureUsageCallback,
     this.features = const <String, GBFeature>{},
     this.backgroundSync = false,
-    this.savedGroups,
+    SavedGroupsValues? savedGroups,
     this.url,
     this.remoteGroupIds,
-  });
+  })  : _savedGroups = savedGroups,
+        _hasRemoteSavedGroups = _containsRemoteGroup(savedGroups);
 
   /// Registered API key for GrowthBook SDK.
   String? apiKey;
@@ -73,7 +74,14 @@ class GBContext {
   ///For example, you can make an Admin group and add the userId of all of your admins.
   ///Condition Groups - Configure advanced targeting rules based on a user's attributes. For example,
   ///"all users located in the US on a mobile device".
-  SavedGroupsValues? savedGroups;
+  SavedGroupsValues? get savedGroups => _savedGroups;
+
+  set savedGroups(SavedGroupsValues? value) {
+    _savedGroups = value;
+    _hasRemoteSavedGroups = _containsRemoteGroup(value);
+  }
+
+  SavedGroupsValues? _savedGroups;
 
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
@@ -93,8 +101,13 @@ class GBContext {
     return {...?attributes, Constant.remoteGroupIdsAttribute: ids};
   }
 
-  /// Whether [savedGroups] has a remote entry.
-  bool get hasRemoteSavedGroups =>
+  /// Whether [savedGroups] has a remote entry. Computed when [savedGroups]
+  /// changes rather than on each read, since every feature and experiment read
+  /// checks it.
+  bool get hasRemoteSavedGroups => _hasRemoteSavedGroups;
+  bool _hasRemoteSavedGroups;
+
+  static bool _containsRemoteGroup(SavedGroupsValues? savedGroups) =>
       savedGroups?.values
           .any((entry) => entry is Map && entry['type'] == 'remote') ??
       false;
