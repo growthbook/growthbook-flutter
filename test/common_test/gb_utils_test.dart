@@ -237,6 +237,36 @@ void main() {
       expect(endValue, expectedValue);
     });
 
+    /// growthbook/growthbook#7401: one leading `v` and everything from the
+    /// first `+` are stripped
+    test('padded version string strips one leading v and build metadata', () {
+      final plain = GBUtils.paddedVersionString('1.2.3');
+      expect(GBUtils.paddedVersionString('v1.2.3'), plain);
+      expect(GBUtils.paddedVersionString('vv1.2.3'), 'v1-    2-    3-~');
+      expect(GBUtils.paddedVersionString('1.2.3+build'), plain);
+      expect(GBUtils.paddedVersionString('v1.2.3+build+more.1-2'), plain);
+      expect(GBUtils.paddedVersionString('1.2.3+'), plain);
+      expect(GBUtils.paddedVersionString('+build'), '');
+    });
+
+    /// The regex kept "+build\nmore": `.` doesn't match a newline
+    test(
+        'padded version string cuts at the first + even when a newline follows',
+        () {
+      final plain = GBUtils.paddedVersionString('1.2.3');
+      expect(GBUtils.paddedVersionString('1.2.3+build\nmore'), plain);
+      expect(GBUtils.paddedVersionString('1.2.3+\n'), plain);
+    });
+
+    /// Quadratic for the regex: every `+` started a `.*` that failed at the
+    /// newline (100 000 of them took seconds)
+    test('padded version string runs in linear time on many + characters', () {
+      final input = '${'+' * 100000}\n';
+      final stopwatch = Stopwatch()..start();
+      GBUtils.paddedVersionString(input);
+      expect(stopwatch.elapsedMilliseconds, lessThan(500));
+    });
+
     test('TestDecrypt', () async {
       try {
         var testCases = GBTestHelper.getDecryptData();
