@@ -7,6 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -54,6 +55,7 @@ class GBSDKBuilderApp {
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
   final List<GrowthBookPlugin> _plugins = [];
+  List<String>? _remoteGroupIds;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -70,7 +72,8 @@ class GBSDKBuilderApp {
         stickyBucketService: stickyBucketService,
         backgroundSync: backgroundSync,
         remoteEval: remoteEval,
-        url: url);
+        url: url,
+        remoteGroupIds: _remoteGroupIds);
     final gb = GrowthBookSDK._(
         context: gbContext,
         client: client,
@@ -119,6 +122,13 @@ class GBSDKBuilderApp {
   /// Registers a plugin that will receive experiment and feature evaluation events.
   GBSDKBuilderApp addPlugin(GrowthBookPlugin plugin) {
     _plugins.add(plugin);
+    return this;
+  }
+
+  /// Sets the remote saved groups the user is in, resolved by the app. See
+  /// [GrowthBookSDK.setRemoteGroupIds]; leave unset while they are unresolved.
+  GBSDKBuilderApp setRemoteGroupIds(List<String> remoteGroupIds) {
+    _remoteGroupIds = remoteGroupIds;
     return this;
   }
 }
@@ -369,6 +379,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   GBFeatureResult feature(String id) {
     _triggerBackgroundRefreshIfNeeded();
+    _warnIfRemoteGroupIdsMissing();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
     _notifyFeatureEvaluated(id, result);
@@ -398,6 +409,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
+    _warnIfRemoteGroupIdsMissing();
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
@@ -471,6 +483,45 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     refreshForRemoteEval();
   }
 
+  /// Sets the remote saved groups the user is in. A remote saved group keeps
+  /// its members outside the payload, so the app resolves the user's groups
+  /// (for example from its back end) and passes their ids here. Conditions read
+  /// them as the `__gb_remoteGroupIds` attribute, over any value the attributes
+  /// set for it. In remote-eval mode this triggers a fresh remote evaluation.
+  ///
+  /// Pass `null` while the groups are unresolved: rules that use remote groups
+  /// then fail, including "not in group". Don't pass an empty list for that —
+  /// it means "in no group", so "not in group" rules match.
+  void setRemoteGroupIds(List<String>? remoteGroupIds) {
+    _context.remoteGroupIds = remoteGroupIds;
+    _updateEvaluationContext();
+    refreshForRemoteEval();
+  }
+
+  /// The ids of the remote saved groups the user is in, or `null` while
+  /// unresolved.
+  List<String>? get remoteGroupIds => _context.remoteGroupIds;
+
+  // Set once the missing-ids warning has been logged, so it isn't repeated on
+  // every evaluation
+  bool _warnedMissingRemoteGroupIds = false;
+
+  /// Logs once when the payload has remote saved groups but the user has no
+  /// remote group ids, since every rule using them will then fail. Logs no
+  /// attribute values.
+  void _warnIfRemoteGroupIdsMissing() {
+    if (_warnedMissingRemoteGroupIds) return;
+    // The cached flag first: a payload without remote groups is the common case
+    if (!_context.hasRemoteSavedGroups ||
+        _context.remoteGroupIds != null ||
+        _context.attributes?[Constant.remoteGroupIdsAttribute] is List) {
+      return;
+    }
+    _warnedMissingRemoteGroupIds = true;
+    logger.w('The payload has remote saved groups, but the user has no remote '
+        'group ids. Rules using them won\'t match. See setRemoteGroupIds.');
+  }
+
   /// The setForcedFeatures method updates forced features
   void setForcedFeatures(List<dynamic> forcedFeatures) {
     _forcedFeatures = forcedFeatures;
@@ -540,6 +591,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
+    _warnIfRemoteGroupIdsMissing();
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection

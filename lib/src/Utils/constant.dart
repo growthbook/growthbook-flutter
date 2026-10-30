@@ -11,6 +11,10 @@ class Constant {
 
   static String savedGroupsCache = 'savedGroupCache';
 
+  /// Attribute holding the ids of the remote saved groups the user is in.
+  /// Internal attributes start with `__gb_`, matching GrowthBook's back end.
+  static const String remoteGroupIdsAttribute = '__gb_remoteGroupIds';
+
   /// Context Path for Fetching Feature Details - Web Service
   static String featurePath = 'api/features';
 
