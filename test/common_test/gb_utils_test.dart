@@ -1,5 +1,6 @@
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 import '../Helper/gb_test_helper.dart';
@@ -173,6 +174,53 @@ void main() {
       expect(failedScenarios.length, 0);
     });
 
+    test('Only non-empty strings and non-zero numbers are hash values', () {
+      List<String> hashOf(dynamic id, {dynamic fallback}) =>
+          GBUtils.getHashAttribute(
+            attr: 'id',
+            fallback: 'deviceId',
+            attributes: {'id': id, 'deviceId': fallback},
+          );
+
+      for (final missing in <dynamic>[
+        0,
+        0.0,
+        false,
+        true,
+        null,
+        '',
+        <dynamic>[],
+        ['1'],
+        <String, dynamic>{},
+        {'a': '1'},
+        double.nan,
+        double.infinity,
+      ]) {
+        expect(hashOf(missing), ['id', ''], reason: '$missing');
+        expect(hashOf(missing, fallback: 'd1'), ['deviceId', 'd1'],
+            reason: '$missing with fallback');
+        expect(hashOf(missing, fallback: missing), ['id', ''],
+            reason: '$missing with the same fallback');
+      }
+      expect(hashOf(1.0), ['id', '1']);
+      expect(hashOf(1), ['id', '1']);
+      expect(hashOf(1.5), ['id', '1.5']);
+      expect(hashOf(-2), ['id', '-2']);
+      expect(hashOf('abc', fallback: 'd1'), ['id', 'abc']);
+    });
+
+    test('A filter on a missing hash value filters the user out', () {
+      final filter = GBFilter(
+        seed: 'seed',
+        ranges: [
+          [0.0, 1.0]
+        ],
+        attribute: 'id',
+      );
+      expect(GBUtils.isFilteredOut([filter], {'id': true}), isTrue);
+      expect(GBUtils.isFilteredOut([filter], {'id': '1'}), isFalse);
+    });
+
     test('test edge cases', () async {
       expect(GBUtils.inNamespace('4242', const GBNameSpace('', 0.0, 0.0)),
           isFalse);
@@ -266,13 +314,17 @@ bool isCompareBucket(
     GBBucketRange source = pairExpectedResults[i];
     GBBucketRange target = calculatedResults[i];
 
-    if (source[0] != target[0] || source[1] != target[1]) {
+    if (roundForCompare(source[0]) != roundForCompare(target[0]) ||
+        roundForCompare(source[1]) != roundForCompare(target[1])) {
       return false;
     }
   }
 
   return true;
 }
+
+// Mirrors the JS SDK spec test: compare ranges at 8 decimals, floored.
+double roundForCompare(double n) => (n * 1e8).floorToDouble() / 1e8;
 
 List<GBBucketRange> getPairedData(List<List<double>> items) {
   List<GBBucketRange> pairExpectedResults = [];

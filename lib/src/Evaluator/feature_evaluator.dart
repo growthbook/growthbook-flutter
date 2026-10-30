@@ -229,10 +229,12 @@ class FeatureEvaluator {
       GBExperiment? experiment,
       GBExperimentResult? result,
       String? ruleId = ""}) {
-    var isFalse = value == null ||
-        value.toString() == 'false' ||
-        value.toString() == '0' ||
-        (value.toString().isEmpty && value is! Map && value is! List);
+    // JavaScript truthiness: only null, false, 0, NaN and "" are off. The
+    // strings "false", "0" and "off", and empty lists and maps, are on.
+    final isFalse = value == null ||
+        value == false ||
+        (value is num && (value == 0 || value.isNaN)) ||
+        value == '';
     return GBFeatureResult(
         value: value,
         on: !isFalse,
