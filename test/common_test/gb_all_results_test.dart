@@ -350,6 +350,32 @@ void main() {
 
         expect(reached, 1);
       });
+
+      /// A one-shot listener is the ordinary case, and before this branch only
+      /// `run()` could reach it. Iterating the live list threw
+      /// ConcurrentModificationError straight out of `feature()`.
+      test('a subscriber may unsubscribe from inside its own callback',
+          () async {
+        final sdk = await buildSdk(features: {
+          'banner': featureRunning('banner-exp'),
+          'checkout': featureRunning('checkout-exp'),
+        });
+        final seen = <String>[];
+        final other = <String>[];
+        late final Function unsubscribe;
+        unsubscribe = sdk.subscribe((experiment, _) {
+          seen.add(experiment.key);
+          unsubscribe();
+        });
+        sdk.subscribe((experiment, _) => other.add(experiment.key));
+
+        expect(() => sdk.feature('banner'), returnsNormally);
+        sdk.feature('checkout');
+
+        expect(seen, ['banner-exp'], reason: 'it unsubscribed after the first');
+        expect(other, ['banner-exp', 'checkout-exp'],
+            reason: 'the second subscriber is unaffected');
+      });
     });
   });
 }

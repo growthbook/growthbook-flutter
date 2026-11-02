@@ -7,6 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -375,14 +376,17 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       required GBExperimentResult result}) {
     assigned[key] =
         AssignedExperiment(experiment: experiment, experimentResult: result);
-    for (var subscription in subscriptions) {
+    // Iterate a copy: a one-shot listener that unsubscribes from inside its
+    // own callback would otherwise throw ConcurrentModificationError out of
+    // the evaluation that triggered it.
+    for (final subscription in List.of(subscriptions)) {
       // Subscribers now also fire from the feature evaluation path, so a
       // throwing one would take feature() down with it. Guard it the way
       // PluginRegistry guards plugin dispatch.
       try {
         subscription(experiment, result);
-      } catch (e) {
-        log('GrowthBook subscription error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBook subscription error', error: e, stackTrace: st);
       }
     }
   }
