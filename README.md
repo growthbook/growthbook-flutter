@@ -502,14 +502,22 @@ final sdk = await GBSDKBuilderApp(
 class _AppState extends State<App> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      sdk.startPolling();
-    } else {
-      sdk.stopPolling();
+    switch (state) {
+      case AppLifecycleState.resumed:
+        sdk.startPolling();
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        sdk.stopPolling();
+      default:
+        break;
     }
   }
 }
 ```
+
+Stop on `paused` / `hidden` rather than on everything that is not `resumed`: on iOS `inactive`
+fires for the Control Center, the app switcher and incoming calls, which would stop and restart
+polling constantly.
 
 Nothing starts on its own — tie `startPolling()` / `stopPolling()` to the app lifecycle so the timer
 does not spend battery on requests the system will suspend anyway.
@@ -520,9 +528,11 @@ Notes:
   `startPolling()` returns `false`.
 - Each round ignores `ttlSeconds`. A refresh skips the network while the cache is fresh, so an
   interval shorter than the TTL would otherwise issue no requests at all.
-- A failing host is backed off exponentially with jitter, capped at five minutes, so a recovered host
-  is still noticed and many devices that fail together do not return as one burst. One outage never
-  stops the loop.
+- A failing host is backed off exponentially: the delay doubles per failure up to a five-minute cap,
+  never drops below `pollingInterval` (a host that is down must not be polled more often than a
+  healthy one), and is then spread by up to 100% — so with a one-minute interval the longest gap is
+  five to ten minutes. The cap keeps a recovered host noticed; the jitter keeps many devices that
+  failed together from returning as one burst. One outage never stops the loop.
 - A non-positive `pollingInterval` throws an `ArgumentError` from `initialize()` rather than being
   clamped, so a typo is reported instead of silently reinterpreted.
 

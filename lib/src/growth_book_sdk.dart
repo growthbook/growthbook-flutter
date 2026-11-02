@@ -369,11 +369,22 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// app being backgrounded. Polling refreshes on a timer instead.
   ///
   /// Nothing starts on its own: tie this to the app lifecycle so the timer does
-  /// not spend battery on requests the system will suspend anyway.
+  /// not spend battery on requests the system will suspend anyway. Stop on
+  /// `paused`/`hidden` rather than on everything that is not `resumed`: on iOS
+  /// `inactive` fires for the Control Center, the app switcher and incoming
+  /// calls, which would stop and restart polling constantly.
   /// ```dart
   /// @override
   /// void didChangeAppLifecycleState(AppLifecycleState state) {
-  ///   state == AppLifecycleState.resumed ? sdk.startPolling() : sdk.stopPolling();
+  ///   switch (state) {
+  ///     case AppLifecycleState.resumed:
+  ///       sdk.startPolling();
+  ///     case AppLifecycleState.paused:
+  ///     case AppLifecycleState.hidden:
+  ///       sdk.stopPolling();
+  ///     default:
+  ///       break;
+  ///   }
   /// }
   /// ```
   ///
@@ -382,8 +393,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// cheaper, so enabling both is safe rather than doubling the traffic.
   ///
   /// Each round ignores `ttlSeconds` — a cache-fresh round would issue no
-  /// request, leaving the loop looking alive while doing nothing — and a failing
-  /// host is backed off exponentially with jitter, capped at five minutes.
+  /// request, leaving the loop looking alive while doing nothing. A failing host
+  /// is backed off exponentially, capped at five minutes and floored at the
+  /// interval, then spread by up to 100%: see `pollBackoffDelay`.
   bool startPolling() {
     final interval = _pollingInterval;
     if (interval == null) {
