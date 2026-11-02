@@ -1,6 +1,5 @@
-import 'dart:developer';
-
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 /// Holds all registered plugins and dispatches lifecycle and evaluation events
 /// to each one.
@@ -32,8 +31,9 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         plugin.initialize(clientKey);
-      } catch (e) {
-        log('GrowthBookPlugin.initialize error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.initialize failed',
+            error: e, stackTrace: st);
       }
     }
   }
@@ -47,8 +47,9 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         plugin.onExperimentViewed(experiment, result, attributes);
-      } catch (e) {
-        log('GrowthBookPlugin.onExperimentViewed error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.onExperimentViewed failed',
+            error: e, stackTrace: st);
       }
     }
   }
@@ -62,8 +63,9 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         plugin.onFeatureEvaluated(featureKey, result, attributes);
-      } catch (e) {
-        log('GrowthBookPlugin.onFeatureEvaluated error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.onFeatureEvaluated failed',
+            error: e, stackTrace: st);
       }
     }
   }
@@ -77,8 +79,8 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         plugin.logEvent(eventName, properties, attributes);
-      } catch (e) {
-        log('GrowthBookPlugin.logEvent error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.logEvent failed', error: e, stackTrace: st);
       }
     }
   }
@@ -89,8 +91,8 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         await plugin.flush();
-      } catch (e) {
-        log('GrowthBookPlugin.flush error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.flush failed', error: e, stackTrace: st);
       }
     }
   }
@@ -103,8 +105,8 @@ class PluginRegistry {
     for (final plugin in _plugins) {
       try {
         await plugin.close();
-      } catch (e) {
-        log('GrowthBookPlugin.close error: $e');
+      } catch (e, st) {
+        logger.e('GrowthBookPlugin.close failed', error: e, stackTrace: st);
       }
     }
   }
