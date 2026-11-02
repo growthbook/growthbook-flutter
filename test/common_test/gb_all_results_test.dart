@@ -400,6 +400,7 @@ void main() {
             reason: 'the second subscriber is unaffected');
       });
     });
+
     // -------------------------------------------------------------------------
     // Subscribers run outside the evaluation
     // -------------------------------------------------------------------------

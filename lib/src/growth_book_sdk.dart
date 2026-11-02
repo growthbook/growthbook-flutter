@@ -148,19 +148,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
-    // The initializer list cannot reach `_pluginRegistry`, and a caller may
-    // have supplied its own evaluation context, so the registry and the
-    // exposure history are attached here instead of being passed to
-    // `initializeEvalContext` above.
+    // The initializer list cannot reach `_pluginRegistry` or `this`, and a
+    // caller may have supplied its own evaluation context, so the registry,
+    // the exposure history and the experiment sink are attached here instead
+    // of being passed to `initializeEvalContext` above. Every later rebuild
+    // goes through `_updateEvaluationContext()`, which passes all three.
     _evaluationContext.options.pluginRegistry = _pluginRegistry;
     _evaluationContext.options.experimentHelper = _experimentHelper;
+    _evaluationContext.globalContext.onExperimentEvaluated = fireSubscriptions;
     _featureViewModel = FeatureViewModel(
         delegate: this,
         source: FeatureDataSource(context: _context, client: _baseClient),
         encryptionKey: _context.encryptionKey ?? "",
         backgroundSync: _context.backgroundSync,
         ttlSeconds: ttlSeconds);
-    _installExperimentSink();
     autoRefresh();
   }
 
@@ -222,18 +223,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
     _evaluationContext = GBUtils.initializeEvalContext(
-        _context, _refreshHandler,
-        pluginRegistry: _pluginRegistry, experimentHelper: _experimentHelper);
-    _installExperimentSink();
-  }
-
-  /// Points the evaluators at [fireSubscriptions] so experiments a feature rule
-  /// triggers are recorded and reported, not just the ones a caller runs
-  /// directly. Has to be re-installed every time the evaluation context is
-  /// rebuilt, since [GBUtils.initializeEvalContext] produces a fresh one.
-  void _installExperimentSink() {
-    if (_disposed) return;
-    _evaluationContext.globalContext.onExperimentEvaluated = fireSubscriptions;
+      _context,
+      _refreshHandler,
+      pluginRegistry: _pluginRegistry,
+      experimentHelper: _experimentHelper,
+      onExperimentEvaluated: _disposed ? null : fireSubscriptions,
+    );
   }
 
   void _initializePlugins() {

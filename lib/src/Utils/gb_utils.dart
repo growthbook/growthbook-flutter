@@ -10,6 +10,7 @@ import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_contex
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/constant.dart';
 import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
@@ -729,7 +730,8 @@ class GBUtils {
       // ignore: deprecated_member_use_from_same_package
       GBCacheRefreshHandler? refreshHandler,
       {PluginRegistry? pluginRegistry,
-      ExperimentHelper? experimentHelper}) {
+      ExperimentHelper? experimentHelper,
+      ExperimentEvalCallback? onExperimentEvaluated}) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -751,6 +753,7 @@ class GBUtils {
     var globalContext = GlobalContext(
       features: gbContext.features,
       savedGroups: gbContext.savedGroups,
+      onExperimentEvaluated: onExperimentEvaluated,
     );
 
     var userContext = UserContext(
