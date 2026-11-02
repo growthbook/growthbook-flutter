@@ -397,24 +397,33 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   void _scheduleNextPoll(Duration delay) {
-    _pollTimer = Timer(delay, () async {
-      await _pollOnce();
-      // stopPolling() may have run while the round was in flight.
-      if (_pollTimer == null) return;
+    late final Timer timer;
+    timer = Timer(delay, () async {
+      final succeeded = await _pollOnce();
+      // A Timer that has already fired cannot be cancelled, so the round has to
+      // ask whether it is still the current one rather than whether any timer
+      // is scheduled. stopPolling() and then startPolling() while this round
+      // was awaiting the network - a quick inactive -> resumed - leaves this
+      // callback holding a stale timer, and scheduling from here would run a
+      // second loop alongside the new one for the rest of the process.
+      if (!identical(_pollTimer, timer)) return;
+      _pollFailures = succeeded ? 0 : _pollFailures + 1;
       _scheduleNextPoll(
         pollBackoffDelay(_pollingInterval!, _pollFailures),
       );
     });
+    _pollTimer = timer;
   }
 
-  Future<void> _pollOnce() async {
-    bool succeeded;
+  /// Runs one round and reports whether it ended with usable definitions.
+  Future<bool> _pollOnce() async {
     try {
-      succeeded = _context.remoteEval
+      return _context.remoteEval
           ? await _featureViewModel.fetchFeatures(
               context.getRemoteEvalUrl(),
               remoteEval: true,
               payload: _buildRemoteEvalPayload(),
+              force: true,
             )
           : await _featureViewModel.fetchFeatures(
               context.getFeaturesURL(),
@@ -424,9 +433,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       // A round must never take the loop down with it: one outage cannot stop a
       // client refreshing for the rest of its life.
       log('Poll failed: ${e.runtimeType}');
-      succeeded = false;
+      return false;
     }
-    _pollFailures = succeeded ? 0 : _pollFailures + 1;
   }
 
   Future<void> refresh() async {

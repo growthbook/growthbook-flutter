@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -188,6 +189,40 @@ void main() {
         expect(client.gets, lessThan(6));
       });
 
+      /// A Timer that has already fired cannot be cancelled, so a round that
+      /// outlives its own loop has to notice: the quick inactive -> resumed the
+      /// README warns about would otherwise leave two loops polling forever.
+      test('restarting during an in-flight round leaves a single loop',
+          () async {
+        final client = _CountingClient();
+        final sdk = await buildSdk(
+          client: client,
+          pollingInterval: const Duration(milliseconds: 20),
+        );
+
+        final gate = Completer<void>();
+        client.gate = gate;
+        sdk.startPolling();
+        final heldAt = client.gets;
+        await waitUntil(() => client.gets > heldAt);
+
+        sdk.stopPolling();
+        expect(sdk.startPolling(), isTrue);
+
+        client.gate = null;
+        gate.complete();
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+
+        // One stopPolling() has to be enough: a stale round that rescheduled
+        // would have replaced the live timer with its own, leaving the live one
+        // running where nothing can reach it.
+        sdk.stopPolling();
+        final afterStop = client.gets;
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+
+        expect(client.gets, afterStop);
+      });
+
       test('stopPolling is safe when nothing is running', () async {
         final sdk = await buildSdk(pollingInterval: const Duration(seconds: 1));
         expect(sdk.stopPolling, returnsNormally);
@@ -321,19 +356,33 @@ class _FixedRandom implements Random {
   int nextInt(int max) => 0;
 }
 
-/// Counts the requests the SDK makes, and can fail them all.
+/// Counts the requests the SDK makes, and can fail them all, fail them from a
+/// given request on, or hold one in flight.
 class _CountingClient implements BaseClient {
-  _CountingClient({this.fail = false});
+  _CountingClient({this.fail = false, this.failAfterGets});
 
   final bool fail;
+
+  /// Requests past this many GETs fail: a host that goes down after the SDK
+  /// has already loaded its features.
+  final int? failAfterGets;
+
+  /// While set, requests park here instead of answering — a round in flight.
+  Completer<void>? gate;
+
   int gets = 0;
   int posts = 0;
+
+  bool _shouldFail(int count) =>
+      fail || (failAfterGets != null && count > failAfterGets!);
 
   @override
   Future<void> consumeGetRequest(
       String url, OnSuccess onSuccess, OnError onError) async {
     gets++;
-    if (fail) {
+    final shouldFail = _shouldFail(gets);
+    await gate?.future;
+    if (shouldFail) {
       onError(StateError('host down'), StackTrace.current);
       return;
     }
@@ -344,6 +393,7 @@ class _CountingClient implements BaseClient {
   Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
       OnSuccess onSuccess, OnError onError) async {
     posts++;
+    await gate?.future;
     if (fail) {
       onError(StateError('host down'), StackTrace.current);
       return;
