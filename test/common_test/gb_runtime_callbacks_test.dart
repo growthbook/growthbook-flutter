@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
+import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
 
 import '../mocks/network_mock.dart';
 
@@ -41,9 +45,8 @@ void main() {
       cachingManager.clearCache();
     });
 
-    // Exposures are deduped in a process-wide set keyed by experiment, so every
-    // test needs its own key — a reused one silences the callback and the
-    // assertion would be measuring the dedupe instead of the sink.
+    // Exposures are deduped per SDK instance, so a test that evaluates the
+    // same experiment twice is measuring the dedupe unless it means to.
     GBExperiment experimentNamed(String key) =>
         GBExperiment(key: key, variations: [0, 1]);
 
@@ -227,6 +230,40 @@ void main() {
 
         expect(sdk.context.attributes, {'id': 'user-7', 'plan': 'pro'});
         expect(sdk.feature('onboarding').value, isNotNull);
+      });
+    });
+
+    group('an exposure nobody received', () {
+      /// Marking an exposure as reported when there is no sink loses it for
+      /// good: unlike the JavaScript SDK there is no deferred buffer for
+      /// `setTrackingCallback` to flush, so the only way a later sink can see
+      /// it is for the exposure to stay unmarked.
+      test('reaches a callback installed afterwards, exactly once', () {
+        final seen = <String>[];
+        final context = EvaluationContext(
+          globalContext: GlobalContext(features: {}),
+          userContext: UserContext(
+            attributes: {'id': 'user-1'},
+            forcedVariationsMap: {},
+          ),
+          stackContext: StackContext(),
+          options: Options(
+            enabled: true,
+            isQaMode: false,
+            isCacheDisabled: false,
+          ),
+        );
+        final experiment = experimentNamed('runtime-no-sink');
+
+        ExperimentEvaluator().evaluateExperiment(context, experiment);
+        expect(seen, isEmpty, reason: 'nothing was listening yet');
+
+        context.options.trackingCallBackWithUser =
+            (data) => seen.add(data.experiment.key);
+        ExperimentEvaluator().evaluateExperiment(context, experiment);
+        ExperimentEvaluator().evaluateExperiment(context, experiment);
+
+        expect(seen, ['runtime-no-sink']);
       });
     });
   });

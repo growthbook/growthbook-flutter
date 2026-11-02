@@ -16,18 +16,45 @@ import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 /// too: its failure arrives in the returned future, long after the try block
 /// has been left.
 ///
-/// The callbacks are read per invocation rather than captured, so a sink
-/// replaced between two exposures is not called again.
+/// The callbacks are read per invocation rather than captured, and
+/// `GrowthBookSDK.setTrackingCallback` writes into this same [Options] object,
+/// so a sink installed mid-evaluation takes effect for the rest of that
+/// evaluation rather than being swapped in behind it.
 extension CallbackInvoker on Options {
-  /// Reports an experiment exposure to the tracking callback, if one is set.
-  void notifyExperimentViewed(GBTrackData trackData) {
+  /// Reports an experiment exposure to the tracking callback and to the
+  /// registered plugins, once per experiment and result.
+  ///
+  /// Deduplication happens here rather than at the call sites so that an
+  /// exposure is only ever marked as reported when something was there to
+  /// receive it. The JavaScript SDK defers such calls into a buffer that
+  /// `setTrackingCallback` flushes; there is no such buffer here, so leaving
+  /// the exposure unmarked is what lets a sink installed later still see it on
+  /// the next evaluation.
+  void notifyExperimentViewed(
+    GBTrackData trackData,
+    Map<String, dynamic>? attributes,
+  ) {
     final callback = trackingCallBackWithUser;
-    if (callback == null) return;
-    _guard(
-      () => callback(trackData) as Object?,
-      'trackingCallBack threw for experiment '
-      '"${trackData.experiment.key}"',
-    );
+    final plugins = pluginRegistry;
+    final hasPlugins = plugins != null && plugins.hasPlugins;
+    if (callback == null && !hasPlugins) return;
+
+    if (experimentHelper.isTracked(
+        trackData.experiment, trackData.experimentResult)) {
+      return;
+    }
+
+    if (callback != null) {
+      _guard(
+        () => callback(trackData) as Object?,
+        'trackingCallBack threw for experiment '
+        '"${trackData.experiment.key}"',
+      );
+    }
+    if (hasPlugins) {
+      plugins.onExperimentViewed(
+          trackData.experiment, trackData.experimentResult, attributes);
+    }
   }
 
   /// Reports a feature evaluation to the feature usage callback, if one is set.

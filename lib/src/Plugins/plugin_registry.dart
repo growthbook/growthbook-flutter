@@ -22,6 +22,11 @@ class PluginRegistry {
   /// app asked the SDK to shut down.
   bool _isClosed = false;
 
+  /// Whether anything is listening. Lets a caller tell "nobody received this"
+  /// apart from "it was delivered", which decides whether an exposure counts
+  /// as reported.
+  bool get hasPlugins => !_isClosed && _plugins.isNotEmpty;
+
   void initialize(String clientKey) {
     if (_isClosed) return;
     for (final plugin in _plugins) {

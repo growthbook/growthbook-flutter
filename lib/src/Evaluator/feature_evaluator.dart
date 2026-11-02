@@ -145,14 +145,12 @@ class FeatureEvaluator {
               if (track.experiment != null && track.result != null) {
                 var experiment = track.experiment!;
                 var result = track.result!;
-                if (experiment.active &&
-                    result.inExperiment &&
-                    !context.options.experimentHelper
-                        .isTracked(experiment, result)) {
-                  context.options.notifyExperimentViewed(GBTrackData(
-                      experiment: experiment, experimentResult: result));
-                  context.options.pluginRegistry?.onExperimentViewed(
-                      experiment, result, context.userContext.attributes);
+                if (experiment.active && result.inExperiment) {
+                  context.options.notifyExperimentViewed(
+                    GBTrackData(
+                        experiment: experiment, experimentResult: result),
+                    context.userContext.attributes,
+                  );
                 }
               }
             }
