@@ -48,9 +48,8 @@ void main() {
       cachingManager.clearCache();
     });
 
-    // `ExperimentHelper.shared` dedupes exposures in a process-wide set, so
-    // every test needs its own experiment key — a reused one silences the
-    // callback and the assertion would be measuring the dedupe instead.
+    // Exposures are deduped per SDK instance, so a test that evaluates the
+    // same experiment twice is measuring the dedupe unless it means to.
     GBExperiment experimentNamed(String key) =>
         GBExperiment(key: key, variations: [0, 1]);
 
@@ -140,6 +139,45 @@ void main() {
 
         expect(result.source, GBFeatureSource.unknownFeature);
         expect(seen, ['no-such-feature']);
+      });
+    });
+
+    /// Both callback types are declared `void`, which does not stop a caller
+    /// from passing an `async` closure — analytics SDKs are commonly
+    /// asynchronous. What such a closure throws never reaches the enclosing
+    /// catch: it completes the future the closure returned, which nobody
+    /// awaits, and arrives as an unhandled zone error — a crash report in an
+    /// app, a failed test here. These tests pass only because the failure is
+    /// caught and logged.
+    group('async callbacks', () {
+      test('an async throwing tracking callback does not escape', () async {
+        var calls = 0;
+        final sdk = await buildSdk(trackingCallBack: (_) async {
+          calls++;
+          throw StateError('analytics not ready');
+        });
+
+        final result = sdk.run(experimentNamed('safety-async-run'));
+        await Future<void>.delayed(Duration.zero);
+
+        expect(calls, 1);
+        expect(result.inExperiment, isTrue);
+      });
+
+      test('an async throwing feature usage callback does not escape',
+          () async {
+        final seen = <String>[];
+        final sdk = await buildSdk(featureUsageCallback: (key, _) async {
+          seen.add(key);
+          throw StateError('sink disposed');
+        });
+
+        final result = sdk.feature('onboarding');
+        sdk.feature('qrscanpayment');
+        await Future<void>.delayed(Duration.zero);
+
+        expect(seen, ['onboarding', 'qrscanpayment']);
+        expect(result.value, isNotNull);
       });
     });
 
