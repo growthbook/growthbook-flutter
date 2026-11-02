@@ -479,12 +479,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// starting. Without this the only bridge is a closure over a mutable holder
   /// that every caller has to build themselves.
   ///
-  /// The next evaluation reports to the new sink. Exposures already reported
-  /// stay with the callback that received them — there is no deferred buffer to
-  /// replay, unlike the JavaScript SDK's `fireDeferredTrackingCalls()`. Install
-  /// the real sink before the first [feature] or [run] call if you need every
-  /// exposure: an exposure is marked as tracked the first time it is seen, so
-  /// one swallowed by a placeholder callback is not re-reported later.
+  /// The sink takes effect immediately, including for an evaluation already in
+  /// flight — installing it from inside the first exposure is a natural
+  /// pattern, and the rest of that evaluation reports to the new sink rather
+  /// than to the one being replaced.
+  ///
+  /// Exposures already delivered stay with the callback that received them:
+  /// there is no deferred buffer to replay, unlike the JavaScript SDK's
+  /// `fireDeferredTrackingCalls()`. An exposure that had no sink at all is not
+  /// marked as reported, so installing one here still delivers it on the next
+  /// evaluation; one a previous sink received, or threw on, is not re-sent.
   ///
   /// Read `sdk.context.trackingCallBack` to wrap the current sink rather than
   /// replace it:
@@ -496,16 +500,21 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// });
   /// ```
   void setTrackingCallback(TrackingCallBack trackingCallBack) {
+    // Written into the live Options rather than through a context rebuild.
+    // _updateEvaluationContext() replaces Options, GlobalContext, UserContext
+    // and StackContext wholesale: an evaluation in flight would carry on with
+    // the old Options, and the sticky bucket documents it wrote into the old
+    // user context would be dropped on the way out.
     _context.trackingCallBack = trackingCallBack;
-    _updateEvaluationContext();
+    _evaluationContext.options.trackingCallBackWithUser = trackingCallBack;
   }
 
   /// Replaces the callback invoked every time a feature is evaluated.
   ///
   /// Same motivation as [setTrackingCallback]: `GBSDKBuilderApp` only accepts
   /// this callback before `initialize()`, which a container-managed or
-  /// consent-gated setup cannot satisfy. The next evaluation reports to the new
-  /// sink; evaluations that already ran are not replayed.
+  /// consent-gated setup cannot satisfy. The sink takes effect immediately;
+  /// evaluations that already ran are not replayed.
   ///
   /// Plugins registered with `GBSDKBuilderApp.addPlugin` keep receiving
   /// `onFeatureEvaluated` independently — this setter does not affect them.
@@ -513,8 +522,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Read `sdk.context.featureUsageCallback` to wrap the current sink rather
   /// than replace it.
   void setFeatureUsageCallback(GBFeatureUsageCallback featureUsageCallback) {
+    // In place, for the reasons given on [setTrackingCallback].
     _context.featureUsageCallback = featureUsageCallback;
-    _updateEvaluationContext();
+    _evaluationContext.options.featureUsageCallbackWithUser =
+        featureUsageCallback;
   }
 
   /// The setForcedFeatures method updates forced features

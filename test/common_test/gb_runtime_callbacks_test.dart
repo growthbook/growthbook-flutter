@@ -231,6 +231,34 @@ void main() {
         expect(sdk.context.attributes, {'id': 'user-7', 'plan': 'pro'});
         expect(sdk.feature('onboarding').value, isNotNull);
       });
+
+      /// Installing the real sink from inside the first exposure is a natural
+      /// pattern. Rebuilding the evaluation context there replaced the user
+      /// context mid-evaluation, and `run()` then copied the sticky bucket
+      /// documents out of the replacement — losing the one the evaluation had
+      /// just written into the context it started with.
+      test('a swap from inside the callback keeps the sticky assignment',
+          () async {
+        final sdk = await GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: {'id': 'user-sticky'},
+          client: client,
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        ).setStickyBucketService(InMemoryStickyBucketService()).initialize();
+
+        // Nothing has been bucketed yet, so the evaluation creates the map —
+        // on the user context it started with. A rebuild hands `run()` a
+        // different user context to copy out of, and this is where the
+        // assignment went missing.
+        sdk.context.stickyBucketAssignmentDocs = null;
+
+        sdk.setTrackingCallback((_) => sdk.setTrackingCallback((_) {}));
+        sdk.run(experimentNamed('runtime-sticky-swap'));
+
+        expect(sdk.context.stickyBucketAssignmentDocs, isNotEmpty);
+      });
     });
 
     group('an exposure nobody received', () {
