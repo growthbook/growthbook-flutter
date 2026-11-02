@@ -51,9 +51,36 @@ void main() {
     });
 
     test('a cap plus jitter never exceeds twice the cap', () {
-      final delay = pollBackoffDelay(const Duration(minutes: 10), 9,
+      final delay = pollBackoffDelay(const Duration(seconds: 30), 9,
           random: _FixedRandom(1));
       expect(delay, maxPollBackoff * 2);
+    });
+
+    /// The cap was written for intervals below it. Applied to a longer one it
+    /// would poll a host that is down more often than a healthy one.
+    test('a failing host is never polled sooner than a healthy one', () {
+      const interval = Duration(minutes: 15);
+      for (final failures in [1, 2, 5, 100]) {
+        expect(
+          pollBackoffDelay(interval, failures, random: noJitter()),
+          greaterThanOrEqualTo(interval),
+          reason: 'after $failures failures',
+        );
+      }
+    });
+
+    /// Duration holds microseconds in a 64-bit int: interval * 2^exponent
+    /// wraps negative for any interval above a couple of hours, and a negative
+    /// delay fires immediately — requests back to back for the whole outage.
+    test('a long interval does not overflow into an immediate retry', () {
+      const interval = Duration(hours: 3);
+      for (final failures in [20, 31, 1000000]) {
+        expect(
+          pollBackoffDelay(interval, failures, random: noJitter()),
+          greaterThanOrEqualTo(interval),
+          reason: 'after $failures failures',
+        );
+      }
     });
   });
 
