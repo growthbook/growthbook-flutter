@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Version reported on every ingested event and in the plugin's `User-Agent`.
-const String gbSdkVersion = '4.5.0'; // x-release-please-version
+const String gbSdkVersion = '5.0.0'; // x-release-please-version
 
 /// A plugin that receives lifecycle and evaluation events from the GrowthBook SDK.
 ///
