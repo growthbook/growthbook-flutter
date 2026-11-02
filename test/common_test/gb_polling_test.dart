@@ -110,6 +110,7 @@ void main() {
         remoteEval: remoteEval,
         ttlSeconds: ttlSeconds,
         pollingInterval: pollingInterval,
+        onInitializationFailure: onInitializationFailure,
       ).initialize();
     }
 
@@ -320,6 +321,43 @@ void main() {
 
       expect(client.gets, greaterThanOrEqualTo(afterInit + 2));
       expect(sdk.isPolling, isFalse);
+    });
+
+    /// An outage reporting an "initialization failure" every round, long after
+    /// initialization succeeded, would have apps showing an error screen or
+    /// re-initializing on a loop.
+    test('a failed poll is not an initialization failure', () async {
+      final client = _CountingClient(failAfterGets: 1);
+      var initFailures = 0;
+      final sdk = await buildSdk(
+        client: client,
+        pollingInterval: const Duration(milliseconds: 20),
+        onInitializationFailure: (_) => initFailures++,
+      );
+
+      final afterInit = client.gets;
+      expect(initFailures, 0, reason: 'the first load succeeded');
+
+      sdk.startPolling();
+      await waitUntil(() => client.gets >= afterInit + 2,
+          timeout: const Duration(seconds: 3));
+      sdk.stopPolling();
+
+      expect(client.gets, greaterThanOrEqualTo(afterInit + 2),
+          reason: 'the rounds that follow failed');
+      expect(initFailures, 0);
+    });
+
+    test('a failure before the first load still reports initialization',
+        () async {
+      var initFailures = 0;
+      await buildSdk(
+        client: _CountingClient(fail: true),
+        pollingInterval: const Duration(milliseconds: 20),
+        onInitializationFailure: (_) => initFailures++,
+      );
+
+      expect(initFailures, greaterThan(0));
     });
 
     test('polling refreshes remotely evaluated features', () async {

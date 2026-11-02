@@ -215,6 +215,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Consecutive failed rounds, which drive the backoff.
   int _pollFailures = 0;
 
+  /// Whether features have been loaded at least once, from cache or network.
+  /// Failures after that are refresh failures, not initialization failures.
+  bool _featuresLoaded = false;
+
   List<dynamic> _forcedFeatures;
 
   Map<String, dynamic> _attributeOverrides;
@@ -316,6 +320,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required bool isRemote,
   }) {
     _context.features = gbFeatures;
+    _featuresLoaded = true;
     _updateEvaluationContext();
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
@@ -326,13 +331,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   @override
   void featuresNotModified() {
+    // A 304 confirms the definitions already in memory, so the load stands.
+    _featuresLoaded = true;
     _refreshHandler?.call(true);
     _refreshHandlerV2?.call(true, null);
   }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
-    _onInitializationFailure?.call(error);
+    // Only until the first successful load. With polling on, a host outage
+    // would otherwise report an "initialization failure" every round, long
+    // after initialization succeeded, and apps that show an error screen or
+    // re-initialize from this callback would do it repeatedly. Later failures
+    // belong to the refresh handlers.
+    if (!_featuresLoaded) _onInitializationFailure?.call(error);
     if (isRemote) {
       _refreshHandler?.call(false);
       _refreshHandlerV2?.call(false, error);
@@ -693,7 +705,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   @override
   void savedGroupsFetchFailed(
       {required GBError? error, required bool isRemote}) {
-    _onInitializationFailure?.call(error);
+    // Same gate as featuresFetchFailed: once features are loaded, a failing
+    // round is a refresh failure, not a failed initialization.
+    if (!_featuresLoaded) _onInitializationFailure?.call(error);
     if (isRemote) {
       _refreshHandler?.call(false);
       _refreshHandlerV2?.call(false, error);
