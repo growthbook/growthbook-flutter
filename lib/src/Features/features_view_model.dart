@@ -32,11 +32,12 @@ class FeatureViewModel {
   final utf8Encoder = const Utf8Encoder();
   final utf8Decoder = const Utf8Decoder();
 
-  Completer<void>? _ongoingFetch;
+  /// Round currently running, completed with that round's own outcome so every
+  /// caller joining it gets the result of the round it actually waited for.
+  Completer<bool>? _ongoingFetch;
 
-  /// Outcome of the round currently running, read by [fetchFeatures] on the way
-  /// out. False once any network attempt in that round failed.
-  bool _lastRoundSucceeded = true;
+  /// Whether the round in [_ongoingFetch] bypasses the cache.
+  bool _ongoingFetchForced = false;
 
   Future<void> connectBackgroundSync() async {
     await source.fetchFeatures(
@@ -58,64 +59,38 @@ class FeatureViewModel {
   /// needs its own outcome, which the delegate cannot give it because the same
   /// callbacks serve initialization, streaming and manual refreshes.
   ///
-  /// [force] skips the cache-freshness check so the round always reaches the
-  /// network. Without it a caller polling faster than [ttlSeconds] would issue
-  /// no requests at all.
+  /// [force] skips the cache entirely so the round always reaches the network.
+  /// Without it a caller polling faster than [ttlSeconds] would issue no
+  /// requests at all. A forced call that arrives while an unforced round is in
+  /// flight waits for it and then runs its own, rather than reporting a round
+  /// that may never have left the device.
   Future<bool> fetchFeatures(String? apiUrl,
       {bool remoteEval = false,
       RemoteEvalModel? payload,
       bool force = false}) async {
     // If there's already an ongoing request — wait for it to complete
-    if (_ongoingFetch != null) {
+    while (_ongoingFetch != null) {
+      final ongoing = _ongoingFetch!;
+      final ongoingWasForced = _ongoingFetchForced;
       log('Fetch already in progress, waiting for completion.');
-      await _ongoingFetch!.future;
-      return _lastRoundSucceeded;
+      final outcome = await ongoing.future;
+      // A forced caller cannot take the answer of an unforced round: that round
+      // may have been served from a fresh cache without ever reaching the
+      // network, which is the one thing force rules out. Run its own round
+      // instead - after the loop, since yet another may have started meanwhile.
+      if (!force || ongoingWasForced) return outcome;
     }
 
-    final completer = Completer<void>();
+    final completer = Completer<bool>();
     _ongoingFetch = completer;
-    _lastRoundSucceeded = true;
+    _ongoingFetchForced = force;
 
+    bool succeeded;
     try {
-      if (remoteEval && apiUrl != null) {
-        final receivedData =
-            await manager.getContent(fileName: Constant.featureCache);
-
-        if (receivedData != null) {
-          final featureMap = _fetchCachedFeatures(receivedData);
-          if (featureMap != null) {
-            delegate.featuresFetchedSuccessfully(
-              gbFeatures: featureMap,
-              isRemote: false,
-            );
-          }
-        }
-
-        await _fetchRemoteEval(apiUrl, payload);
-      } else {
-        final receivedData =
-            await manager.getContent(fileName: Constant.featureCache);
-
-        final featureMap =
-            receivedData != null ? _fetchCachedFeatures(receivedData) : null;
-
-        if (featureMap != null) {
-          delegate.featuresFetchedSuccessfully(
-            gbFeatures: featureMap,
-            isRemote: false,
-          );
-        }
-
-        // If cache is missing, corrupt, or expired, fetch fresh data from network
-        if (force || featureMap == null || isCacheExpired()) {
-          await _fetchFromNetwork(hasCachedFeatures: featureMap != null);
-        }
-      }
-
-      completer.complete();
+      succeeded = await _runRound(apiUrl,
+          remoteEval: remoteEval, payload: payload, force: force);
     } catch (e, s) {
-      _lastRoundSucceeded = false;
-      completer.completeError(e, s);
+      succeeded = false;
       delegate.featuresFetchFailed(
         error: GBError(error: e, stackTrace: s.toString()),
         isRemote: true,
@@ -123,10 +98,45 @@ class FeatureViewModel {
     } finally {
       _ongoingFetch = null;
     }
-    return _lastRoundSucceeded;
+    // After the round is off the field, so a waiter resuming here never joins
+    // one that has already finished.
+    completer.complete(succeeded);
+    return succeeded;
   }
 
-  Future<void> _fetchFromNetwork({bool hasCachedFeatures = false}) async {
+  Future<bool> _runRound(String? apiUrl,
+      {required bool remoteEval,
+      required RemoteEvalModel? payload,
+      required bool force}) async {
+    // A forced round reaches the network whatever the cache holds, and the
+    // in-memory features already mirror the cache, so reading it would only
+    // decode the same JSON and rebuild the evaluation context a second time.
+    final cached = force
+        ? null
+        : await manager.getContent(fileName: Constant.featureCache);
+    final featureMap = cached != null ? _fetchCachedFeatures(cached) : null;
+
+    if (featureMap != null) {
+      delegate.featuresFetchedSuccessfully(
+        gbFeatures: featureMap,
+        isRemote: false,
+      );
+    }
+
+    if (remoteEval && apiUrl != null) {
+      return _fetchRemoteEval(apiUrl, payload);
+    }
+
+    // If cache is missing, corrupt, or expired, fetch fresh data from network
+    if (force || featureMap == null || isCacheExpired()) {
+      // A 304 only follows an ETag this process stored from an earlier 200, so
+      // on a forced round there is always a cached payload for it to confirm.
+      return _fetchFromNetwork(hasCachedFeatures: force || featureMap != null);
+    }
+    return true;
+  }
+
+  Future<bool> _fetchFromNetwork({bool hasCachedFeatures = false}) async {
     // null = no callback invoked (304 Not Modified), true = success, false = error
     bool? success;
     try {
@@ -145,7 +155,6 @@ class FeatureViewModel {
     } catch (e) {
       success = false;
     }
-    if (success == false) _lastRoundSucceeded = false;
     // Refresh TTL on success or 304 Not Modified (null means server confirmed cache is still valid)
     if (success != false) {
       refreshExpiresAt();
@@ -155,9 +164,10 @@ class FeatureViewModel {
     if (success == null && hasCachedFeatures) {
       delegate.featuresNotModified();
     }
+    return success != false;
   }
 
-  Future<void> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
+  Future<bool> _fetchRemoteEval(String apiUrl, RemoteEvalModel? payload) async {
     bool success = false;
     try {
       await source.fetchRemoteEval(
@@ -168,7 +178,6 @@ class FeatureViewModel {
         },
         onError: (e, s) {
           success = false;
-          _lastRoundSucceeded = false;
           log('Remote Eval Error: $e');
           delegate.featuresFetchFailed(
             error: GBError(error: e, stackTrace: s.toString()),
@@ -177,11 +186,16 @@ class FeatureViewModel {
         },
       );
     } catch (e) {
+      // Both failure paths land here or leave success false: an unparseable
+      // payload and a throwing request alike. Reporting the round as a success
+      // would reset the caller's failure count and keep the backoff from ever
+      // starting.
       success = false;
     }
     if (success) {
       refreshExpiresAt();
     }
+    return success;
   }
 
   Future<bool> _handleSuccess(FeaturedDataModel data) async {
