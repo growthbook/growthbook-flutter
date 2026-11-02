@@ -25,11 +25,31 @@ class CachingManager extends CachingLayer {
     return getContent(fileName: fileName);
   }
 
-  void putData({
+  /// Writes in flight, chained so that two of them cannot interleave and so
+  /// that [clearCache] can wait for them.
+  ///
+  /// [saveContent] suspends between creating the cache folder and writing the
+  /// file. A `clearCache()` landing in that gap deletes the folder underneath
+  /// it, and the write then fails with a `PathNotFoundException` that is only
+  /// logged — the next read finds no cache. Callers that await [putData] are
+  /// safe on their own; the chain covers the ones that cannot, such as the
+  /// synchronous encrypted paths.
+  Future<void> _writes = Future<void>.value();
+
+  /// Persists [content], returning when it has been written.
+  ///
+  /// Awaiting is what orders a write against a later [clearCache] or read;
+  /// fire-and-forget still works and still cannot interleave with another
+  /// write, but says nothing about when the bytes land.
+  Future<void> putData({
     required String fileName,
     required Uint8List content,
   }) {
-    saveContent(fileName: fileName, content: content);
+    final write =
+        _writes.then((_) => saveContent(fileName: fileName, content: content));
+    // The chain must survive a failed write, or every later one is skipped.
+    _writes = write.catchError((_) {});
+    return write;
   }
 
   @override
@@ -142,6 +162,10 @@ class CachingManager extends CachingLayer {
         prefs.remove(key);
       }
     }
+
+    // Deleting the folder while a write is suspended inside it is the race
+    // this class used to lose.
+    await _writes;
 
     String cacheDirectoryPath = localPath;
     String targetFolderPath = '$cacheDirectoryPath/$_key';

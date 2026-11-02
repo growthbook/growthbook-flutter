@@ -259,7 +259,7 @@ void main() {
         // Pre-populate cache with mock features JSON
         final cacheContent =
             Uint8List.fromList(utf8.encode(MockResponse.successResponse));
-        CachingManager().putData(
+        await CachingManager().putData(
           fileName: Constant.featureCache,
           content: cacheContent,
         );

@@ -193,7 +193,7 @@ void main() {
         () async {
           // Pre-populate cache with valid feature data
           final cacheData = utf8.encode(MockResponse.successResponse);
-          CachingManager().putData(
+          await CachingManager().putData(
             fileName: Constant.featureCache,
             content: Uint8List.fromList(cacheData),
           );
@@ -244,7 +244,7 @@ void main() {
       test(
         'empty cache should not throw FormatException and should fallback to network',
         () async {
-          CachingManager().putData(
+          await CachingManager().putData(
             fileName: Constant.featureCache,
             content: Uint8List(0),
           );
@@ -270,7 +270,7 @@ void main() {
         () async {
           final corruptData = Uint8List.fromList([123, 34]);
 
-          CachingManager().putData(
+          await CachingManager().putData(
             fileName: Constant.featureCache,
             content: corruptData,
           );
