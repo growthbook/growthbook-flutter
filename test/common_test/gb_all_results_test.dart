@@ -238,6 +238,29 @@ void main() {
         expect(sdk.getAllResults(), isEmpty);
       });
 
+      /// Clearing the results is not enough on its own: the sink stayed
+      /// installed, so the next read filled them in again — and counted as a
+      /// change, so subscribers belonging to widgets already torn down were
+      /// notified too.
+      test('an evaluation after dispose records nothing', () async {
+        final sdk = await buildSdk(features: {
+          'banner': featureRunning('banner-exp'),
+        });
+        final seen = <String>[];
+        sdk.subscribe((experiment, _) => seen.add(experiment.key));
+
+        sdk.feature('banner');
+        await sdk.dispose();
+        seen.clear();
+
+        final result = sdk.feature('banner');
+
+        expect(result.source, GBFeatureSource.experiment,
+            reason: 'evaluation still answers, it just stops recording');
+        expect(sdk.getAllResults(), isEmpty);
+        expect(seen, isEmpty);
+      });
+
       test('the returned map is a snapshot', () async {
         final sdk = await buildSdk(features: {
           'banner': featureRunning('banner-exp'),

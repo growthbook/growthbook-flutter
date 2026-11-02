@@ -193,6 +193,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Map<String, AssignedExperiment> assigned = {};
 
+  /// Set by [dispose]. Stops the evaluators reporting into an instance the app
+  /// has finished with, including across a later context rebuild.
+  bool _disposed = false;
+
   /// Assignments that changed during the evaluation currently running, held
   /// until it finishes. See [_evaluate].
   final List<AssignedExperiment> _pendingNotifications = [];
@@ -228,6 +232,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// directly. Has to be re-installed every time the evaluation context is
   /// rebuilt, since [GBUtils.initializeEvalContext] produces a fresh one.
   void _installExperimentSink() {
+    if (_disposed) return;
     _evaluationContext.globalContext.onExperimentEvaluated = fireSubscriptions;
   }
 
@@ -294,11 +299,19 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   ///   await sdk.dispose();
   /// }
   /// ```
-  /// Also drops the accumulated experiment results, so a disposed instance does
-  /// not keep answering [getAllResults] — matching `destroy()` in the reference
-  /// SDK.
+  /// Ends recording, the way `destroy()` does in the reference SDK: the
+  /// accumulated results are dropped so a disposed instance stops answering
+  /// [getAllResults], the subscribers are unregistered, and the evaluators
+  /// stop reporting into this instance. An evaluation after this point still
+  /// returns a value — it simply leaves nothing behind and notifies nobody,
+  /// rather than repopulating [getAllResults] and calling listeners that
+  /// belong to widgets already torn down.
   Future<void> dispose() {
+    _disposed = true;
     assigned.clear();
+    subscriptions.clear();
+    _pendingNotifications.clear();
+    _evaluationContext.globalContext.onExperimentEvaluated = null;
     return _pluginRegistry.close();
   }
 
@@ -359,6 +372,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   void fireSubscriptions(GBExperiment experiment, GBExperimentResult result) {
+    if (_disposed) return;
     String key = experiment.key;
     AssignedExperiment? prevAssignedExperiment = assigned[key];
     bool hasChanged = prevAssignedExperiment == null ||
