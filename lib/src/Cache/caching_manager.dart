@@ -161,6 +161,10 @@ class CachingManager extends CachingLayer {
       for (String key in keys) {
         prefs.remove(key);
       }
+      // Web has no cache directory to remove, and `localPath` below throws
+      // UnsupportedError there. The other methods return from their web branch
+      // for the same reason; this one fell through.
+      return;
     }
 
     // Deleting the folder while a write is suspended inside it is the race
