@@ -193,6 +193,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   Map<String, AssignedExperiment> assigned = {};
 
+  /// Assignments that changed during the evaluation currently running, held
+  /// until it finishes. See [_evaluate].
+  final List<AssignedExperiment> _pendingNotifications = [];
+
+  /// Nesting depth of [_evaluate]: a subscriber that evaluates during delivery
+  /// must not start a second delivery of its own.
+  int _evaluationDepth = 0;
+
+  bool _notifying = false;
+
   /// The complete data regarding features & attributes etc.
   GBContext get context => _context;
 
@@ -374,20 +384,66 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       {required String key,
       required GBExperiment experiment,
       required GBExperimentResult result}) {
-    assigned[key] =
+    final assignment =
         AssignedExperiment(experiment: experiment, experimentResult: result);
-    // Iterate a copy: a one-shot listener that unsubscribes from inside its
-    // own callback would otherwise throw ConcurrentModificationError out of
-    // the evaluation that triggered it.
-    for (final subscription in List.of(subscriptions)) {
-      // Subscribers now also fire from the feature evaluation path, so a
-      // throwing one would take feature() down with it. Guard it the way
-      // PluginRegistry guards plugin dispatch.
-      try {
-        subscription(experiment, result);
-      } catch (e, st) {
-        logger.e('GrowthBook subscription error', error: e, stackTrace: st);
+    assigned[key] = assignment;
+    _pendingNotifications.add(assignment);
+    // Inside an evaluation the listeners wait for it to finish; outside one —
+    // a direct call — there is nothing to wait for.
+    if (_evaluationDepth == 0) _notifySubscribers();
+  }
+
+  /// Runs [body] as one evaluation, delivering to subscribers only once it is
+  /// over.
+  ///
+  /// Subscribers are consumer code and commonly read back from the SDK.
+  /// Calling them from inside the evaluators means doing that halfway through
+  /// a rule loop, against the very state the evaluation is using: `isOn()`
+  /// clears `stackContext.evaluatedFeatures`, so the outer feature's
+  /// prerequisite and cycle checks then see the wrong stack, and
+  /// `setAttributes()` swaps the evaluation context, so the outer `feature()`
+  /// copies `stickyBucketAssignmentDocs` out of the replacement and drops the
+  /// assignment it just wrote. The reference SDK sidesteps this by building a
+  /// fresh context per call; here the context is shared, so the notifications
+  /// wait instead.
+  T _evaluate<T>(T Function() body) {
+    _evaluationDepth++;
+    try {
+      return body();
+    } finally {
+      _evaluationDepth--;
+      if (_evaluationDepth == 0) _notifySubscribers();
+    }
+  }
+
+  void _notifySubscribers() {
+    // A subscriber that evaluates reaches this again on the way out; the drain
+    // already running picks up whatever that produced.
+    if (_notifying) return;
+    _notifying = true;
+    try {
+      while (_pendingNotifications.isNotEmpty) {
+        final batch = List.of(_pendingNotifications);
+        _pendingNotifications.clear();
+        for (final assignment in batch) {
+          // Iterate a copy: a one-shot listener that unsubscribes from inside
+          // its own callback would otherwise throw ConcurrentModificationError
+          // out of the evaluation that triggered it.
+          for (final subscription in List.of(subscriptions)) {
+            // Subscribers also fire from the feature evaluation path, so a
+            // throwing one would take feature() down with it. Guard it the way
+            // PluginRegistry guards plugin dispatch.
+            try {
+              subscription(assignment.experiment, assignment.experimentResult);
+            } catch (e, st) {
+              logger.e('GrowthBook subscription error',
+                  error: e, stackTrace: st);
+            }
+          }
+        }
       }
+    } finally {
+      _notifying = false;
     }
   }
 
@@ -404,14 +460,16 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   GBFeatureResult feature(String id) {
     _triggerBackgroundRefreshIfNeeded();
-    _evaluationContext.stackContext.evaluatedFeatures.clear();
-    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
-    _notifyFeatureEvaluated(id, result);
-    // Propagate any newly persisted sticky bucket assignments back to the
-    // shared GBContext so the next _updateEvaluationContext() preserves them.
-    _context.stickyBucketAssignmentDocs =
-        _evaluationContext.userContext.stickyBucketAssignmentDocs;
-    return result;
+    return _evaluate(() {
+      _evaluationContext.stackContext.evaluatedFeatures.clear();
+      final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+      _notifyFeatureEvaluated(id, result);
+      // Propagate any newly persisted sticky bucket assignments back to the
+      // shared GBContext so the next _updateEvaluationContext() preserves them.
+      _context.stickyBucketAssignmentDocs =
+          _evaluationContext.userContext.stickyBucketAssignmentDocs;
+      return result;
+    });
   }
 
   void _triggerBackgroundRefreshIfNeeded() {
@@ -433,20 +491,22 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
-    _evaluationContext.globalContext.features = _context.features;
-    // Clear stack context to avoid false cyclic prerequisite detection
-    _evaluationContext.stackContext.evaluatedFeatures.clear();
-    final result = ExperimentEvaluator().evaluateExperiment(
-      _evaluationContext,
-      experiment,
-    );
-    _context.stickyBucketAssignmentDocs =
-        _evaluationContext.userContext.stickyBucketAssignmentDocs;
-    fireSubscriptions(experiment, result);
-    // Plugins are notified by [ExperimentEvaluator] itself, so that exposures
-    // from feature flag rules are recorded too.
-    return result;
+    return _evaluate(() {
+      // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+      _evaluationContext.globalContext.features = _context.features;
+      // Clear stack context to avoid false cyclic prerequisite detection
+      _evaluationContext.stackContext.evaluatedFeatures.clear();
+      final result = ExperimentEvaluator().evaluateExperiment(
+        _evaluationContext,
+        experiment,
+      );
+      _context.stickyBucketAssignmentDocs =
+          _evaluationContext.userContext.stickyBucketAssignmentDocs;
+      fireSubscriptions(experiment, result);
+      // Plugins are notified by [ExperimentEvaluator] itself, so that exposures
+      // from feature flag rules are recorded too.
+      return result;
+    });
   }
 
   Map<StickyAttributeKey, StickyAssignmentsDocument>
@@ -575,15 +635,17 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
-    // Sync features to evaluation context (no fetchFeatures to avoid cycles)
-    _evaluationContext.globalContext.features = _context.features;
-    // Clear stack context to avoid false cyclic prerequisite detection
-    _evaluationContext.stackContext.evaluatedFeatures.clear();
-    final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
-    _notifyFeatureEvaluated(id, result);
-    _context.stickyBucketAssignmentDocs =
-        _evaluationContext.userContext.stickyBucketAssignmentDocs;
-    return result;
+    return _evaluate(() {
+      // Sync features to evaluation context (no fetchFeatures to avoid cycles)
+      _evaluationContext.globalContext.features = _context.features;
+      // Clear stack context to avoid false cyclic prerequisite detection
+      _evaluationContext.stackContext.evaluatedFeatures.clear();
+      final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
+      _notifyFeatureEvaluated(id, result);
+      _context.stickyBucketAssignmentDocs =
+          _evaluationContext.userContext.stickyBucketAssignmentDocs;
+      return result;
+    });
   }
 
   void _notifyFeatureEvaluated(String id, GBFeatureResult result) {

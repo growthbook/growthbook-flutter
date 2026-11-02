@@ -377,6 +377,73 @@ void main() {
             reason: 'the second subscriber is unaffected');
       });
     });
+    // -------------------------------------------------------------------------
+    // Subscribers run outside the evaluation
+    // -------------------------------------------------------------------------
+    group('notification timing', () {
+      /// Notifying from inside the evaluators meant a subscriber ran halfway
+      /// through the rule loop, against the state the evaluation was using.
+      /// Reading a second feature cleared `stackContext.evaluatedFeatures`, so
+      /// the outer feature's prerequisite and cycle checks then saw the wrong
+      /// stack.
+      test(
+          'a subscriber may read another feature without disturbing the one '
+          'being evaluated', () async {
+        final sdk = await buildSdk(features: {
+          'banner': featureRunning('banner-exp'),
+          'checkout': featureRunning('checkout-exp'),
+        });
+        sdk.subscribe((experiment, _) {
+          if (experiment.key == 'banner-exp') sdk.isOn('checkout');
+        });
+
+        final result = sdk.feature('banner');
+
+        expect(result.source, GBFeatureSource.experiment);
+        expect(sdk.getAllResults().keys, containsAll(['banner-exp']));
+      });
+
+      /// Replacing the attributes rebuilds the evaluation context. Called
+      /// mid-evaluation, the outer `feature()` then copied
+      /// `stickyBucketAssignmentDocs` out of the replacement and dropped the
+      /// assignment it had just written.
+      test('a subscriber may change attributes without losing the assignment',
+          () async {
+        final sdk = await GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: {'id': 'user-1'},
+          client: _StaticPayloadClient({
+            'banner': featureRunning('banner-exp'),
+          }),
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+        ).setStickyBucketService(InMemoryStickyBucketService()).initialize();
+        // Nothing is bucketed yet, so the evaluation creates the map on the
+        // user context it started with — the case a mid-evaluation rebuild
+        // loses.
+        sdk.context.stickyBucketAssignmentDocs = null;
+        sdk.subscribe((_, __) => sdk.setAttributes({'id': 'user-2'}));
+
+        sdk.feature('banner');
+
+        expect(sdk.context.stickyBucketAssignmentDocs, isNotEmpty);
+        expect(sdk.getAllResults(), contains('banner-exp'));
+        expect(sdk.context.attributes, {'id': 'user-2'});
+      });
+
+      test('the result is recorded before subscribers are notified', () async {
+        final sdk = await buildSdk(features: {
+          'banner': featureRunning('banner-exp'),
+        });
+        Map<String, GBExperimentResult>? visible;
+        sdk.subscribe((_, __) => visible = sdk.getAllResults());
+
+        sdk.feature('banner');
+
+        expect(visible, contains('banner-exp'));
+      });
+    });
   });
 }
 
