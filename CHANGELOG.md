@@ -11,6 +11,29 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [5.0.0](https://github.com/growthbook/growthbook-flutter/compare/v4.5.0...v5.0.0) (2026-10-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Targeting conditions are strict about types: values are no longer converted between types, negated operators always give the opposite result of their positive form, booleans are not ordered, and version operators need two strings or two numbers. Conditions that use an operator or saved group type the SDK does not support always fail, even under $not or $nor. Only strings and numbers can be hash attributes; other values (booleans, arrays, objects, 0 and "") count as missing. Percentage rollouts no longer include one extra hash bucket.
+
+### Features
+
+* align with spec 0.12.0 (strict types, condition edge cases, bucketing) ([#194](https://github.com/growthbook/growthbook-flutter/issues/194)) ([cf92901](https://github.com/growthbook/growthbook-flutter/commit/cf929011303f9dd08232171c8f139230f49fbeff))
+
+## [4.5.0](https://github.com/growthbook/growthbook-flutter/compare/v4.4.0...v4.5.0) (2026-10-19)
+
+
+### Features
+
+* deduplicate events, add logEvent, and allow turning off feature usage events ([#181](https://github.com/growthbook/growthbook-flutter/issues/181)) ([8aa23bb](https://github.com/growthbook/growthbook-flutter/commit/8aa23bbd7b74d500831073e1fa77ce53841b2045))
+
+
+### Bug Fixes
+
+* record feature flag experiment exposures and correct the ingest payload ([#180](https://github.com/growthbook/growthbook-flutter/issues/180)) ([3198011](https://github.com/growthbook/growthbook-flutter/commit/31980119cd91c3bfcbd0325dede6cdaa7c09099c))
+
 ## [4.4.0](https://github.com/growthbook/growthbook-flutter/compare/v4.3.1...v4.4.0) (2026-08-04)
 
 

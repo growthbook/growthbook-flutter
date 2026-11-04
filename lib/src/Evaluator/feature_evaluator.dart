@@ -1,5 +1,4 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
@@ -149,9 +148,14 @@ class FeatureEvaluator {
               if (track.experiment != null && track.result != null) {
                 var experiment = track.experiment!;
                 var result = track.result!;
-                if (!ExperimentHelper.shared.isTracked(experiment, result)) {
-                  context.options.trackingCallBackWithUser!(GBTrackData(
+                if (experiment.active &&
+                    result.inExperiment &&
+                    !context.options.experimentHelper
+                        .isTracked(experiment, result)) {
+                  context.options.trackingCallBackWithUser?.call(GBTrackData(
                       experiment: experiment, experimentResult: result));
+                  context.options.pluginRegistry?.onExperimentViewed(
+                      experiment, result, context.userContext.attributes);
                 }
               }
             }
@@ -225,10 +229,12 @@ class FeatureEvaluator {
       GBExperiment? experiment,
       GBExperimentResult? result,
       String? ruleId = ""}) {
-    var isFalse = value == null ||
-        value.toString() == 'false' ||
-        value.toString() == '0' ||
-        (value.toString().isEmpty && value is! Map && value is! List);
+    // JavaScript truthiness: only null, false, 0, NaN and "" are off. The
+    // strings "false", "0" and "off", and empty lists and maps, are on.
+    final isFalse = value == null ||
+        value == false ||
+        (value is num && (value == 0 || value.isNaN)) ||
+        value == '';
     return GBFeatureResult(
         value: value,
         on: !isFalse,

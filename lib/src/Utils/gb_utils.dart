@@ -5,12 +5,15 @@ import 'package:growthbook_sdk_flutter/src/Model/context.dart';
 import 'package:growthbook_sdk_flutter/src/Model/experiment.dart';
 import 'package:growthbook_sdk_flutter/src/Model/features_model.dart';
 import 'package:growthbook_sdk_flutter/src/Model/sticky_assignments_document.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/global_context.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/options.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/user_context.dart';
+import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_filter.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/js_json.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/utils.dart';
 
 /// Fowler-Noll-Vo hash - 32 bit
@@ -144,8 +147,8 @@ class GBUtils {
       cumulative += weight;
       double end = start + (targetCoverage * weight);
 
-      // Add the bucket range to the list, rounded to 4 decimal places
-      bucketRanges.add([start.roundTo(4), end.roundTo(4)]);
+      // Add the bucket range to the list (unrounded, to match the JS SDK)
+      bucketRanges.add([start, end]);
     }
 
     return bucketRanges;
@@ -200,6 +203,7 @@ class GBUtils {
         attributes: attributes,
       );
       final hashValue = hashAttributeAndValue[1];
+      if (hashValue.isEmpty) return true;
 
       final hash = GBUtils.hash(
         seed: filter.seed,
@@ -255,13 +259,16 @@ class GBUtils {
     if (range != null) {
       return inRange(hash, range);
     } else if (coverage != null) {
-      return hash <= coverage;
+      // Half-open like inRange, so a coverage of k/10000 includes k buckets
+      return hash < coverage;
     } else {
       return true;
     }
   }
 
   static String paddedVersionString(String input) {
+    // An empty version is version 0
+    if (input.isEmpty) input = '0';
     // "v1.2.3-rc.1+build123" -> ["1","2","3","rc","1"]
     List<String> parts =
         input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
@@ -286,6 +293,10 @@ class GBUtils {
   }
 
   /// Returns a tuple of two elements: the attribute itself and its hash value.
+  ///
+  /// Only non-empty strings and finite, non-zero numbers identify a user.
+  /// Anything else (`0`, `""`, booleans, `null`, lists, maps) counts as
+  /// missing, so the hash value is `""` and the fallback attribute is tried.
   static List<String> getHashAttribute({
     String? attr,
     String? fallback,
@@ -293,29 +304,35 @@ class GBUtils {
     Map<String, dynamic>? attributeOverrides,
   }) {
     String hashAttribute = attr ?? 'id';
-    String hashValue = '';
 
-    if (attributeOverrides != null &&
-        attributeOverrides[hashAttribute] != null) {
-      hashValue = attributeOverrides[hashAttribute].toString();
-    } else if (attributes[hashAttribute] != null) {
-      hashValue = attributes[hashAttribute].toString();
-    }
+    dynamic lookup(String key) =>
+        attributeOverrides != null && attributeOverrides[key] != null
+            ? attributeOverrides[key]
+            : attributes[key];
+
+    String hashValue = hashableString(lookup(hashAttribute)) ?? '';
 
     // If no match, try fallback
     if (hashValue.isEmpty && fallback != null) {
-      if (attributeOverrides != null && attributeOverrides[fallback] != null) {
-        hashValue = attributeOverrides[fallback].toString();
-      } else if (attributes[fallback] != null) {
-        hashValue = attributes[fallback].toString();
-      }
-
-      if (hashValue.isNotEmpty) {
+      final fallbackValue = hashableString(lookup(fallback));
+      if (fallbackValue != null) {
+        hashValue = fallbackValue;
         hashAttribute = fallback;
       }
     }
 
     return [hashAttribute, hashValue];
+  }
+
+  /// Returns [value] as a hash input like JavaScript's `String(value)`, or
+  /// `null` when [value] can't identify a user.
+  static String? hashableString(dynamic value) {
+    if (value is String) return value.isEmpty ? null : value;
+    if (value is num) {
+      if (value == 0 || !value.isFinite) return null;
+      return jsNumberToString(value);
+    }
+    return null;
   }
 
   static double? hashFunction(
@@ -710,7 +727,9 @@ class GBUtils {
   static EvaluationContext initializeEvalContext(
       GBContext gbContext,
       // ignore: deprecated_member_use_from_same_package
-      GBCacheRefreshHandler? refreshHandler) {
+      GBCacheRefreshHandler? refreshHandler,
+      {PluginRegistry? pluginRegistry,
+      ExperimentHelper? experimentHelper}) {
     var options = Options(
       enabled: gbContext.enabled,
       isQaMode: gbContext.qaMode,
@@ -725,6 +744,8 @@ class GBUtils {
       featureUsageCallbackWithUser: gbContext.featureUsageCallback,
       featureRefreshCallback: refreshHandler,
       url: gbContext.url,
+      pluginRegistry: pluginRegistry,
+      experimentHelper: experimentHelper,
     );
 
     var globalContext = GlobalContext(

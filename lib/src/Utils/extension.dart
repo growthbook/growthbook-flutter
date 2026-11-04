@@ -35,6 +35,7 @@ extension ObjectChecker on Object? {
 }
 
 extension DoubleExt on double {
+  @Deprecated('No longer used by the SDK; bucket ranges are not rounded.')
   double roundTo(int numFractionDigits) {
     var factor = pow(10, numFractionDigits.toDouble());
     return (this * factor).toInt() / factor;

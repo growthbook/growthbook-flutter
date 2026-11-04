@@ -1,4 +1,6 @@
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/constant.dart';
+import 'package:growthbook_sdk_flutter/src/Plugins/plugin_registry.dart';
 import 'package:growthbook_sdk_flutter/src/StickyBucketService/sticky_bucket_service.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
@@ -18,7 +20,9 @@ class Options {
     this.refreshStrategy = FeatureRefreshStrategy.STALE_WHILE_REVALIDATE,
     this.featureRefreshCallback,
     this.url,
-  });
+    this.pluginRegistry,
+    ExperimentHelper? experimentHelper,
+  }) : experimentHelper = experimentHelper ?? ExperimentHelper();
 
   /// Whether globally all experiments are enabled (default: true)
   /// Switch to globally disable all experiments.
@@ -60,4 +64,19 @@ class Options {
 
   FeatureRefreshCallback? featureRefreshCallback;
   String? url;
+
+  /// Plugins registered on the owning SDK instance.
+  ///
+  /// Experiment exposures are dispatched from the evaluators rather than from
+  /// the SDK facade, because an experiment that runs through a feature flag
+  /// rule never passes through [GrowthBookSDK.run] — tracking it anywhere else
+  /// would miss those exposures entirely.
+  PluginRegistry? pluginRegistry;
+
+  /// Deduplicates exposures for the owning SDK instance.
+  ///
+  /// The SDK hands the same helper to every evaluation context it builds, so
+  /// the history survives attribute and feature updates. A context created on
+  /// its own gets a fresh one rather than sharing another instance's history.
+  ExperimentHelper experimentHelper;
 }
