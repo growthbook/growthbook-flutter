@@ -24,6 +24,9 @@ abstract class BaseClient {
     OnError onError,
   );
 
+  /// Calls [onSuccess] with the payload of every `features` event, and with an
+  /// empty map for a `features-updated` event, which carries no payload and
+  /// tells the SDK to fetch the features again.
   Future<void> consumeSseConnections(
     String url,
     OnSuccess onSuccess,
@@ -66,6 +69,19 @@ class DioClient extends BaseClient {
             .listen(
           (sseModel) async {
             log('SSE event received: ${sseModel.name}');
+            if (sseModel.name == "features-updated" &&
+                lastKnownId != sseModel.id) {
+              // Sent instead of "features" when the payload cannot be shared,
+              // e.g. by a proxy for a remote-evaluation connection. Like the
+              // JS SDK, treat it as a request to fetch the features again.
+              lastKnownId = sseModel.id;
+              try {
+                await onSuccess(<String, dynamic>{});
+              } catch (e, s) {
+                onError(e, s);
+              }
+              return;
+            }
             if (sseModel.name == "features" && lastKnownId != sseModel.id) {
               final data = sseModel.data;
               if (data == null || data.isEmpty) return;

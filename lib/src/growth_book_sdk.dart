@@ -158,7 +158,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         source: FeatureDataSource(context: _context, client: _baseClient),
         encryptionKey: _context.encryptionKey ?? "",
         backgroundSync: _context.backgroundSync,
-        ttlSeconds: ttlSeconds);
+        ttlSeconds: ttlSeconds,
+        // Only set in remote-eval mode, which is what puts the view model in
+        // that mode; the provider is invoked per round so every request carries
+        // the evaluation inputs as they are at that moment.
+        remoteEvalRequestProvider:
+            _context.remoteEval ? _buildRemoteEvalRequest : null);
     autoRefresh();
   }
 
@@ -425,10 +430,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// If you use Sticky Bucketing and need to guarantee that assignments are
   /// loaded before evaluating experiments (e.g. after login or user switch),
   /// use [setAttributesAsync] instead.
+  ///
+  /// In remote-eval mode attributes are part of the evaluation payload, so
+  /// changing them makes the cached response stale — a fresh remote evaluation
+  /// is triggered in the background.
   void setAttributes(Map<String, dynamic> attributes) {
     _context.attributes = attributes;
     _updateEvaluationContext();
     refreshStickyBucketService(null);
+    refreshForRemoteEval();
   }
 
   /// Async version of [setAttributes] that awaits sticky bucket refresh
@@ -438,10 +448,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// await sdk.setAttributesAsync(loginAttributes);
   /// final result = sdk.feature('my-experiment'); // sticky buckets guaranteed
   /// ```
+  ///
+  /// In remote-eval mode the refetch triggered by the new attributes is
+  /// awaited as well.
   Future<void> setAttributesAsync(Map<String, dynamic> attributes) async {
     _context.attributes = attributes;
     _updateEvaluationContext();
     await refreshStickyBucketService(null);
+    await refreshForRemoteEval();
   }
 
   /// Gets the current attribute overrides
@@ -472,9 +486,15 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   /// The setForcedFeatures method updates forced features
+  ///
+  /// Forced features are part of the remote-evaluation payload, so in
+  /// remote-eval mode changing them triggers a fresh evaluation in the
+  /// background — otherwise the server would keep evaluating against the
+  /// previous forced values.
   void setForcedFeatures(List<dynamic> forcedFeatures) {
     _forcedFeatures = forcedFeatures;
     _updateEvaluationContext();
+    refreshForRemoteEval();
   }
 
   void setEncryptedFeatures(String encryptedString, String encryptionKey,
@@ -522,20 +542,29 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
+  /// Builds the request for the next remote-evaluation round from the current
+  /// evaluation inputs. Passed to the view model as a provider, so a round that
+  /// starts later (a refresh after an attribute change, a streamed update) sends
+  /// the state as it is then.
+  RemoteEvalRequest? _buildRemoteEvalRequest() {
+    final apiUrl = context.getRemoteEvalUrl();
+    // No usable URL (host or client key missing) — nothing to evaluate against.
+    if (apiUrl == null) return null;
+
+    return RemoteEvalRequest(
+      apiUrl: apiUrl,
+      payload: RemoteEvalModel(
+        attributes: _evaluationContext.userContext.attributes ?? {},
+        forcedFeatures: _forcedFeatures,
+        forcedVariations:
+            _evaluationContext.userContext.forcedVariationsMap ?? {},
+      ),
+    );
+  }
+
   Future<void> refreshForRemoteEval() async {
     if (!context.remoteEval) return;
-    RemoteEvalModel payload = RemoteEvalModel(
-      attributes: _evaluationContext.userContext.attributes ?? {},
-      forcedFeatures: _forcedFeatures,
-      forcedVariations:
-          _evaluationContext.userContext.forcedVariationsMap ?? {},
-    );
-
-    await _featureViewModel.fetchFeatures(
-      context.getRemoteEvalUrl(),
-      remoteEval: context.remoteEval,
-      payload: payload,
-    );
+    await _featureViewModel.fetchFeatures(context.getRemoteEvalUrl());
   }
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
