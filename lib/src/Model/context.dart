@@ -1,4 +1,5 @@
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/feature_url_builder.dart';
 
 /// Defines the GrowthBook context.
 class GBContext {
@@ -20,6 +21,9 @@ class GBContext {
     this.backgroundSync = false,
     this.savedGroups,
     this.url,
+    this.streamingHost,
+    this.apiHostRequestHeaders,
+    this.streamingHostRequestHeaders,
   });
 
   /// Registered API key for GrowthBook SDK.
@@ -30,6 +34,18 @@ class GBContext {
 
   /// Host URL for GrowthBook
   String? hostURL;
+
+  /// Host serving the streaming (server-sent events) endpoint, when it differs
+  /// from [hostURL] — a GrowthBook Proxy in front of a CDN, for example.
+  /// Falls back to [hostURL] when null.
+  String? streamingHost;
+
+  /// Headers sent with every features request and remote-evaluation request.
+  /// Meant for deployments behind an authenticated gateway or proxy.
+  Map<String, String>? apiHostRequestHeaders;
+
+  /// Headers sent with the streaming connection, including its reconnects.
+  Map<String, String>? streamingHostRequestHeaders;
 
   /// Switch to globally disable all experiments. Default true.
   bool? enabled;
@@ -77,20 +93,23 @@ class GBContext {
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
 
-  String? getFeaturesURL() => _buildUrl('/api/features/');
+  String? getFeaturesURL() => _urlBuilder.buildUrl(apiKey);
 
-  String? getRemoteEvalUrl() => _buildUrl('/api/eval/');
+  String? getRemoteEvalUrl() => _urlBuilder.buildUrl(
+        apiKey,
+        featureRefreshStrategy:
+            FeatureRefreshStrategy.SERVER_SENT_REMOTE_FEATURE_EVAL,
+      );
 
-  String? _buildUrl(String endpoint) {
-    if (hostURL == null || apiKey == null) return null;
+  /// Streaming endpoint, served from [streamingHost] when one is configured and
+  /// from [hostURL] otherwise.
+  String? getStreamingURL() => _urlBuilder.buildUrl(
+        apiKey,
+        featureRefreshStrategy: FeatureRefreshStrategy.SERVER_SENT_EVENTS,
+      );
 
-    final uri = Uri.parse(hostURL!);
-
-    var basePath = uri.path;
-    while (basePath.endsWith('/')) {
-      basePath = basePath.substring(0, basePath.length - 1);
-    }
-
-    return uri.replace(path: '$basePath$endpoint$apiKey').toString();
-  }
+  FeatureURLBuilder get _urlBuilder => FeatureURLBuilder(
+        apiHost: hostURL,
+        streamingHost: streamingHost,
+      );
 }
