@@ -48,7 +48,7 @@ void main() {
       /// Test passed attr.
       expect(sdk.context.attributes, attr);
 
-      manager.clearCache();
+      await manager.clearCache();
     });
 
     test('- qa mode', () async {
@@ -67,7 +67,7 @@ void main() {
       expect(sdk.context.enabled, true);
       expect(sdk.context.qaMode, true);
 
-      manager.clearCache();
+      await manager.clearCache();
     });
 
     test(
@@ -81,7 +81,7 @@ void main() {
         backgroundSync: false,
       );
       expect(sdkInstance, isNotNull);
-      manager.clearCache();
+      await manager.clearCache();
     });
 
     test('- with network client', () async {
@@ -99,7 +99,7 @@ void main() {
       expect(featureValue.source, GBFeatureSource.unknownFeature);
       final result = sdk.run(GBExperiment(key: "some-feature"));
       expect(result.variationID, 0);
-      manager.clearCache();
+      await manager.clearCache();
     });
 
     test(
@@ -118,7 +118,7 @@ void main() {
         expect(featureValue.value ?? true, true);
         final result = sdk.run(GBExperiment(key: "some-feature"));
         expect(result.variationID, 0);
-        manager.clearCache();
+        await manager.clearCache();
       },
     );
 
@@ -153,7 +153,7 @@ void main() {
         sdkInstance.features["testfeature1"]?.rules?[0].force,
         equals(features["testfeature1"]?["rules"]?[0]["force"]),
       );
-      manager.clearCache();
+      await manager.clearCache();
     });
     test(
       '- onInitializationFailure callback test',
@@ -176,7 +176,7 @@ void main() {
         expect(error != null, true);
         expect(error?.error is DioException, true);
         expect(error?.stackTrace != null, true);
-        manager.clearCache();
+        await manager.clearCache();
       },
     );
     test('- testTrackingCallback', () async {
