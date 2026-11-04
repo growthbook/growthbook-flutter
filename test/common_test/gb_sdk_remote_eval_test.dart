@@ -1,16 +1,19 @@
+import 'dart:io';
+
 // ignore_for_file: deprecated_member_use_from_same_package
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../mocks/network_mock.dart';
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
   group('GrowthBookSDK — remote eval flow', () {
     const testApiKey = '<API_KEY>';
     const testHostURL = 'https://example.growthbook.io';
-    final cachingManager = CachingManager();
+    final cachingManager = FileCacheStorage(cacheDirectory: testCacheDir);
 
     Future<GrowthBookSDK> buildSdk({
       bool remoteEval = false,

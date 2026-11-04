@@ -1,25 +1,47 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/gb_variation_meta.dart';
 
 import '../mocks/network_mock.dart';
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Initialization', () {
     const testApiKey = '<API_KEY>';
     const attr = <String, String>{};
     const testHostURL = 'https://example.growthbook.io';
     const client = MockNetworkClient();
 
-    CachingManager manager = CachingManager();
+    CacheStorage manager = FileCacheStorage(cacheDirectory: testCacheDir);
 
     var isRefreshed = false;
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+
+    setUpAll(() {
+      TestWidgetsFlutterBinding.ensureInitialized();
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
+        if (methodCall.method == 'getApplicationSupportDirectory') {
+          return '/tmp';
+        }
+        return null;
+      });
+    });
+
+    tearDownAll(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
 
     test("- default", () async {
       final sdk = await GBSDKBuilderApp(
