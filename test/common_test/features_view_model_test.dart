@@ -238,6 +238,107 @@ void main() {
         expect(dataSourceMock.counterNetworkCall, 1);
       });
 
+      test('a forced round does not read and re-apply the cache', () async {
+        final cacheData = utf8.encode(MockResponse.successResponse);
+        CachingManager().putData(
+          fileName: Constant.featureCache,
+          content: Uint8List.fromList(cacheData),
+        );
+
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          ttlSeconds: 3600,
+        );
+
+        final succeeded = await featureViewModel
+            .fetchFeatures(context.getFeaturesURL(), force: true);
+
+        // The in-memory features already mirror the cache, so decoding it and
+        // rebuilding the evaluation context before every poll is pure waste.
+        expect(succeeded, true);
+        expect(dataSourceMock.counterCacheCall, 0);
+        expect(dataSourceMock.counterNetworkCall, 1);
+      });
+
+      test('a forced call joining an unforced round runs its own', () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(),
+            context: context,
+          ),
+          ttlSeconds: 3600,
+        );
+
+        final unforced = featureViewModel.fetchFeatures(
+          context.getFeaturesURL(),
+        );
+        final forced = featureViewModel.fetchFeatures(
+          context.getFeaturesURL(),
+          force: true,
+        );
+        await Future.wait([unforced, forced]);
+
+        // Taking the unforced round's answer would skip the network whenever
+        // the cache happened to be fresh — exactly what force rules out.
+        expect(dataSourceMock.counterNetworkCall, 2);
+      });
+
+      test('a remote eval failure is reported as a failed round', () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const MockNetworkClient(error: true),
+            context: context,
+          ),
+        );
+
+        final succeeded = await featureViewModel.fetchFeatures(
+          context.getRemoteEvalUrl(),
+          remoteEval: true,
+          payload: RemoteEvalModel(
+            attributes: const <String, dynamic>{},
+            forcedFeatures: const [],
+            forcedVariations: const <String, dynamic>{},
+          ),
+        );
+
+        expect(succeeded, false);
+      });
+
+      test('an unusable remote eval payload is a failed round', () async {
+        featureViewModel = FeatureViewModel(
+          encryptionKey: '',
+          delegate: dataSourceMock,
+          source: FeatureDataSource(
+            client: const _EmptyPayloadClient(),
+            context: context,
+          ),
+        );
+
+        final succeeded = await featureViewModel.fetchFeatures(
+          context.getRemoteEvalUrl(),
+          remoteEval: true,
+          payload: RemoteEvalModel(
+            attributes: const <String, dynamic>{},
+            forcedFeatures: const [],
+            forcedVariations: const <String, dynamic>{},
+          ),
+        );
+
+        // Neither features nor encryptedFeatures came back: nothing was
+        // applied, so counting the round as a success would reset a caller's
+        // failure count and keep its backoff from ever starting.
+        expect(succeeded, false);
+      });
+
       test(
         'empty cache should not throw FormatException and should fallback to network',
         () async {
@@ -289,4 +390,25 @@ void main() {
       );
     },
   );
+}
+
+/// Answers every request with a 200 that carries no definitions at all.
+class _EmptyPayloadClient implements BaseClient {
+  const _EmptyPayloadClient();
+
+  static const _empty = <String, dynamic>{'status': 200};
+
+  @override
+  Future<void> consumeGetRequest(
+          String url, OnSuccess onSuccess, OnError onError) async =>
+      onSuccess(_empty);
+
+  @override
+  Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
+          OnSuccess onSuccess, OnError onError) async =>
+      onSuccess(_empty);
+
+  @override
+  Future<void> consumeSseConnections(
+      String url, OnSuccess onSuccess, OnError onError) async {}
 }

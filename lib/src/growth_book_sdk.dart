@@ -7,6 +7,7 @@ import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/poll_backoff.dart';
 
 typedef VoidCallback = void Function();
 
@@ -30,7 +31,8 @@ class GBSDKBuilderApp {
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url,
+      this.pollingInterval});
 
   final String apiKey;
   final String? encryptionKey;
@@ -48,6 +50,14 @@ class GBSDKBuilderApp {
   final String? url;
   final int ttlSeconds;
 
+  /// How often [GrowthBookSDK.startPolling] refreshes features.
+  ///
+  /// Configuring it does not start anything: polling is driven by
+  /// [GrowthBookSDK.startPolling] and [GrowthBookSDK.stopPolling] so the app can
+  /// tie it to its lifecycle, rather than leaving a timer running where the
+  /// system will suspend the requests anyway.
+  final Duration? pollingInterval;
+
   // ignore: deprecated_member_use_from_same_package
   CacheRefreshHandler? refreshHandler;
   CacheRefreshHandlerV2? refreshHandlerV2;
@@ -56,6 +66,17 @@ class GBSDKBuilderApp {
   final List<GrowthBookPlugin> _plugins = [];
 
   Future<GrowthBookSDK> initialize() async {
+    final interval = pollingInterval;
+    if (interval != null && interval <= Duration.zero) {
+      // Rejected rather than clamped: a zero or negative interval is a typo,
+      // and spinning on it would hammer the API.
+      throw ArgumentError.value(
+        interval,
+        'pollingInterval',
+        'must be greater than zero',
+      );
+    }
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
@@ -78,7 +99,8 @@ class GBSDKBuilderApp {
         refreshHandler: refreshHandler,
         refreshHandlerV2: refreshHandlerV2,
         pluginRegistry: PluginRegistry(_plugins),
-        ttlSeconds: ttlSeconds);
+        ttlSeconds: ttlSeconds,
+        pollingInterval: pollingInterval);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
@@ -137,7 +159,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     CacheRefreshHandlerV2? refreshHandlerV2,
     PluginRegistry? pluginRegistry,
     required int ttlSeconds,
+    Duration? pollingInterval,
   })  : _context = context,
+        _pollingInterval = pollingInterval,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
@@ -182,6 +206,18 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// Exposures this instance has already reported. Outlives every evaluation
   /// context rebuild, so an attribute update does not re-report them.
   final ExperimentHelper _experimentHelper = ExperimentHelper();
+
+  final Duration? _pollingInterval;
+
+  /// Scheduled next poll, or null while polling is stopped.
+  Timer? _pollTimer;
+
+  /// Consecutive failed rounds, which drive the backoff.
+  int _pollFailures = 0;
+
+  /// Whether features have been loaded at least once, from cache or network.
+  /// Failures after that are refresh failures, not initialization failures.
+  bool _featuresLoaded = false;
 
   List<dynamic> _forcedFeatures;
 
@@ -274,6 +310,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// }
   /// ```
   Future<void> dispose() {
+    stopPolling();
     return _pluginRegistry.close();
   }
 
@@ -283,6 +320,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     required bool isRemote,
   }) {
     _context.features = gbFeatures;
+    _featuresLoaded = true;
     _updateEvaluationContext();
     if (isRemote) {
       log('Features updated from remote source, triggering refresh handler');
@@ -293,13 +331,20 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   @override
   void featuresNotModified() {
+    // A 304 confirms the definitions already in memory, so the load stands.
+    _featuresLoaded = true;
     _refreshHandler?.call(true);
     _refreshHandlerV2?.call(true, null);
   }
 
   @override
   void featuresFetchFailed({required GBError? error, required bool isRemote}) {
-    _onInitializationFailure?.call(error);
+    // Only until the first successful load. With polling on, a host outage
+    // would otherwise report an "initialization failure" every round, long
+    // after initialization succeeded, and apps that show an error screen or
+    // re-initialize from this callback would do it repeatedly. Later failures
+    // belong to the refresh handlers.
+    if (!_featuresLoaded) _onInitializationFailure?.call(error);
     if (isRemote) {
       _refreshHandler?.call(false);
       _refreshHandlerV2?.call(false, error);
@@ -309,6 +354,110 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   Future<void> autoRefresh() async {
     if (_context.backgroundSync) {
       await _featureViewModel.connectBackgroundSync();
+    }
+  }
+
+  /// Whether a poll is currently scheduled.
+  bool get isPolling => _pollTimer != null;
+
+  /// Starts refreshing features on the configured `pollingInterval`, and reports
+  /// whether polling is now running.
+  ///
+  /// Streaming is the cheaper way to stay current, but it is not always
+  /// available — a proxy or firewall that blocks SSE leaves a `backgroundSync`
+  /// client with no updates at all, and on mobile a stream does not survive the
+  /// app being backgrounded. Polling refreshes on a timer instead.
+  ///
+  /// Nothing starts on its own: tie this to the app lifecycle so the timer does
+  /// not spend battery on requests the system will suspend anyway. Stop on
+  /// `paused`/`hidden` rather than on everything that is not `resumed`: on iOS
+  /// `inactive` fires for the Control Center, the app switcher and incoming
+  /// calls, which would stop and restart polling constantly.
+  /// ```dart
+  /// @override
+  /// void didChangeAppLifecycleState(AppLifecycleState state) {
+  ///   switch (state) {
+  ///     case AppLifecycleState.resumed:
+  ///       sdk.startPolling();
+  ///     case AppLifecycleState.paused:
+  ///     case AppLifecycleState.hidden:
+  ///       sdk.stopPolling();
+  ///     default:
+  ///       break;
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// Returns false, and starts nothing, when no interval is configured or when
+  /// `backgroundSync` is on: both reach the same endpoint and the stream is
+  /// cheaper, so enabling both is safe rather than doubling the traffic.
+  ///
+  /// Each round ignores `ttlSeconds` — a cache-fresh round would issue no
+  /// request, leaving the loop looking alive while doing nothing. A failing host
+  /// is backed off exponentially, capped at five minutes and floored at the
+  /// interval, then spread by up to 100%: see `pollBackoffDelay`.
+  bool startPolling() {
+    final interval = _pollingInterval;
+    if (interval == null) {
+      log('Polling not started: no pollingInterval is configured');
+      return false;
+    }
+    if (_context.backgroundSync) {
+      log('Polling not started: streaming is already keeping features current');
+      return false;
+    }
+    if (isPolling) return true;
+
+    _pollFailures = 0;
+    _scheduleNextPoll(interval);
+    return true;
+  }
+
+  /// Stops polling. Safe to call when it is not running.
+  void stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+    _pollFailures = 0;
+  }
+
+  void _scheduleNextPoll(Duration delay) {
+    late final Timer timer;
+    timer = Timer(delay, () async {
+      final succeeded = await _pollOnce();
+      // A Timer that has already fired cannot be cancelled, so the round has to
+      // ask whether it is still the current one rather than whether any timer
+      // is scheduled. stopPolling() and then startPolling() while this round
+      // was awaiting the network - a quick inactive -> resumed - leaves this
+      // callback holding a stale timer, and scheduling from here would run a
+      // second loop alongside the new one for the rest of the process.
+      if (!identical(_pollTimer, timer)) return;
+      _pollFailures = succeeded ? 0 : _pollFailures + 1;
+      _scheduleNextPoll(
+        pollBackoffDelay(_pollingInterval!, _pollFailures),
+      );
+    });
+    _pollTimer = timer;
+  }
+
+  /// Runs one round and reports whether it ended with usable definitions.
+  Future<bool> _pollOnce() async {
+    try {
+      return _context.remoteEval
+          ? await _featureViewModel.fetchFeatures(
+              context.getRemoteEvalUrl(),
+              remoteEval: true,
+              payload: _buildRemoteEvalPayload(),
+              force: true,
+            )
+          : await _featureViewModel.fetchFeatures(
+              context.getFeaturesURL(),
+              force: true,
+            );
+    } catch (e) {
+      // A round must never take the loop down with it: one outage cannot stop a
+      // client refreshing for the rest of its life.
+      log('Poll failed: ${e.runtimeType}');
+      return false;
     }
   }
 
@@ -390,8 +539,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       } else {
         _featureViewModel
             .fetchFeatures(context.getFeaturesURL())
-            .catchError((e) {
+            .catchError((Object e) {
           log('Background refresh failed: $e');
+          return false;
         });
       }
     }
@@ -522,19 +672,23 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     }
   }
 
-  Future<void> refreshForRemoteEval() async {
-    if (!context.remoteEval) return;
-    RemoteEvalModel payload = RemoteEvalModel(
+  /// Builds the remote-evaluation payload from the current evaluation inputs.
+  RemoteEvalModel _buildRemoteEvalPayload() {
+    return RemoteEvalModel(
       attributes: _evaluationContext.userContext.attributes ?? {},
       forcedFeatures: _forcedFeatures,
       forcedVariations:
           _evaluationContext.userContext.forcedVariationsMap ?? {},
     );
+  }
+
+  Future<void> refreshForRemoteEval() async {
+    if (!context.remoteEval) return;
 
     await _featureViewModel.fetchFeatures(
       context.getRemoteEvalUrl(),
       remoteEval: context.remoteEval,
-      payload: payload,
+      payload: _buildRemoteEvalPayload(),
     );
   }
 
@@ -563,7 +717,9 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   @override
   void savedGroupsFetchFailed(
       {required GBError? error, required bool isRemote}) {
-    _onInitializationFailure?.call(error);
+    // Same gate as featuresFetchFailed: once features are loaded, a failing
+    // round is a refresh failure, not a failed initialization.
+    if (!_featuresLoaded) _onInitializationFailure?.call(error);
     if (isRemote) {
       _refreshHandler?.call(false);
       _refreshHandlerV2?.call(false, error);
