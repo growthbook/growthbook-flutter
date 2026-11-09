@@ -237,6 +237,24 @@ void main() {
       expect(endValue, expectedValue);
     });
 
+    test('padded version string strips build metadata', () {
+      final plain = GBUtils.paddedVersionString('1.2.3');
+      expect(GBUtils.paddedVersionString('v1.2.3+build+more.1-2'), plain);
+      expect(GBUtils.paddedVersionString('1.2.3+'), plain);
+      // Build metadata is everything after the first `+`, even across a newline
+      expect(GBUtils.paddedVersionString('1.2.3+build\nx'), plain);
+      expect(GBUtils.paddedVersionString('vv1.2.3'), 'v1-    2-    3-~');
+      expect(GBUtils.paddedVersionString('+build'), '');
+    });
+
+    test('padded version string is linear on many pluses', () {
+      // The old `^v|\+.*$` regex took several seconds on this input
+      final input = '${'+' * 100000}\nx';
+      final stopwatch = Stopwatch()..start();
+      expect(GBUtils.paddedVersionString(input), '');
+      expect(stopwatch.elapsedMilliseconds, lessThan(1000));
+    });
+
     test('TestDecrypt', () async {
       try {
         var testCases = GBTestHelper.getDecryptData();
