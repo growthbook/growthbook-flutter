@@ -270,8 +270,11 @@ class GBUtils {
     // An empty version is version 0
     if (input.isEmpty) input = '0';
     // "v1.2.3-rc.1+build123" -> ["1","2","3","rc","1"]
-    List<String> parts =
-        input.replaceAll(RegExp(r'^v|\+.*$'), '').split(RegExp(r'[-.]'));
+    // Build metadata starts at the first `+`. No regex here: `\+.*$` is quadratic on many `+`s then a newline.
+    if (input.startsWith('v')) input = input.substring(1);
+    final buildIndex = input.indexOf('+');
+    if (buildIndex != -1) input = input.substring(0, buildIndex);
+    List<String> parts = input.split(RegExp(r'[-.]'));
 
     // ["1","0","0"] -> ["1","0","0","~"]
     // "~" is the largest ASCII character, so this will make "1.0.0" greater than "1.0.0-beta" for example
