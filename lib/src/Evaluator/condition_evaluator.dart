@@ -1,5 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/js_json.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
+
+/// Keys a condition can have that aren't attributes, besides `$not`, which is
+/// also an operator on a value.
+const _conditionOperators = {'\$or', '\$nor', '\$and', '\$savedGroup'};
+
+/// Negates a result, keeping "unsupported" (`null`) as it is.
+bool? _not(bool? result) => result == null ? null : !result;
 
 /// Both experiments and features can define targeting conditions using a syntax modeled after MongoDB queries.
 /// These conditions can have arbitrary nesting levels and evaluating them requires recursion.
@@ -40,94 +48,116 @@ class GBConditionEvaluator {
   /// This is the main function used to evaluate a condition. It loops through the condition key/value pairs and checks each entry:
   /// - attributes : User Attributes
   /// - condition : to be evaluated
+  ///
+  /// A condition that depends on an operator or saved group type this SDK
+  /// doesn't support fails, even under `$not` or `$nor`. A malformed condition
+  /// fails instead of throwing.
   bool isEvalCondition(
     Map<String, dynamic> attributes,
     dynamic conditionObj,
     // Must be included for `condition` to correctly evaluate group Operators
     SavedGroupsValues? savedGroups,
   ) {
-    savedGroups ??= {};
+    // No condition at all passes
+    if (conditionObj == null) return true;
+    try {
+      return _evalCondition(attributes, conditionObj, savedGroups ?? {}) ==
+          true;
+    } catch (e) {
+      logger.w('Condition evaluation failed: $e');
+      return false;
+    }
+  }
+
+  /// Evaluates a condition. Returns `null` when the result depends on an
+  /// operator or saved group type this SDK doesn't support.
+  bool? _evalCondition(
+    dynamic attributes,
+    dynamic conditionObj,
+    SavedGroupsValues savedGroups,
+  ) {
     if (conditionObj is List) {
       return false;
     }
-    if (conditionObj is Map<String, dynamic>) {
+    if (conditionObj == null) {
+      throw const FormatException('Malformed condition: null');
+    }
+    bool? result = true;
+    if (conditionObj is Map) {
       for (var key in conditionObj.keys) {
         var value = conditionObj[key];
+        bool? r;
         switch (key) {
           case "\$or":
-            if (!isEvalOr(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _evalOr(attributes, value, savedGroups);
             break;
           case "\$nor":
-            if (isEvalOr(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _not(_evalOr(attributes, value, savedGroups));
             break;
           case "\$and":
-            if (!isEvalAnd(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _evalAnd(attributes, value, savedGroups);
             break;
           case "\$not":
-            if (isEvalCondition(attributes, value, savedGroups)) {
-              return false;
-            }
+            r = _not(_evalCondition(attributes, value, savedGroups));
+            break;
+          case "\$savedGroup":
+            // Saved group references aren't supported by this SDK yet
+            r = null;
             break;
           default:
-            var element = getPath(attributes, key);
-            if (!isEvalConditionValue(value, element, savedGroups)) {
-              return false;
-            }
+            r = _evalConditionValue(
+                value, getPath(attributes, key), savedGroups);
         }
+        // One failing entry decides it, wherever an unsupported one is
+        if (r == false) return false;
+        if (r == null) result = null;
       }
     }
-    // If none of the entries failed their checks, `evalCondition` returns true
-    return true;
+    return result;
   }
 
   /// Evaluate OR conditions against given attributes
   bool isEvalOr(Map<String, dynamic> attributes, List conditionObj,
       SavedGroupsValues savedGroups) {
+    return _evalOr(attributes, conditionObj, savedGroups) == true;
+  }
+
+  bool? _evalOr(
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
     // If conditionObj is empty, return true
-    if (conditionObj.isEmpty) {
-      return true;
-    } else {
-      // Loop through the conditionObjects
-      for (var item in conditionObj) {
-        // If evalCondition(attributes, conditionObj[i]) is true, break out of
-        // the loop and return true
-        if (isEvalCondition(attributes, item, savedGroups)) {
-          return true;
-        }
-      }
+    if (conditionObj.isEmpty) return true;
+    bool? result = false;
+    for (var item in conditionObj) {
+      final r = _evalCondition(attributes, item, savedGroups);
+      if (r == true) return true;
+      if (r == null) result = null;
     }
-    // Return false
-    return false;
+    return result;
   }
 
   /// Evaluate AND conditions against given attributes
   bool isEvalAnd(
       dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
-    // Loop through the conditionObjects
+    return _evalAnd(attributes, conditionObj, savedGroups) == true;
+  }
 
-    // Loop through the conditionObjects
+  bool? _evalAnd(
+      dynamic attributes, List conditionObj, SavedGroupsValues savedGroups) {
+    bool? result = true;
     for (var item in conditionObj) {
-      // If evalCondition(attributes, conditionObj[i]) is true, break out of
-      // the loop and return false
-      if (!isEvalCondition(attributes, item, savedGroups)) {
-        return false;
-      }
+      final r = _evalCondition(attributes, item, savedGroups);
+      if (r == false) return false;
+      if (r == null) result = null;
     }
-    // Return true
-    return true;
+    return result;
   }
 
   /// This accepts a parsed JSON object as input and returns true if every key
-  /// in the object starts with $
+  /// in the object starts with $. An empty object has no operators, so it is
+  /// an operator object that always passes.
   bool isOperatorObject(dynamic obj) {
-    if (obj is Map<String, dynamic> && obj.isNotEmpty) {
-      return obj.keys.every((key) => key.startsWith('\$'));
+    if (obj is Map) {
+      return obj.keys.every((key) => key.toString().startsWith('\$'));
     }
     return false;
   }
@@ -162,23 +192,28 @@ class GBConditionEvaluator {
   }
 
   /// Given attributes and a dot-separated path string, return the value at
-  /// that path (or null/undefined if the path doesn't exist)
+  /// that path (or null if the path doesn't exist). A segment can index into
+  /// a list (`"tags.0"`), as in JavaScript.
   dynamic getPath(dynamic obj, String key) {
-    var paths = <String>[];
-
-    if (key.contains(".")) {
-      paths = key.split('.');
-    } else {
-      paths.add(key);
-    }
-
     dynamic element = obj;
-    for (final path in paths) {
-      if (element == null || (element as Object).isArray) {
-        return null;
-      }
-      if ((element is Map)) {
+    for (final path in key.split('.')) {
+      if (element is Map) {
+        if (!element.containsKey(path)) return null;
         element = element[path];
+      } else if (element is List) {
+        if (path == 'length') {
+          element = element.length;
+          continue;
+        }
+        // Only canonical indexes ("0", "12"), like JavaScript's own keys
+        final index = int.tryParse(path);
+        if (index == null ||
+            index < 0 ||
+            index >= element.length ||
+            index.toString() != path) {
+          return null;
+        }
+        element = element[index];
       } else {
         return null;
       }
@@ -194,271 +229,326 @@ class GBConditionEvaluator {
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
-    // Case-insensitive equality short-circuit for strings.
-    if (inSensitive && conditionValue is String && attributeValue is String) {
-      return conditionValue.toLowerCase() == attributeValue.toLowerCase();
-    }
-    // If conditionValue is a string, number, boolean, return true if it's
-    // "equal" to attributeValue and false if not.
-    if ((conditionValue as Object?).isPrimitive &&
-        (attributeValue as Object?).isPrimitive) {
-      return conditionValue == attributeValue;
+    return _evalConditionValue(conditionValue, attributeValue, savedGroups,
+            inSensitive: inSensitive) ==
+        true;
+  }
+
+  bool? _evalConditionValue(
+    dynamic conditionValue,
+    dynamic attributeValue,
+    SavedGroupsValues savedGroups, {
+    bool inSensitive = false,
+  }) {
+    // Simple equality: the attribute must have the same type as the
+    // condition, with no coercion ("10" does not equal 10).
+    if (conditionValue is String ||
+        conditionValue is num ||
+        conditionValue is bool) {
+      if (getType(attributeValue) != getType(conditionValue)) {
+        return false;
+      }
+      if (inSensitive && conditionValue is String) {
+        return (attributeValue as String).toLowerCase() ==
+            conditionValue.toLowerCase();
+      }
+      return attributeValue == conditionValue;
     }
 
-    // Evaluate to false if attributeValue is null.
-    if (conditionValue.isPrimitive && attributeValue == null) {
-      return false;
+    if (conditionValue == null) {
+      return attributeValue == null;
     }
 
-    // If conditionValue is array, return true if it's "equal" - "equal" should
-    // do a deep comparison for arrays.
-    if (conditionValue is List) {
-      if (attributeValue is List) {
-        if (conditionValue.length == attributeValue.length) {
-          return listEquals(conditionValue, attributeValue);
-        } else {
-          return false;
-        }
-      } else {
+    // Arrays and plain objects are compared by their JSON.stringify output.
+    if (conditionValue is List || !isOperatorObject(conditionValue)) {
+      if (getType(attributeValue) != getType(conditionValue)) {
+        return false;
+      }
+      try {
+        return jsJsonEncode(attributeValue) == jsJsonEncode(conditionValue);
+      } catch (_) {
         return false;
       }
     }
 
-    // If conditionValue is an object, loop over each key/value pair:
-    if (conditionValue is Map) {
-      if (isOperatorObject(conditionValue)) {
-        for (var key in conditionValue.keys) {
-          // If evalOperatorCondition(key, attributeValue, value)
-          // is false, return false
-          if (!evalOperatorCondition(
-              key, attributeValue, conditionValue[key], savedGroups)) {
-            return false;
-          }
-        }
-      } else if (attributeValue != null) {
-        if (attributeValue is Map) {
-          return mapEquals(conditionValue, attributeValue);
-        } else {
-          return attributeValue == conditionValue;
-        }
-      } else {
-        return false;
-      }
+    // An operator object: every operator must pass.
+    bool? result = true;
+    for (var key in (conditionValue as Map).keys) {
+      final r = _evalOperator(
+          key.toString(), attributeValue, conditionValue[key], savedGroups);
+      if (r == false) return false;
+      if (r == null) result = null;
     }
-
-    return true;
+    return result;
   }
 
   /// This checks if attributeValue is an array, and if so at least one of the
   /// array items must match the condition
   bool elemMatch(dynamic attributeValue, dynamic condition,
       SavedGroupsValues savedGroups) {
-    // Loop through items in attributeValue
-    if (attributeValue is List) {
-      for (final item in attributeValue) {
-        // If isOperatorObject(condition)
-        if (isOperatorObject(condition)) {
-          // If evalConditionValue(condition, item), break out of loop and
-          //return true
-          if (isEvalConditionValue(condition, item, savedGroups)) {
-            return true;
-          }
-        }
-        // Else if evalCondition(item, condition), break out of loop and
-        //return true
-        else if (isEvalCondition(item, condition, savedGroups)) {
-          return true;
-        }
-      }
-    }
+    return _elemMatch(attributeValue, condition, savedGroups) == true;
+  }
+
+  bool? _elemMatch(dynamic attributeValue, dynamic condition,
+      SavedGroupsValues savedGroups) {
     // If attributeValue is not an array, return false
-    return false;
+    if (attributeValue is! List) return false;
+    // Operators test each element itself. A condition, including one that only
+    // uses $or, $and, $nor, or $savedGroup, tests each element's fields.
+    final testsItself = isOperatorObject(condition) &&
+        !(condition as Map).keys.any(_conditionOperators.contains);
+    bool? result = false;
+    for (final item in attributeValue) {
+      // Only skip null elements; 0, "" and false are still tested
+      if (item == null) continue;
+      final r = testsItself
+          ? _evalConditionValue(condition, item, savedGroups)
+          : _evalCondition(item, condition, savedGroups);
+      if (r == true) return true;
+      if (r == null) result = null;
+    }
+    return result;
   }
 
   /// This function is just a case statement that handles all the possible operators
   /// There are basic comparison operators in the form attributeValue {op}
   ///  conditionValue.
+  ///
+  /// When the attribute's type differs from the condition's, the positive
+  /// operator fails and its negation matches.
   bool evalOperatorCondition(
     String operator,
     dynamic attributeValue,
     dynamic conditionValue,
     SavedGroupsValues savedGroups,
   ) {
-    /// Evaluate TYPE operator - whether both are of the same type
-    if (operator == "\$type") {
-      return getType(attributeValue).name == conditionValue;
-    }
+    return _evalOperator(
+            operator, attributeValue, conditionValue, savedGroups) ==
+        true;
+  }
 
-    /// Evaluate NOT operator - whether condition doesn't contain attribute
-    if (operator == "\$not") {
-      return !isEvalConditionValue(conditionValue, attributeValue, savedGroups);
-    }
-
-    /// Evaluate EXISTS operator - whether condition contains attribute
-    if (operator == "\$exists") {
-      if (conditionValue.toString() == 'false' && attributeValue == null) {
-        return true;
-      } else if (conditionValue.toString() == 'true' &&
-          attributeValue != null) {
-        return true;
-      }
-    }
-
+  /// Returns `null` for an operator this SDK doesn't support.
+  bool? _evalOperator(
+    String operator,
+    dynamic attributeValue,
+    dynamic conditionValue,
+    SavedGroupsValues savedGroups,
+  ) {
     switch (operator) {
+      case "\$veq":
+      case "\$vne":
+      case "\$vgt":
+      case "\$vgte":
+      case "\$vlt":
+      case "\$vlte":
+        return _evalVersion(operator, attributeValue, conditionValue);
+
+      case "\$eq":
+        return attributeValue == conditionValue;
+      case "\$ne":
+        return attributeValue != conditionValue;
+
+      /// Only two numbers or two strings are ordered; strings compare as text.
+      case '\$lt':
+      case '\$lte':
+      case '\$gt':
+      case '\$gte':
+        if (!_isOrderable(attributeValue, conditionValue)) return false;
+        // Numbers use Dart's operators: NaN is unordered and -0.0 equals 0,
+        // as in JavaScript. compareTo would order both.
+        if (attributeValue is num && conditionValue is num) {
+          switch (operator) {
+            case '\$lt':
+              return attributeValue < conditionValue;
+            case '\$lte':
+              return attributeValue <= conditionValue;
+            case '\$gt':
+              return attributeValue > conditionValue;
+            default:
+              return attributeValue >= conditionValue;
+          }
+        }
+        final comparison =
+            (attributeValue as Comparable).compareTo(conditionValue);
+        switch (operator) {
+          case '\$lt':
+            return comparison < 0;
+          case '\$lte':
+            return comparison <= 0;
+          case '\$gt':
+            return comparison > 0;
+          default:
+            return comparison >= 0;
+        }
+
+      /// Evaluate EXISTS operator - whether condition contains attribute
+      case "\$exists":
+        return _isTruthy(conditionValue)
+            ? attributeValue != null
+            : attributeValue == null;
+
+      /// Evaluate TYPE operator - whether both are of the same type
+      case "\$type":
+        return getType(attributeValue).name == conditionValue;
+
+      /// Evaluate NOT operator - whether condition doesn't contain attribute
+      case "\$not":
+        return _not(
+            _evalConditionValue(conditionValue, attributeValue, savedGroups));
+
       case "\$inGroup":
-        return isIn(attributeValue, savedGroups[conditionValue] ?? []);
       case "\$notInGroup":
-        return !isIn(attributeValue, savedGroups[conditionValue] ?? []);
+        final group = savedGroups[conditionValue];
+        // A saved group type added after this SDK was built
+        if (group is Map &&
+            group['type'] != 'list' &&
+            group['type'] != 'condition') {
+          return null;
+        }
+        final values = savedGroups.containsKey(conditionValue)
+            ? _savedGroupValues(group)
+            // An unknown id has always behaved like an empty list
+            : const <dynamic>[];
+        // No values means matching nobody. An empty list would pass everyone.
+        if (values == null) return false;
+        final found = isIn(attributeValue, values);
+        return operator == "\$inGroup" ? found : !found;
+
+      case '\$in':
+        if (conditionValue is! List) return false;
+        return isIn(attributeValue, conditionValue);
+
+      /// Evaluate INI operator - case-insensitive version of $in
+      case '\$ini':
+        if (conditionValue is! List) return false;
+        return isIn(attributeValue, conditionValue, inSensitive: true);
+
+      /// Evaluate NIN operator - attributeValue not in the conditionValue
+      /// array.
+      case '\$nin':
+        if (conditionValue is! List) return false;
+        return !isIn(attributeValue, conditionValue);
+
+      /// Evaluate NINI operator - case-insensitive version of $nin
+      case '\$nini':
+        if (conditionValue is! List) return false;
+        return !isIn(attributeValue, conditionValue, inSensitive: true);
+
+      /// Evaluate ALL operator - whether condition contains all attribute
+      case '\$all':
+        if (conditionValue is! List) return false;
+        return _isInAll(attributeValue, conditionValue, savedGroups);
+
+      /// Evaluate ALLI operator - case-insensitive version of $all
+      case '\$alli':
+        if (conditionValue is! List) return false;
+        return _isInAll(attributeValue, conditionValue, savedGroups,
+            inSensitive: true);
+
+      /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
+      case "\$elemMatch":
+        return _elemMatch(attributeValue, conditionValue, savedGroups);
+
+      /// Evaluate SIZE operator - whether condition size is same as that
+      /// of attribute
+      case "\$size":
+        if (attributeValue is! List) return false;
+        return _evalConditionValue(
+            conditionValue, attributeValue.length, savedGroups);
+
+      case '\$regex':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: true,
+          negate: false,
+        );
+
+      case '\$regexi':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: false,
+          negate: false,
+        );
+
+      case '\$notRegex':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: true,
+          negate: true,
+        );
+
+      case '\$notRegexi':
+        return _evalRegex(
+          conditionValue: conditionValue,
+          attributeValue: attributeValue,
+          isCaseSensitive: false,
+          negate: true,
+        );
+
+      default:
+        // Keys this SDK knows, but on a condition rather than on a value,
+        // where they never match
+        if (_conditionOperators.contains(operator)) return false;
+        logger.w('Unknown operator: $operator');
+        return null;
     }
+  }
 
-    /// There are three operators where conditionValue is an array
-    if (conditionValue is List) {
-      switch (operator) {
-        case '\$in':
-          return isIn(attributeValue, conditionValue);
-
-        /// Evaluate INI operator - case-insensitive version of $in
-        case '\$ini':
-          return isIn(attributeValue, conditionValue, inSensitive: true);
-
-        /// Evaluate NIN operator - attributeValue not in the conditionValue
-        /// array.
-        case '\$nin':
-          return !isIn(attributeValue, conditionValue);
-
-        /// Evaluate NINI operator - case-insensitive version of $nin
-        case '\$nini':
-          return !isIn(attributeValue, conditionValue, inSensitive: true);
-
-        /// Evaluate ALL operator - whether condition contains all attribute
-        case '\$all':
-          return _isInAll(attributeValue, conditionValue, savedGroups);
-
-        /// Evaluate ALLI operator - case-insensitive version of $all
-        case '\$alli':
-          return _isInAll(attributeValue, conditionValue, savedGroups,
-              inSensitive: true);
-        default:
-          return false;
-      }
-    } else if (attributeValue is List) {
-      switch (operator) {
-        /// Evaluate ELEMENT-MATCH operator - whether condition matches attribute
-        case "\$elemMatch":
-          return elemMatch(attributeValue, conditionValue, savedGroups);
-
-        /// Evaluate SIE operator - whether condition size is same as that
-        /// of attribute
-        case "\$size":
-          return isEvalConditionValue(
-              conditionValue, attributeValue.length, savedGroups);
-
-        default:
-      }
-    } else if ((attributeValue as Object?).isPrimitive &&
-        (conditionValue as Object?).isPrimitive) {
-      final targetPrimitiveValue = double.tryParse(conditionValue.toString());
-      final sourcePrimitiveValue = double.tryParse(attributeValue.toString());
-      final paddedVersionTarget =
-          GBUtils.paddedVersionString(conditionValue.toString());
-      final paddedVersionSource =
-          GBUtils.paddedVersionString(attributeValue?.toString() ?? '0.0');
-
-      /// If condition is bool.
-      bool evaluatedValue = false;
-      switch (operator) {
-        case "\$eq":
-          evaluatedValue = conditionValue == attributeValue;
-          break;
-        case "\$ne":
-          evaluatedValue = conditionValue != attributeValue;
-          break;
-        case "\$veq":
-          return paddedVersionSource == paddedVersionTarget;
-        case "\$vne":
-          return paddedVersionSource != paddedVersionTarget;
-        case "\$vgt":
-          return paddedVersionSource > paddedVersionTarget;
-        case "\$vgte":
-          return paddedVersionSource >= paddedVersionTarget;
-        case "\$vlt":
-          return paddedVersionSource < paddedVersionTarget;
-        case "\$vlte":
-          return paddedVersionSource <= paddedVersionTarget;
-
-        /// Evaluate LT operator - whether attribute less than to condition
-        case '\$lt':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) < 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) < (targetPrimitiveValue ?? 0);
-          break;
-
-        /// Evaluate LTE operator - whether attribute less than or equal to condition
-        case '\$lte':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) <= 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) <= (targetPrimitiveValue ?? 0);
-          break;
-
-        /// Evaluate GT operator - whether attribute greater than to condition
-        case '\$gt':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) > 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) > (targetPrimitiveValue ?? 0);
-          break;
-
-        case '\$gte':
-          if (conditionValue is String && attributeValue is String) {
-            return attributeValue.compareTo(conditionValue) >= 0;
-          }
-          evaluatedValue =
-              (sourcePrimitiveValue ?? 0.0) >= (targetPrimitiveValue ?? 0);
-          break;
-
-        case '\$regex':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: true,
-            negate: false,
-          );
-
-        case '\$regexi':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: false,
-            negate: false,
-          );
-
-        case '\$notRegex':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: true,
-            negate: true,
-          );
-
-        case '\$notRegexi':
-          return _evalRegex(
-            conditionValue: conditionValue,
-            attributeValue: attributeValue,
-            isCaseSensitive: false,
-            negate: true,
-          );
-
-        default:
-          conditionValue = false;
-      }
-      return evaluatedValue;
+  /// The values of a saved group: a bare list, or a typed `list` entry.
+  /// Returns `null` for a condition group or a malformed entry, so
+  /// `$notInGroup` doesn't pass everyone.
+  List<dynamic>? _savedGroupValues(dynamic group) {
+    if (group is List) return group;
+    if (group is Map && group['type'] == 'list' && group['values'] is List) {
+      return group['values'] as List;
     }
-    return false;
+    return null;
+  }
+
+  /// Version operators need both sides to be strings, or both numbers.
+  /// `$vne` is the opposite of `$veq`, so it matches on a type mismatch.
+  bool _evalVersion(
+      String operator, dynamic attributeValue, dynamic conditionValue) {
+    if (!_isOrderable(attributeValue, conditionValue)) {
+      return operator == "\$vne";
+    }
+    final source = GBUtils.paddedVersionString(_versionInput(attributeValue));
+    final target = GBUtils.paddedVersionString(_versionInput(conditionValue));
+    switch (operator) {
+      case "\$veq":
+        return source == target;
+      case "\$vne":
+        return source != target;
+      case "\$vgt":
+        return source > target;
+      case "\$vgte":
+        return source >= target;
+      case "\$vlt":
+        return source < target;
+      default:
+        return source <= target;
+    }
+  }
+
+  /// Formats a number the way JavaScript does (`2.0` -> `"2"`).
+  String _versionInput(dynamic value) {
+    return value is num ? jsNumberToString(value) : value.toString();
+  }
+
+  bool _isOrderable(dynamic attributeValue, dynamic conditionValue) {
+    return (attributeValue is num && conditionValue is num) ||
+        (attributeValue is String && conditionValue is String);
+  }
+
+  bool _isTruthy(dynamic value) {
+    return value != null &&
+        value != false &&
+        value != 0 &&
+        value != '' &&
+        !(value is double && value.isNaN);
   }
 
   bool isIn(dynamic actualValue, List<dynamic> conditionValue,
@@ -483,25 +573,29 @@ class GBConditionEvaluator {
     );
   }
 
-  bool _isInAll(
+  bool? _isInAll(
     dynamic attributeValue,
     List<dynamic> conditionValue,
     SavedGroupsValues savedGroups, {
     bool inSensitive = false,
   }) {
     if (attributeValue is! List) return false;
+    bool? result = true;
     for (final condition in conditionValue) {
-      var passed = false;
+      bool? passed = false;
       for (final attribute in attributeValue) {
-        if (isEvalConditionValue(condition, attribute, savedGroups,
-            inSensitive: inSensitive)) {
+        final r = _evalConditionValue(condition, attribute, savedGroups,
+            inSensitive: inSensitive);
+        if (r == true) {
           passed = true;
           break;
         }
+        if (r == null) passed = null;
       }
-      if (!passed) return false;
+      if (passed == false) return false;
+      if (passed == null) result = null;
     }
-    return true;
+    return result;
   }
 
   bool _evalRegex({
@@ -510,11 +604,12 @@ class GBConditionEvaluator {
     required bool isCaseSensitive,
     required bool negate,
   }) {
-    if (conditionValue == null || attributeValue == null) return false;
+    if (attributeValue is! String) return negate;
+    // A non-string pattern never matches
+    if (conditionValue is! String) return false;
     try {
-      final regex =
-          RegExp(conditionValue.toString(), caseSensitive: isCaseSensitive);
-      final matches = regex.hasMatch(attributeValue.toString());
+      final regex = RegExp(conditionValue, caseSensitive: isCaseSensitive);
+      final matches = regex.hasMatch(attributeValue);
       return negate != matches;
     } catch (_) {
       return false;

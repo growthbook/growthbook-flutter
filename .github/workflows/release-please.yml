@@ -20,16 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Dart
         uses: dart-lang/setup-dart@v1
-        
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.0'
           channel: 'stable'
-          
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -58,4 +58,27 @@ jobs:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
 
-
+  # Tags created by release-please via GITHUB_TOKEN do not trigger the
+  # `push: tags:` event in publish.yml (GitHub's guard against workflow
+  # recursion), which is why releases never reached pub.dev on their own.
+  #
+  # Publishing directly from this job would not work either: it runs on
+  # `push` to main, so its OIDC token carries ref=refs/heads/main /
+  # ref_type=branch, and pub.dev rejects anything that is not a tag ref --
+  # checking the tag out does not change the token's claims. Instead we
+  # dispatch publish.yml *at the tag ref*, which gives that run an OIDC token
+  # with ref=refs/tags/<version> and ref_type=tag. Dispatches sent with
+  # GITHUB_TOKEN are exempt from the recursion guard.
+  publish:
+    needs: validate-and-release
+    if: needs.validate-and-release.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write  # Required to dispatch publish.yml
+    steps:
+      - name: Dispatch publish workflow at the release tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.validate-and-release.outputs.tag_name }}
+        run: gh workflow run publish.yml --ref "$TAG_NAME"
