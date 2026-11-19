@@ -20,6 +20,10 @@ const _runSections = {
       'gb_saved_group_references_v2_test.dart',
   'savedGroupReferencesV2.feature': 'gb_saved_group_references_v2_test.dart',
   'savedGroupReferencesV2.run': 'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesRemote.evalCondition':
+      'gb_saved_group_references_remote_test.dart',
+  'savedGroupReferencesRemote.feature':
+      'gb_saved_group_references_remote_test.dart',
 };
 
 /// Spec sections this SDK doesn't run, and why.
@@ -30,10 +34,6 @@ const _excludedSections = {
       'reducePayload) are not implemented for client SDKs to start with',
   'urlRedirect': 'URL redirects are a browser feature this SDK lacks',
   'contextualBandit': 'This SDK does not support contextual bandits yet',
-  'savedGroupReferencesRemote.evalCondition':
-      'Remote saved groups (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesRemote.feature':
-      'Remote saved groups (\$savedGroup) are not implemented yet',
 };
 
 /// Every case section in the spec, with nested sections as `parent.child`.

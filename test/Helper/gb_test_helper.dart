@@ -67,6 +67,12 @@ class GBTestHelper {
   static List getSavedGroupReferencesV2RunData() {
     return testData['savedGroupReferencesV2']['run'];
   }
+
+  /// A section of the spec's `savedGroupReferencesRemote` key: `evalCondition`
+  /// or `feature`.
+  static List getSavedGroupReferencesRemoteData(String section) {
+    return testData['savedGroupReferencesRemote'][section];
+  }
 }
 
 class GBFeaturesTest {

@@ -757,7 +757,7 @@ class GBUtils {
     );
 
     var userContext = UserContext(
-      attributes: gbContext.attributes,
+      attributes: gbContext.evaluationAttributes,
       stickyBucketAssignmentDocs: gbContext.stickyBucketAssignmentDocs,
       forcedVariationsMap: gbContext.forcedVariation,
     );
