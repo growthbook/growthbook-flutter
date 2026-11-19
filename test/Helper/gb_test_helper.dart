@@ -53,6 +53,20 @@ class GBTestHelper {
   static List getQueryStringOverrideData() {
     return testData['getQueryStringOverride'];
   }
+
+  /// The `savedGroupReferencesV2` section nests its own `evalCondition`,
+  /// `feature` and `run` cases, in the same shape as the top-level sections.
+  static List getSavedGroupReferencesV2EvalConditionData() {
+    return testData['savedGroupReferencesV2']['evalCondition'];
+  }
+
+  static List getSavedGroupReferencesV2FeatureData() {
+    return testData['savedGroupReferencesV2']['feature'];
+  }
+
+  static List getSavedGroupReferencesV2RunData() {
+    return testData['savedGroupReferencesV2']['run'];
+  }
 }
 
 class GBFeaturesTest {
