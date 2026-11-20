@@ -1,0 +1,6 @@
+# Test files must not run concurrently: CachingManager is a process-wide
+# singleton over one shared directory (${systemTemp}/GrowthBook-Cache), so a
+# clearCache() in one file's tearDown deletes the cache another file is in the
+# middle of reading or writing. Serialising is the cheap fix; the real one is an
+# injectable cache directory per SDK instance.
+concurrency: 1
