@@ -478,11 +478,29 @@ final sdk = await GBSDKBuilderApp(
 
 A sticky bucket service and `backgroundSync` are supported alongside remote evaluation; a streamed update triggers a fresh evaluation.
 
-Changing the evaluation inputs (`setAttributes`, `setForcedFeatures`, `setForcedVariations`, `setUrl`) sends a new evaluation request. The current URL is part of the request, so URL-targeting rules work too:
+Changing the evaluation inputs (`setAttributes`, `setForcedFeatures`, `setForcedVariations`, `setRemoteGroupIds`, `setUrl`) sends a new evaluation request. The current URL is part of the request, so URL-targeting rules work too:
 
 ```dart
 await sdk.setUrl('https://example.com/pricing');
 ```
+
+### Remote Saved Groups
+
+A **remote** saved group keeps its members outside the payload, for lists too large to ship (millions of ids). The payload only says which attribute the group is about, `{"type": "remote", "attributeKey": "account_id"}`, so the SDK can't work out membership itself: your app resolves the user's groups, typically from its own back end, and passes their ids.
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  attributes: userAttributes,
+).setRemoteGroupIds(["grp_vip"]).initialize();
+
+// Later, when the user or their groups change
+sdk.setRemoteGroupIds(["grp_vip", "grp_beta"]);
+```
+
+Conditions read the ids as the `__gb_remoteGroupIds` attribute, and remote evaluation sends them too. Setting them here wins over an attribute of that name, which also works on its own.
+
+Leave the ids unset (or pass `null`) while they are unresolved: rules that use remote groups then fail, including "not in group" rules, and one warning is logged. Pass an empty list only when the user is in no group, because that is what lets "not in group" rules match.
 
 ### Real-time Updates
 
