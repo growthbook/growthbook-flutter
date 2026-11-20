@@ -92,6 +92,81 @@ void main() {
       });
     });
 
+    // -------------------------------------------------------------------------
+    // ranges (BucketRange)
+    //
+    // A BucketRange is a bare `[start, end]` pair on the wire. Serializing it
+    // as an object, or as a 3-element tuple, silently breaks bucketing against
+    // every other SDK, so the shape is pinned explicitly here.
+    // -------------------------------------------------------------------------
+    group('ranges serialization', () {
+      test('serialize as 2-element arrays', () {
+        final exp = GBExperiment(
+          key: 'exp-ranges',
+          ranges: [
+            [0.0, 0.5],
+            [0.5, 1.0],
+          ],
+        );
+
+        final rawRanges = exp.toJson()['ranges'] as List;
+
+        expect(rawRanges.length, 2);
+        expect(rawRanges[0], [0.0, 0.5]);
+        expect(rawRanges[1], [0.5, 1.0]);
+      });
+
+      test('round-trip preserves values', () {
+        final exp = GBExperiment(
+          key: 'exp-ranges-rt',
+          ranges: [
+            [0.0, 0.25],
+            [0.25, 0.75],
+            [0.75, 1.0],
+          ],
+        );
+
+        final restored = GBExperiment.fromJson(exp.toJson());
+
+        expect(restored.ranges, isNotNull);
+        expect(restored.ranges!.length, 3);
+        expect(restored.ranges![0], [0.0, 0.25]);
+        expect(restored.ranges![1], [0.25, 0.75]);
+        expect(restored.ranges![2], [0.75, 1.0]);
+      });
+
+      test('deserialize from raw JSON arrays', () {
+        final exp = GBExperiment.fromJson(<String, dynamic>{
+          'key': 'exp-raw',
+          'ranges': [
+            [0.0, 0.5],
+            [0.5, 1.0],
+          ],
+        });
+
+        expect(exp.ranges, isNotNull);
+        expect(exp.ranges!.length, 2);
+        expect(exp.ranges![0], [0.0, 0.5]);
+        expect(exp.ranges![1], [0.5, 1.0]);
+      });
+
+      test('emit arrays, never maps or 3-element tuples', () {
+        final exp = GBExperiment(
+          key: 'exp-shape',
+          ranges: [
+            [0.0, 0.8]
+          ],
+        );
+
+        final firstRange = (exp.toJson()['ranges'] as List)[0];
+
+        expect(firstRange, isA<List>(),
+            reason: 'BucketRange must be an array, not a map');
+        expect((firstRange as List).length, 2,
+            reason: 'BucketRange must have exactly 2 elements');
+      });
+    });
+
     group('customFields', () {
       test('parsed from JSON map', () {
         final json = <String, dynamic>{
