@@ -50,6 +50,10 @@ class GBTestHelper {
     return testData['getEqualWeights'];
   }
 
+  static List getContextualBanditData() {
+    return testData['contextualBandit'];
+  }
+
   static List getQueryStringOverrideData() {
     return testData['getQueryStringOverride'];
   }
@@ -148,7 +152,8 @@ class GBContextTest {
       this.enabled = true,
       this.forcedVariations,
       this.savedGroups,
-      this.url});
+      this.url,
+      this.contextualBandits});
 
   dynamic attributes;
   Map<String, GBFeature> features;
@@ -157,6 +162,7 @@ class GBContextTest {
   Map<String, dynamic>? forcedVariations;
   SavedGroupsValues? savedGroups;
   String? url;
+  Map<String, dynamic>? contextualBandits;
 
   factory GBContextTest.fromMap(Map<String, dynamic> map) => GBContextTest(
       attributes: map['attributes'],
@@ -168,7 +174,9 @@ class GBContextTest {
       enabled: map['enabled'] ?? true,
       forcedVariations: map['forcedVariations'],
       savedGroups: map['savedGroups'],
-      url: map["url"] ?? "");
+      url: map["url"] ?? "",
+      contextualBandits:
+          (map['contextualBandits'] as Map?)?.cast<String, dynamic>());
 }
 
 class GBExperimentResultTest {
@@ -185,6 +193,9 @@ class GBExperimentResultTest {
     this.passthrough,
     this.featureId,
     this.stickyBucketUsed,
+    this.leafId,
+    this.variationWeights,
+    this.banditVersion,
   });
 
   /// Whether or not the user is part of the experiment
@@ -223,6 +234,13 @@ class GBExperimentResultTest {
   /// If sticky bucketing was used to assign a variation
   bool? stickyBucketUsed;
 
+  /// Contextual-bandit metadata copied from the resolved leaf when the user
+  /// is bucketed in. `null` when the assignment did not come from a bandit
+  /// rule.
+  int? leafId;
+  List<double>? variationWeights;
+  int? banditVersion;
+
   factory GBExperimentResultTest.fromMap(Map<String, dynamic> map) =>
       GBExperimentResultTest(
         value: map['value'],
@@ -233,9 +251,14 @@ class GBExperimentResultTest {
         hashValue: map['hashValue']?.toString(),
         key: map['key']?.toString(),
         name: map['name']?.toString(),
-        bucket: map['bucket'],
+        bucket: (map['bucket'] as num?)?.toDouble(),
         passthrough: map['passthrough'],
         featureId: map['featureId']?.toString(),
         stickyBucketUsed: map['stickyBucketUsed'],
+        leafId: map['leafId'],
+        variationWeights: (map['variationWeights'] as List?)
+            ?.map((v) => (v as num).toDouble())
+            .toList(),
+        banditVersion: map['banditVersion'],
       );
 }

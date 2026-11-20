@@ -39,7 +39,7 @@ GBExperiment _$GBExperimentFromJson(Map<String, dynamic> json) => GBExperiment(
       seed: json['seed'] as String?,
       name: json['name'] as String?,
       phase: json['phase'] as String?,
-      customFields: (json['customFields'] as Map<String, dynamic>?),
+      customFields: json['customFields'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$GBExperimentToJson(GBExperiment instance) =>

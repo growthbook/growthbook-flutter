@@ -20,6 +20,7 @@ class GBContext {
     this.backgroundSync = false,
     SavedGroupsValues? savedGroups,
     this.url,
+    this.contextualBandits,
     this.remoteGroupIds,
   })  : _savedGroups = savedGroups,
         _hasRemoteSavedGroups = _containsRemoteGroup(savedGroups);
@@ -85,6 +86,13 @@ class GBContext {
 
   ///A URL string that is used for experiment evaluation, as well as forcing feature values.
   String? url;
+
+  /// Contextual-bandit definitions from the feature payload, keyed by the
+  /// `contextualBanditRef` a feature rule points at. Each value is the raw
+  /// JSON blob decoded from either `contextualBandits` or
+  /// `encryptedContextualBandits`. The SDK parses individual definitions on
+  /// demand during evaluation.
+  Map<String, dynamic>? contextualBandits;
 
   /// The ids of the remote saved groups the user is in, resolved by the app.
   /// `null` means unresolved, which is not the same as no groups: see
