@@ -470,6 +470,24 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+### Remote Saved Groups
+
+A **remote** saved group keeps its members outside the payload, for lists too large to ship (millions of ids). The payload only says which attribute the group is about, `{"type": "remote", "attributeKey": "account_id"}`, so the SDK can't work out membership itself: your app resolves the user's groups, typically from its own back end, and passes their ids.
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  attributes: userAttributes,
+).setRemoteGroupIds(["grp_vip"]).initialize();
+
+// Later, when the user or their groups change
+sdk.setRemoteGroupIds(["grp_vip", "grp_beta"]);
+```
+
+Conditions read the ids as the `__gb_remoteGroupIds` attribute, and remote evaluation sends them too. Setting them here wins over an attribute of that name, which also works on its own.
+
+Leave the ids unset (or pass `null`) while they are unresolved: rules that use remote groups then fail, including "not in group" rules, and one warning is logged. Pass an empty list only when the user is in no group, because that is what lets "not in group" rules match.
+
 ### Real-time Updates
 
 The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.
@@ -556,10 +574,13 @@ Future<void> main() async {
 
 #### Custom configuration
 
+Events go to `https://us1.gb-ingest.com` by default. Override `ingestorHost` to
+send them to another region, for example `https://eu-west-1.gb-ingest.com`:
+
 ```dart
 final trackingPlugin = GrowthBookTrackingPlugin(
   config: GrowthBookTrackingPluginConfig(
-    ingestorHost: 'https://ingest.growthbook.io',
+    ingestorHost: 'https://eu-west-1.gb-ingest.com',
     batchSize: 50,
     batchTimeout: Duration(seconds: 30),
   ),
@@ -569,6 +590,67 @@ await GBSDKBuilderApp(...)
     .addPlugin(trackingPlugin)
     .initialize();
 ```
+
+#### Deduplication
+
+A flag read on every screen produces the same evaluation over and over. The
+plugin remembers the last 1,000 events and drops repeats, so only distinct
+evaluations are sent. The key is the event name plus its own fields —
+attributes are deliberately excluded, since a feature evaluation carries no
+unit identity of its own and every attribute change would otherwise look like a
+new event. A batch that fails to send gives its keys back, so nothing is lost
+to a dropped connection.
+
+Set `dedupeCacheSize` to tune the window, or to `0` to send every evaluation:
+
+```dart
+GrowthBookTrackingPluginConfig(dedupeCacheSize: 5000)
+```
+
+#### Turning off feature usage events
+
+Feature evaluations are by far the larger volume. An app that only needs
+experiment data can drop them and keep its exposures:
+
+```dart
+GrowthBookTrackingPluginConfig(enableFeatureUsageEvents: false)
+```
+
+Experiment exposures and custom events are unaffected.
+
+#### Custom events
+
+`logEvent` sends an event of your own through the same envelope as the SDK's
+own events. These are never deduplicated — a repeat is a second occurrence,
+not a redundant re-evaluation — and they carry the SDK's current attributes.
+
+```dart
+sdk.logEvent('Checkout Completed', {'total': 42.0, 'currency': 'USD'});
+sdk.logEvent('App Opened');
+```
+
+Like every other event they are buffered, so call `flush()` before the app is
+suspended if you need them delivered.
+
+#### Flushing when the app goes to the background
+
+`flush()` delivers what the plugins have buffered and leaves them recording.
+Without it, events sit in the buffer for up to `batchTimeout` and are lost if
+the OS kills the suspended app — which is how most mobile apps end.
+
+```dart
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      sdk.flush();
+    }
+  }
+}
+```
+
+Use `dispose()` instead when the SDK instance is done for good — it flushes as
+well, but nothing is recorded afterwards.
 
 #### Lifecycle — always await `dispose()`
 
@@ -848,6 +930,24 @@ We welcome contributions! Here's how to get started:
 - Uses automated releases via **release-please**
 - Follow conventional commits: `feat:`, `fix:`, `docs:`, etc.
 - Automatic version bumping and changelog generation
+- Once a release PR is merged, `release-please.yml` dispatches `publish.yml` at the new
+  tag, and that run publishes to pub.dev over OIDC
+
+**Publishing requirements:**
+
+- pub.dev automated publishing must allow the `workflow_dispatch` event for `publish.yml`
+  (pub.dev → package admin → automated publishing), in addition to the configured tag pattern
+- `publish.yml` only runs from a tag ref — pub.dev validates the `ref`/`ref_type` claims of the
+  run's OIDC token, so a run started from a branch is rejected no matter which ref it checks out
+- Tags created before this setup landed have a `publish.yml` without `workflow_dispatch` and
+  cannot be dispatched. To release one of them, re-push the tag so the `push: tags:` trigger
+  fires (note that deleting a tag turns its GitHub Release into a draft, which has to be
+  re-published afterwards):
+
+  ```bash
+  git push --delete origin v4.3.1
+  git push origin v4.3.1
+  ```
 
 ---
 

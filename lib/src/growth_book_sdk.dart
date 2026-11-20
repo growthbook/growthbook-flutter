@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'dart:developer';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
+import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
 import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
+import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
 
 typedef VoidCallback = void Function();
 
@@ -53,6 +55,7 @@ class GBSDKBuilderApp {
   StickyBucketService? stickyBucketService;
   GBFeatureUsageCallback? featureUsageCallback;
   final List<GrowthBookPlugin> _plugins = [];
+  List<String>? _remoteGroupIds;
 
   Future<GrowthBookSDK> initialize() async {
     final gbContext = GBContext(
@@ -69,7 +72,8 @@ class GBSDKBuilderApp {
         stickyBucketService: stickyBucketService,
         backgroundSync: backgroundSync,
         remoteEval: remoteEval,
-        url: url);
+        url: url,
+        remoteGroupIds: _remoteGroupIds);
     final gb = GrowthBookSDK._(
         context: gbContext,
         client: client,
@@ -120,6 +124,13 @@ class GBSDKBuilderApp {
     _plugins.add(plugin);
     return this;
   }
+
+  /// Sets the remote saved groups the user is in, resolved by the app. See
+  /// [GrowthBookSDK.setRemoteGroupIds]; leave unset while they are unresolved.
+  GBSDKBuilderApp setRemoteGroupIds(List<String> remoteGroupIds) {
+    _remoteGroupIds = remoteGroupIds;
+    return this;
+  }
 }
 
 /// The main export of the libraries is a simple GrowthBook wrapper class that
@@ -146,6 +157,12 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
         _attributeOverrides = {} {
+    // The initializer list cannot reach `_pluginRegistry`, and a caller may
+    // have supplied its own evaluation context, so the registry and the
+    // exposure history are attached here instead of being passed to
+    // `initializeEvalContext` above.
+    _evaluationContext.options.pluginRegistry = _pluginRegistry;
+    _evaluationContext.options.experimentHelper = _experimentHelper;
     _featureViewModel = FeatureViewModel(
         delegate: this,
         source: FeatureDataSource(context: _context, client: _baseClient),
@@ -171,6 +188,10 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final CacheRefreshHandlerV2? _refreshHandlerV2;
 
   final PluginRegistry _pluginRegistry;
+
+  /// Exposures this instance has already reported. Outlives every evaluation
+  /// context rebuild, so an attribute update does not re-report them.
+  final ExperimentHelper _experimentHelper = ExperimentHelper();
 
   List<dynamic> _forcedFeatures;
 
@@ -199,12 +220,48 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   /// instead of creating new contexts on every evaluation, which is more efficient
   /// and prevents bugs caused by stale evaluation contexts.
   void _updateEvaluationContext() {
-    _evaluationContext =
-        GBUtils.initializeEvalContext(_context, _refreshHandler);
+    _evaluationContext = GBUtils.initializeEvalContext(
+        _context, _refreshHandler,
+        pluginRegistry: _pluginRegistry, experimentHelper: _experimentHelper);
   }
 
   void _initializePlugins() {
     _pluginRegistry.initialize(_context.apiKey ?? '');
+  }
+
+  /// Records an event of the app's own, alongside the exposures and
+  /// evaluations the SDK tracks by itself.
+  ///
+  /// Buffered and batched like every other event, so it is subject to the same
+  /// loss on termination — call [flush] when the app goes to the background.
+  /// Unlike the SDK's own events these are never deduplicated: a repeat is a
+  /// second occurrence, not a redundant re-evaluation.
+  ///
+  /// ```dart
+  /// sdk.logEvent('Checkout Completed', {'total': 42.0});
+  /// ```
+  void logEvent(String eventName, [Map<String, dynamic>? properties]) {
+    _pluginRegistry.logEvent(eventName, properties, _context.attributes);
+  }
+
+  /// Delivers whatever the registered plugins have buffered, leaving them
+  /// running.
+  ///
+  /// Call this when the app is heading to the background. Nothing else
+  /// delivers early: the tracking plugin batches for up to its `batchTimeout`,
+  /// and a process the OS kills while suspended never reaches [dispose], so
+  /// those events are simply lost.
+  ///
+  /// Unlike [dispose], recording resumes afterwards.
+  ///
+  /// ```dart
+  /// @override
+  /// void didChangeAppLifecycleState(AppLifecycleState state) {
+  ///   if (state == AppLifecycleState.paused) sdk.flush();
+  /// }
+  /// ```
+  Future<void> flush() {
+    return _pluginRegistry.flush();
   }
 
   /// Releases resources held by all registered plugins.
@@ -413,6 +470,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   GBFeatureResult feature(String id) {
     _triggerBackgroundRefreshIfNeeded();
+    _warnIfRemoteGroupIdsMissing();
     _evaluationContext.stackContext.evaluatedFeatures.clear();
     final result = FeatureEvaluator().evaluateFeature(_evaluationContext, id);
     _notifyFeatureEvaluated(id, result);
@@ -442,6 +500,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   }
 
   GBExperimentResult run(GBExperiment experiment) {
+    _warnIfRemoteGroupIdsMissing();
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
@@ -453,9 +512,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     _context.stickyBucketAssignmentDocs =
         _evaluationContext.userContext.stickyBucketAssignmentDocs;
     fireSubscriptions(experiment, result);
-    if (result.inExperiment) {
-      _notifyExperimentViewed(experiment, result);
-    }
+    // Plugins are notified by [ExperimentEvaluator] itself, so that exposures
+    // from feature flag rules are recorded too.
     return result;
   }
 
@@ -514,6 +572,45 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
       await refreshStickyBucketService(null);
     }
     refreshForRemoteEval();
+  }
+
+  /// Sets the remote saved groups the user is in. A remote saved group keeps
+  /// its members outside the payload, so the app resolves the user's groups
+  /// (for example from its back end) and passes their ids here. Conditions read
+  /// them as the `__gb_remoteGroupIds` attribute, over any value the attributes
+  /// set for it. In remote-eval mode this triggers a fresh remote evaluation.
+  ///
+  /// Pass `null` while the groups are unresolved: rules that use remote groups
+  /// then fail, including "not in group". Don't pass an empty list for that —
+  /// it means "in no group", so "not in group" rules match.
+  void setRemoteGroupIds(List<String>? remoteGroupIds) {
+    _context.remoteGroupIds = remoteGroupIds;
+    _updateEvaluationContext();
+    refreshForRemoteEval();
+  }
+
+  /// The ids of the remote saved groups the user is in, or `null` while
+  /// unresolved.
+  List<String>? get remoteGroupIds => _context.remoteGroupIds;
+
+  // Set once the missing-ids warning has been logged, so it isn't repeated on
+  // every evaluation
+  bool _warnedMissingRemoteGroupIds = false;
+
+  /// Logs once when the payload has remote saved groups but the user has no
+  /// remote group ids, since every rule using them will then fail. Logs no
+  /// attribute values.
+  void _warnIfRemoteGroupIdsMissing() {
+    if (_warnedMissingRemoteGroupIds) return;
+    // The cached flag first: a payload without remote groups is the common case
+    if (!_context.hasRemoteSavedGroups ||
+        _context.remoteGroupIds != null ||
+        _context.attributes?[Constant.remoteGroupIdsAttribute] is List) {
+      return;
+    }
+    _warnedMissingRemoteGroupIds = true;
+    logger.w('The payload has remote saved groups, but the user has no remote '
+        'group ids. Rules using them won\'t match. See setRemoteGroupIds.');
   }
 
   /// The setForcedFeatures method updates forced features
@@ -585,6 +682,7 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   /// The evalFeature method takes a single string argument, which is the unique identifier for the feature and returns a FeatureResult object.
   GBFeatureResult evalFeature(String id) {
+    _warnIfRemoteGroupIdsMissing();
     // Sync features to evaluation context (no fetchFeatures to avoid cycles)
     _evaluationContext.globalContext.features = _context.features;
     // Clear stack context to avoid false cyclic prerequisite detection
@@ -598,11 +696,6 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
 
   void _notifyFeatureEvaluated(String id, GBFeatureResult result) {
     _pluginRegistry.onFeatureEvaluated(id, result, _context.attributes);
-  }
-
-  void _notifyExperimentViewed(
-      GBExperiment experiment, GBExperimentResult result) {
-    _pluginRegistry.onExperimentViewed(experiment, result, _context.attributes);
   }
 
   /// The isOn method takes a single string argument, which is the unique identifier for the feature and returns the feature state on/off
