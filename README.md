@@ -172,6 +172,43 @@ final sdk = await GBSDKBuilderApp(
 ).initialize();
 ```
 
+### Setting the callbacks at runtime
+
+The builder needs a tracking callback before `initialize()`, but the analytics
+sink often does not exist yet at that point — it appears after a tracking
+consent prompt, after login, or once a third-party SDK finishes starting. Both
+callbacks can be replaced on the live instance instead of wrapping them in a
+mutable holder:
+
+```dart
+sdk.setTrackingCallback((trackData) {
+  YourAnalytics.trackExperiment(trackData.experiment, trackData.experimentResult);
+});
+
+sdk.setFeatureUsageCallback((featureKey, result) {
+  YourAnalytics.trackFeature(featureKey, result.value);
+});
+```
+
+The next evaluation reports to the new sink. To wrap the current one rather
+than replace it, read it off the context first:
+
+```dart
+final previous = sdk.context.trackingCallBack;
+sdk.setTrackingCallback((data) {
+  previous?.call(data);
+  YourAnalytics.trackExperiment(data.experiment, data.experimentResult);
+});
+```
+
+> **Install the sink before the first evaluation if you need every exposure.**
+> An exposure is marked as tracked the first time it is seen, so one that fired
+> into a placeholder callback is not re-reported to a sink installed afterwards.
+> There is no deferred buffer to replay.
+
+A callback that throws is logged and ignored — it cannot break `feature()`,
+`run()` or `evalFeature()`, or stop the next exposure from being reported.
+
 ---
 
 ## 📚 Documentation
