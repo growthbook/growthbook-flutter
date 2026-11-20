@@ -470,6 +470,24 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+### Remote Saved Groups
+
+A **remote** saved group keeps its members outside the payload, for lists too large to ship (millions of ids). The payload only says which attribute the group is about, `{"type": "remote", "attributeKey": "account_id"}`, so the SDK can't work out membership itself: your app resolves the user's groups, typically from its own back end, and passes their ids.
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  attributes: userAttributes,
+).setRemoteGroupIds(["grp_vip"]).initialize();
+
+// Later, when the user or their groups change
+sdk.setRemoteGroupIds(["grp_vip", "grp_beta"]);
+```
+
+Conditions read the ids as the `__gb_remoteGroupIds` attribute, and remote evaluation sends them too. Setting them here wins over an attribute of that name, which also works on its own.
+
+Leave the ids unset (or pass `null`) while they are unresolved: rules that use remote groups then fail, including "not in group" rules, and one warning is logged. Pass an empty list only when the user is in no group, because that is what lets "not in group" rules match.
+
 ### Real-time Updates
 
 The GrowthBook SDK supports streaming with Server-Sent Events (SSE). When enabled, changes to features within GrowthBook will be streamed to the SDK in realtime as they are published. This is only supported on GrowthBook Cloud or if running a GrowthBook Proxy Server.
