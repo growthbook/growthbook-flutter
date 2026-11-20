@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 void main() {
+  final testCacheDir =
+      Directory.systemTemp.createTempSync('gb_cache_test_').path;
   group('CachingManager — additional coverage', () {
-    final manager = CachingManager();
+    final manager = FileCacheStorage(cacheDirectory: testCacheDir);
 
     tearDown(() async {
       await manager.clearCache();
