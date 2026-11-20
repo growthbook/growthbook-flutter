@@ -17,6 +17,14 @@ const _runSections = {
   'decrypt': 'gb_utils_test.dart',
   'stickyBucket': 'gb_sticky_bucketing_feature_test.dart',
   'contextualBandit': 'contextual_bandit_conformance_test.dart',
+  'savedGroupReferencesV2.evalCondition':
+      'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesV2.feature': 'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesV2.run': 'gb_saved_group_references_v2_test.dart',
+  'savedGroupReferencesRemote.evalCondition':
+      'gb_saved_group_references_remote_test.dart',
+  'savedGroupReferencesRemote.feature':
+      'gb_saved_group_references_remote_test.dart',
 };
 
 /// Spec sections this SDK doesn't run, and why.
@@ -26,16 +34,6 @@ const _excludedSections = {
   'reducePayload': 'The payload reduction methods (pruneCondition, '
       'reducePayload) are not implemented for client SDKs to start with',
   'urlRedirect': 'URL redirects are a browser feature this SDK lacks',
-  'savedGroupReferencesV2.evalCondition':
-      'Saved group references (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesV2.feature':
-      'Saved group references (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesV2.run':
-      'Saved group references (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesRemote.evalCondition':
-      'Remote saved groups (\$savedGroup) are not implemented yet',
-  'savedGroupReferencesRemote.feature':
-      'Remote saved groups (\$savedGroup) are not implemented yet',
 };
 
 /// Every case section in the spec, with nested sections as `parent.child`.
