@@ -196,6 +196,11 @@ class FeatureEvaluator {
             GBExperimentResult result = ExperimentEvaluator()
                 .evaluateExperiment(context, exp, featureId: featureKey);
 
+            // Report before the inExperiment check, the way the reference SDK
+            // does: a user who was evaluated against an experiment and left out
+            // is part of the answer to "which experiments is this user in".
+            context.globalContext.onExperimentEvaluated?.call(exp, result);
+
             // Check if the result is in the experiment and not a passthrough
             if (result.inExperiment && !(result.passthrough ?? false)) {
               // Return the result value and source if the result is successful
