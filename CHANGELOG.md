@@ -11,6 +11,21 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [5.1.0](https://github.com/growthbook/growthbook-flutter/compare/v5.0.1...v5.1.0) (2026-11-19)
+
+
+### Features
+
+* add remote saved groups (savedGroupReferencesRemote) ([#197](https://github.com/growthbook/growthbook-flutter/issues/197)) ([da9eb5b](https://github.com/growthbook/growthbook-flutter/commit/da9eb5ba7140c2325e50709c7f69ff78c342e3b4))
+* support saved group references v2 ($savedGroup) ([#195](https://github.com/growthbook/growthbook-flutter/issues/195)) ([ef728f9](https://github.com/growthbook/growthbook-flutter/commit/ef728f9d05f4f110fabab04796e99452e04b96a8))
+
+## [5.0.1](https://github.com/growthbook/growthbook-flutter/compare/v5.0.0...v5.0.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* avoid quadratic regex when stripping version build metadata ([#203](https://github.com/growthbook/growthbook-flutter/issues/203)) ([95cf11a](https://github.com/growthbook/growthbook-flutter/commit/95cf11a6e01c8f1899f6acd5ae7be1f095c14bcf))
+
 ## [5.0.0](https://github.com/growthbook/growthbook-flutter/compare/v4.5.0...v5.0.0) (2026-10-30)
 
 
