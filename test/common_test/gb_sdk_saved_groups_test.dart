@@ -28,8 +28,8 @@ void main() {
       ).initialize();
     }
 
-    tearDown(() {
-      cachingManager.clearCache();
+    tearDown(() async {
+      await cachingManager.clearCache();
     });
 
     // -------------------------------------------------------------------------

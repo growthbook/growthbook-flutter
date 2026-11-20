@@ -216,7 +216,7 @@ class FeatureViewModel {
         isRemote: true,
       );
       final featureData = utf8Encoder.convert(jsonEncode(data));
-      manager.putData(
+      await manager.putData(
         fileName: Constant.featureCache,
         content: Uint8List.fromList(featureData),
       );
@@ -229,7 +229,7 @@ class FeatureViewModel {
         );
         final savedGroupsData =
             utf8Encoder.convert(jsonEncode(data.savedGroups));
-        manager.putData(
+        await manager.putData(
           fileName: Constant.savedGroupsCache,
           content: Uint8List.fromList(savedGroupsData),
         );
