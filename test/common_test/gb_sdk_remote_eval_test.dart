@@ -175,6 +175,35 @@ void main() {
         ]);
       });
 
+      test(
+          'updateAttributesAsync triggers a new remote request with the '
+          'merged attributes', () async {
+        final recorder = _RecordingNetworkClient();
+        final sdk = await buildRecordingSdk(recorder,
+            attributes: {'id': 'user-1', 'country': 'UA'});
+
+        final postsAfterInit = recorder.postCount;
+        await sdk.updateAttributesAsync({'plan': 'pro'});
+
+        expect(recorder.postCount, postsAfterInit + 1);
+        expect(recorder.lastPayload?['attributes'],
+            {'id': 'user-1', 'country': 'UA', 'plan': 'pro'});
+      });
+
+      test('fire-and-forget updateAttributes also triggers a remote request',
+          () async {
+        final recorder = _RecordingNetworkClient();
+        final sdk = await buildRecordingSdk(recorder);
+
+        final postsAfterInit = recorder.postCount;
+        sdk.updateAttributes({'plan': 'pro'});
+        await _waitUntil(() => recorder.postCount > postsAfterInit);
+
+        expect(recorder.postCount, greaterThan(postsAfterInit));
+        expect(recorder.lastPayload?['attributes'],
+            {'id': 'user-1', 'plan': 'pro'});
+      });
+
       test('no remote request when remoteEval is false', () async {
         final recorder = _RecordingNetworkClient();
         final sdk = await buildRecordingSdk(recorder, remoteEval: false);
