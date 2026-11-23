@@ -58,6 +58,28 @@ void main() {
       expect(File('$targetPath.tmp').existsSync(), isFalse,
           reason: 'temp file must not be left behind');
     });
+
+    test('a read right after an unawaited putData returns the new content',
+        () async {
+      const fileName = 'async-write-read-after-write';
+      final content = Uint8List.fromList(utf8.encode('{"v":3}'));
+
+      manager.putData(fileName: fileName, content: content);
+      final saved = await manager.getContent(fileName: fileName);
+
+      expect(saved, equals(content));
+    });
+
+    test('removeContent after an unawaited putData leaves no file', () async {
+      const fileName = 'async-write-then-remove';
+      final content = Uint8List.fromList(utf8.encode('{"v":4}'));
+
+      manager.putData(fileName: fileName, content: content);
+      await manager.removeContent(fileName: fileName);
+
+      final targetPath = await manager.getTargetFile(fileName);
+      expect(File(targetPath).existsSync(), isFalse);
+    });
   });
 }
 
@@ -69,6 +91,10 @@ final class _SpyIOOverrides extends IOOverrides {
 
   @override
   File createFile(String path) => _SpyFile(super.createFile(path), syncCalls);
+
+  @override
+  Directory createDirectory(String path) =>
+      _SpyDirectory(super.createDirectory(path), syncCalls);
 
   @override
   Directory getSystemTempDirectory() => _systemTemp;
@@ -221,4 +247,78 @@ class _SpyFile implements File {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnsupportedError(
       '_SpyFile does not forward ${invocation.memberName}; add it to the spy');
+}
+
+/// Delegates to a real [Directory] and records every blocking call that
+/// checks, creates, moves or deletes the folder.
+class _SpyDirectory implements Directory {
+  _SpyDirectory(this._directory, this._syncCalls);
+
+  final Directory _directory;
+  final List<String> _syncCalls;
+
+  void _record(String name) => _syncCalls.add('$name(${_directory.path})');
+
+  @override
+  String get path => _directory.path;
+
+  @override
+  Directory get absolute => _directory.absolute;
+
+  @override
+  Uri get uri => _directory.uri;
+
+  @override
+  Directory get parent => _directory.parent;
+
+  @override
+  bool get isAbsolute => _directory.isAbsolute;
+
+  @override
+  Future<bool> exists() => _directory.exists();
+
+  @override
+  bool existsSync() {
+    _record('existsSync');
+    return _directory.existsSync();
+  }
+
+  @override
+  Future<Directory> create({bool recursive = false}) =>
+      _directory.create(recursive: recursive);
+
+  @override
+  void createSync({bool recursive = false}) {
+    _record('createSync');
+    _directory.createSync(recursive: recursive);
+  }
+
+  @override
+  Future<FileSystemEntity> delete({bool recursive = false}) =>
+      _directory.delete(recursive: recursive);
+
+  @override
+  void deleteSync({bool recursive = false}) {
+    _record('deleteSync');
+    _directory.deleteSync(recursive: recursive);
+  }
+
+  @override
+  Future<Directory> rename(String newPath) => _directory.rename(newPath);
+
+  @override
+  Directory renameSync(String newPath) {
+    _record('renameSync');
+    return _directory.renameSync(newPath);
+  }
+
+  @override
+  Future<FileStat> stat() => _directory.stat();
+
+  @override
+  FileStat statSync() => _directory.statSync();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnsupportedError(
+      '_SpyDirectory does not forward ${invocation.memberName}; add it to the spy');
 }

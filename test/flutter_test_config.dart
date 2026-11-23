@@ -14,7 +14,13 @@ import 'package:flutter_test/flutter_test.dart';
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   final testTempDir = Directory.systemTemp.createTempSync('growthbook_test_');
   IOOverrides.global = _TempDirOverrides(testTempDir);
-  tearDownAll(() => testTempDir.delete(recursive: true));
+  tearDownAll(() async {
+    try {
+      await testTempDir.delete(recursive: true);
+    } on FileSystemException {
+      // A cache write that outlived the tests may still touch the folder.
+    }
+  });
 
   await testMain();
 }
