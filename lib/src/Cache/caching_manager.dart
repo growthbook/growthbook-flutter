@@ -44,10 +44,10 @@ class CachingManager extends CachingLayer {
       return;
     }
 
-    final targetPath = await getTargetFile(fileName);
-    // Writes to one file run one at a time so they never share its temp
-    // file, and getContent waits for them so a read right after putData
-    // sees the new content.
+    // The write is queued before the first await, so writes to one file run
+    // in call order and never share its temp file, and a getContent or
+    // removeContent called after putData waits for it.
+    final targetPath = _targetFilePath(fileName);
     final write =
         _writeFile(_pendingWrites[targetPath], targetPath, fileName, content);
     _pendingWrites[targetPath] = write;
@@ -62,6 +62,7 @@ class CachingManager extends CachingLayer {
   Future<void> _writeFile(Future<void>? previousWrite, String targetPath,
       String fileName, Uint8List content) async {
     await previousWrite;
+    await getTargetFile(fileName);
     final tempFile = File('$targetPath.tmp');
 
     try {
@@ -84,19 +85,21 @@ class CachingManager extends CachingLayer {
   }
 
   Future<String> getTargetFile(String fileName) async {
-    final cacheDirectoryPath = localPath;
-    String targetFolderPath = '$cacheDirectoryPath/$_key';
-    final fileManager = Directory(targetFolderPath);
-    if (!fileManager.existsSync()) {
-      try {
-        fileManager.createSync(recursive: true);
-      } catch (e) {
-        logger.e('Failed to create directory: $e');
-      }
+    try {
+      await Directory(_targetFolderPath).create(recursive: true);
+    } catch (e) {
+      logger.e('Failed to create directory: $e');
     }
+
+    return _targetFilePath(fileName);
+  }
+
+  String get _targetFolderPath => '$localPath/$_key';
+
+  String _targetFilePath(String fileName) {
     String file = fileName.replaceAll('.txt', '');
 
-    return '$targetFolderPath/$file.txt';
+    return '$_targetFolderPath/$file.txt';
   }
 
   String get localPath => Directory.systemTemp.path;
@@ -113,8 +116,8 @@ class CachingManager extends CachingLayer {
     }
 
     try {
+      await _pendingWrites[_targetFilePath(fileName)];
       final filePath = await getTargetFile(fileName);
-      await _pendingWrites[filePath];
       File file = File(filePath);
       if (await file.exists()) {
         return await file.readAsBytes();
@@ -133,6 +136,7 @@ class CachingManager extends CachingLayer {
     }
 
     try {
+      await _pendingWrites[_targetFilePath(fileName)];
       final filePath = await getTargetFile(fileName);
       final file = File(filePath);
       if (await file.exists()) {
@@ -152,6 +156,8 @@ class CachingManager extends CachingLayer {
         prefs.remove(key);
       }
     }
+
+    await Future.wait(_pendingWrites.values);
 
     String cacheDirectoryPath = localPath;
     String targetFolderPath = '$cacheDirectoryPath/$_key';
