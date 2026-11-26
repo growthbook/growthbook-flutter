@@ -164,6 +164,53 @@ void main() {
         );
         expect(await vm.handleValidFeatures(data), isFalse);
       });
+
+      test(
+          'fires featuresAPIModelSuccessfully after a successful decryption '
+          '(payload-ready hook must run for encrypted deployments too)',
+          () async {
+        // Regression: the encrypted branch used to skip
+        // delegate.featuresAPIModelSuccessfully, which is the SDK's
+        // "payload ready" hook driving sticky-bucket refresh and the
+        // contextual-bandit apply step. Without it, encrypted deployments
+        // silently lost both behaviors.
+        final vm = buildViewModel(encryptionKey: validEncryptionKey);
+        final data = FeaturedDataModel(
+          features: null,
+          encryptedFeatures: validEncryptedFeatures,
+        );
+        await vm.handleValidFeatures(data);
+        expect(delegate.apiModelSuccessCount, 1);
+        expect(delegate.lastApiModel, same(data));
+      });
+
+      test('does NOT fire featuresAPIModelSuccessfully when decryption fails',
+          () async {
+        final vm = buildViewModel(encryptionKey: wrongEncryptionKey);
+        final data = FeaturedDataModel(
+          features: null,
+          encryptedFeatures: validEncryptedFeatures,
+        );
+        await vm.handleValidFeatures(data);
+        expect(delegate.apiModelSuccessCount, 0);
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // handleValidFeatures — plaintext branch (existing behavior, guarded)
+    // -------------------------------------------------------------------------
+    group('handleValidFeatures plaintext path', () {
+      test('fires featuresAPIModelSuccessfully once with the received model',
+          () async {
+        final vm = buildViewModel();
+        final data = FeaturedDataModel(
+          features: {'flag': GBFeature(defaultValue: true)},
+          encryptedFeatures: null,
+        );
+        await vm.handleValidFeatures(data);
+        expect(delegate.apiModelSuccessCount, 1);
+        expect(delegate.lastApiModel, same(data));
+      });
     });
 
     // -------------------------------------------------------------------------

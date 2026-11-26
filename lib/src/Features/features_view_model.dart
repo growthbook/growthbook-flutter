@@ -249,6 +249,15 @@ class FeatureViewModel {
         isHandleEncryptedSavedGroups =
             handleEncryptedSavedGroups(data.encryptedSavedGroups!);
       }
+
+      // Fire the "payload ready" hook so the SDK can refresh sticky-bucket
+      // docs and apply any contextual-bandit payload. The plaintext branch
+      // above already does this; without mirroring it here, encrypted
+      // deployments silently skip both refreshes.
+      if (isHandleEncryptedFeatures) {
+        await delegate.featuresAPIModelSuccessfully(data);
+      }
+
       return isHandleEncryptedFeatures && isHandleEncryptedSavedGroups;
     }
   }
