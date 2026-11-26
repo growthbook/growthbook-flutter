@@ -1,5 +1,8 @@
 // ignore_for_file: deprecated_member_use_from_same_package
 
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
@@ -288,6 +291,112 @@ void main() {
 
         expect(results, isNot(contains(false)),
             reason: 'a round that no longer matters must stay silent');
+      });
+    });
+
+    // -------------------------------------------------------------------------
+    // The cached evaluation is personal: at startup it is only reused for the
+    // same evaluation inputs. Each test starts the SDK twice; the second start
+    // cannot reach the server, so its features can only come from the cache.
+    // -------------------------------------------------------------------------
+    group('remote-eval cache at startup', () {
+      Future<GrowthBookSDK> start(
+        Map<String, dynamic> attributes, {
+        bool online = true,
+        List<String>? cacheKeyAttributes,
+        String? url,
+      }) {
+        return GBSDKBuilderApp(
+          apiKey: testApiKey,
+          hostURL: testHostURL,
+          attributes: attributes,
+          client: MockNetworkClient(error: !online),
+          growthBookTrackingCallBack: (_) {},
+          backgroundSync: false,
+          remoteEval: true,
+          cacheKeyAttributes: cacheKeyAttributes,
+          url: url,
+          onInitializationFailure: (_) {},
+        ).initialize();
+      }
+
+      bool servedFromCache(GrowthBookSDK sdk) =>
+          sdk.features.containsKey('onboarding');
+
+      test('is served to the same user', () async {
+        await start({'id': 'user-1'});
+        final offline = await start({'id': 'user-1'}, online: false);
+
+        expect(servedFromCache(offline), isTrue);
+      });
+
+      test('is not served to a different user', () async {
+        await start({'id': 'user-1'});
+        final offline = await start({'id': 'user-2'}, online: false);
+
+        expect(servedFromCache(offline), isFalse);
+      });
+
+      test('keeps only the latest evaluation', () async {
+        await start({'id': 'user-1'});
+        await start({'id': 'user-2'});
+        final offline = await start({'id': 'user-1'}, online: false);
+
+        expect(servedFromCache(offline), isFalse,
+            reason: "user-2's evaluation replaced user-1's");
+      });
+
+      test('is not served for a different url', () async {
+        await start({'id': 'user-1'}, url: 'https://example.com/a');
+        final offline = await start({'id': 'user-1'},
+            online: false, url: 'https://example.com/b');
+
+        expect(servedFromCache(offline), isFalse);
+      });
+
+      test('ignores attributes outside cacheKeyAttributes', () async {
+        await start({'id': 'user-1', 'session': 'a'},
+            cacheKeyAttributes: ['id']);
+        final offline = await start({'id': 'user-1', 'session': 'b'},
+            online: false, cacheKeyAttributes: ['id']);
+
+        expect(servedFromCache(offline), isTrue);
+      });
+
+      test('uses every attribute without cacheKeyAttributes', () async {
+        await start({'id': 'user-1', 'session': 'a'});
+        final offline =
+            await start({'id': 'user-1', 'session': 'b'}, online: false);
+
+        expect(servedFromCache(offline), isFalse);
+      });
+
+      test('ignores a cache written without a key', () async {
+        // As left by an earlier SDK version.
+        cachingManager.putData(
+          fileName: Constant.featureCache,
+          content:
+              Uint8List.fromList(utf8.encode(MockResponse.successResponse)),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+
+        final offline = await start({'id': 'user-1'}, online: false);
+
+        expect(servedFromCache(offline), isFalse);
+      });
+
+      test('cacheKeyAttributes require remoteEval', () {
+        expect(
+          () => GBSDKBuilderApp(
+            apiKey: testApiKey,
+            hostURL: testHostURL,
+            client: const MockNetworkClient(),
+            growthBookTrackingCallBack: (_) {},
+            cacheKeyAttributes: ['id'],
+          ).initialize(),
+          throwsA(isA<ArgumentError>().having((e) => e.message, 'message',
+              contains('cacheKeyAttributes are only used for remoteEval'))),
+        );
       });
     });
 

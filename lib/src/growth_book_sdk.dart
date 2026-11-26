@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:typed_data';
 
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 import 'package:growthbook_sdk_flutter/src/Evaluator/experiment_helper.dart';
@@ -8,6 +9,7 @@ import 'package:growthbook_sdk_flutter/src/Model/remote_eval_model.dart';
 import 'package:growthbook_sdk_flutter/src/MultiUserMode/Model/evaluation_context.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/crypto.dart';
 import 'package:growthbook_sdk_flutter/src/Utils/logger.dart';
+import 'package:pointycastle/digests/sha256.dart';
 
 typedef VoidCallback = void Function();
 
@@ -31,7 +33,8 @@ class GBSDKBuilderApp {
       this.backgroundSync = false,
       this.remoteEval = false,
       this.ttlSeconds = 60,
-      this.url});
+      this.url,
+      this.cacheKeyAttributes});
 
   final String apiKey;
   final String? encryptionKey;
@@ -47,6 +50,14 @@ class GBSDKBuilderApp {
   final bool backgroundSync;
   final bool remoteEval;
   final String? url;
+
+  /// The attributes that identify a user for the remote-eval cache, e.g.
+  /// `['id']`. A cached evaluation is only reused at startup while these
+  /// attributes, the forced variations and the URL are unchanged. Defaults to
+  /// all attributes; narrow it when attributes change on every launch (a
+  /// session start time, for example), which would otherwise never hit the
+  /// cache. Only valid with [remoteEval].
+  final List<String>? cacheKeyAttributes;
   final int ttlSeconds;
 
   // ignore: deprecated_member_use_from_same_package
@@ -58,6 +69,10 @@ class GBSDKBuilderApp {
   List<String>? _remoteGroupIds;
 
   Future<GrowthBookSDK> initialize() async {
+    if (!remoteEval && cacheKeyAttributes != null) {
+      throw ArgumentError('cacheKeyAttributes are only used for remoteEval');
+    }
+
     final gbContext = GBContext(
         apiKey: apiKey,
         encryptionKey: encryptionKey,
@@ -81,7 +96,8 @@ class GBSDKBuilderApp {
         refreshHandler: refreshHandler,
         refreshHandlerV2: refreshHandlerV2,
         pluginRegistry: PluginRegistry(_plugins),
-        ttlSeconds: ttlSeconds);
+        ttlSeconds: ttlSeconds,
+        cacheKeyAttributes: cacheKeyAttributes);
     await gb.refresh();
     await gb.refreshStickyBucketService(null);
     gb._initializePlugins();
@@ -147,12 +163,14 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     CacheRefreshHandlerV2? refreshHandlerV2,
     PluginRegistry? pluginRegistry,
     required int ttlSeconds,
+    List<String>? cacheKeyAttributes,
   })  : _context = context,
         _evaluationContext =
             evaluationContext ?? GBUtils.initializeEvalContext(context, null),
         _onInitializationFailure = onInitializationFailure,
         _refreshHandler = refreshHandler,
         _refreshHandlerV2 = refreshHandlerV2,
+        _cacheKeyAttributes = cacheKeyAttributes,
         _baseClient = client ?? DioClient(),
         _pluginRegistry = pluginRegistry ?? PluginRegistry.empty,
         _forcedFeatures = [],
@@ -191,6 +209,8 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
   final CacheRefreshHandler? _refreshHandler;
 
   final CacheRefreshHandlerV2? _refreshHandlerV2;
+
+  final List<String>? _cacheKeyAttributes;
 
   final PluginRegistry _pluginRegistry;
 
@@ -602,15 +622,36 @@ class GrowthBookSDK extends FeaturesFlowDelegate {
     // No usable URL (host or client key missing) — nothing to evaluate against.
     if (apiUrl == null) return null;
 
+    final attributes = _evaluationContext.userContext.attributes ?? {};
+    final forcedVariations =
+        _evaluationContext.userContext.forcedVariationsMap ?? {};
     return RemoteEvalRequest(
       apiUrl: apiUrl,
       payload: RemoteEvalModel(
-        attributes: _evaluationContext.userContext.attributes ?? {},
+        attributes: attributes,
         forcedFeatures: _forcedFeatures,
-        forcedVariations:
-            _evaluationContext.userContext.forcedVariationsMap ?? {},
+        forcedVariations: forcedVariations,
       ),
+      cacheKey: _remoteEvalCacheKey(attributes, forcedVariations),
     );
+  }
+
+  /// Identifies the inputs of a remote evaluation, like `getCacheKey` in the
+  /// JS SDK: the cache-key attributes, the forced variations and the URL.
+  /// Forced features are left out, as there.
+  ///
+  /// Hashed so the cache does not hold the attributes themselves.
+  String _remoteEvalCacheKey(
+      Map<String, dynamic> attributes, Map<String, dynamic> forcedVariations) {
+    final keys = [...(_cacheKeyAttributes ?? attributes.keys)]..sort();
+    final inputs = jsonEncode({
+      'ca': {for (final key in keys) key: attributes[key]},
+      'fv': forcedVariations,
+      'url': _context.url ?? '',
+    });
+    final digest =
+        SHA256Digest().process(Uint8List.fromList(utf8.encode(inputs)));
+    return digest.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   Future<void> refreshForRemoteEval() async {

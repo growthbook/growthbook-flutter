@@ -29,10 +29,16 @@ class RemoteEvalRequest {
   RemoteEvalRequest({
     required this.apiUrl,
     required this.payload,
+    this.cacheKey,
   });
 
   final String apiUrl;
   final RemoteEvalModel payload;
+
+  /// Identifies the evaluation inputs this request carries. A cached response
+  /// is only served again for a request with the same key, so features
+  /// evaluated for one user are never shown to another.
+  final String? cacheKey;
 }
 
 /// Supplies the request for the next remote-evaluation round, or `null` when

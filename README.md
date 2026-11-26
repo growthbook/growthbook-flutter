@@ -470,6 +470,17 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+The evaluated features are personal, so the SDK caches only the latest evaluation and reuses it at startup only for the same attributes, forced variations and URL. If some attributes change on every launch (a session start time, for example), list the ones that identify the user in `cacheKeyAttributes`, or the cache will never be reused:
+
+```dart
+final sdk = await GBSDKBuilderApp(
+  apiKey: "your_api_key",
+  remoteEval: true,
+  attributes: {'id': userId, 'sessionStart': now},
+  cacheKeyAttributes: ['id'],
+).initialize();
+```
+
 ### Remote Saved Groups
 
 A **remote** saved group keeps its members outside the payload, for lists too large to ship (millions of ids). The payload only says which attribute the group is about, `{"type": "remote", "attributeKey": "account_id"}`, so the SDK can't work out membership itself: your app resolves the user's groups, typically from its own back end, and passes their ids.

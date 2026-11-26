@@ -110,7 +110,8 @@ class FeatureViewModel {
         // used, so they are only worth showing before the first round of this
         // session — never as an answer to a state change.
         _servedRemoteEvalCache = true;
-        await _serveCachedFeatures();
+        await _serveCachedFeatures(
+            requiredCacheKey: remoteEvalRequestProvider?.call()?.cacheKey);
       }
       await _fetchRemoteEval();
       return;
@@ -196,10 +197,18 @@ class FeatureViewModel {
   }
 
   /// Serves the cached payload to the delegate, if there is a usable one.
-  Future<void> _serveCachedFeatures() async {
+  ///
+  /// With [requiredCacheKey], only a payload cached for the same remote-eval
+  /// inputs is usable: features evaluated for one user must not be shown to
+  /// another.
+  Future<void> _serveCachedFeatures({String? requiredCacheKey}) async {
     final receivedData =
         await manager.getContent(fileName: Constant.featureCache);
     if (receivedData == null) return;
+    if (requiredCacheKey != null &&
+        _cachedRemoteEvalKey(receivedData) != requiredCacheKey) {
+      return;
+    }
 
     final featureMap = _fetchCachedFeatures(receivedData);
     if (featureMap == null) return;
@@ -232,7 +241,8 @@ class FeatureViewModel {
         params: request.payload,
         onSuccess: (data) async {
           if (isSuperseded()) return;
-          success = await prepareFeaturesData(data);
+          success = await prepareFeaturesData(data,
+              remoteEvalCacheKey: request!.cacheKey);
         },
         onError: (e, s) {
           success = false;
@@ -267,6 +277,20 @@ class FeatureViewModel {
     return await prepareFeaturesData(data);
   }
 
+  /// The remote-eval cache key stored alongside a cached payload, if any.
+  String? _cachedRemoteEvalKey(Uint8List receivedData) {
+    try {
+      final json = jsonDecode(utf8Decoder.convert(receivedData));
+      final key =
+          json is Map<String, dynamic> ? json[_remoteEvalKeyField] : null;
+      return key is String ? key : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static const _remoteEvalKeyField = 'remoteEvalCacheKey';
+
   Map<String, GBFeature>? _fetchCachedFeatures(Uint8List receivedData) {
     if (receivedData.isEmpty) return null;
 
@@ -291,14 +315,21 @@ class FeatureViewModel {
     }
   }
 
-  Future<bool> prepareFeaturesData(FeaturedDataModel data) async {
+  /// Applies a fetched payload and caches it.
+  ///
+  /// [remoteEvalCacheKey] identifies the remote-eval inputs the payload was
+  /// evaluated for; it is stored with the cached payload, which overwrites the
+  /// previous one, so the cache only ever holds the latest user's features.
+  Future<bool> prepareFeaturesData(FeaturedDataModel data,
+      {String? remoteEvalCacheKey}) async {
     try {
       // If both features and encryptedFeatures are null, log JSON as null
       if (data.features == null && data.encryptedFeatures == null) {
         log("JSON is null.");
         return false;
       } else {
-        return await handleValidFeatures(data);
+        return await handleValidFeatures(data,
+            remoteEvalCacheKey: remoteEvalCacheKey);
       }
     } catch (e, s) {
       handleException(e, s);
@@ -306,7 +337,8 @@ class FeatureViewModel {
     }
   }
 
-  Future<bool> handleValidFeatures(FeaturedDataModel data) async {
+  Future<bool> handleValidFeatures(FeaturedDataModel data,
+      {String? remoteEvalCacheKey}) async {
     if (data.features != null && data.encryptedFeatures == null) {
       // Handle non-encrypted features
       await delegate.featuresAPIModelSuccessfully(data);
@@ -314,7 +346,11 @@ class FeatureViewModel {
         gbFeatures: data.features!,
         isRemote: true,
       );
-      final featureData = utf8Encoder.convert(jsonEncode(data));
+      final featureData = utf8Encoder.convert(jsonEncode(
+        remoteEvalCacheKey == null
+            ? data
+            : {...data.toJson(), _remoteEvalKeyField: remoteEvalCacheKey},
+      ));
       manager.putData(
         fileName: Constant.featureCache,
         content: Uint8List.fromList(featureData),
