@@ -11,6 +11,13 @@
 
 * **ci:** enforce dart format with --set-exit-if-changed ([#162](https://github.com/growthbook/growthbook-flutter/issues/162)) ([d51dfbd](https://github.com/growthbook/growthbook-flutter/commit/d51dfbd))
 
+## [5.1.1](https://github.com/growthbook/growthbook-flutter/compare/v5.1.0...v5.1.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* prevent Android ANRs caused by blocking feature cache writes on the main thread ([#207](https://github.com/growthbook/growthbook-flutter/issues/207)) ([8127b88](https://github.com/growthbook/growthbook-flutter/commit/8127b886be1f0204bbf35909cd0a99d4805a8872))
+
 ## [5.1.0](https://github.com/growthbook/growthbook-flutter/compare/v5.0.1...v5.1.0) (2026-11-19)
 
 
