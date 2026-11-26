@@ -107,18 +107,51 @@ class FileCacheStorage extends CacheStorage {
       return;
     }
 
+    // The write is queued before the first await, so writes to one file run
+    // in call order and never share its temp file, and a getContent or
+    // removeContent called after saveContent waits for it.
+    final key = _writeKey(fileName);
+    final write = _writeFile(_pendingWrites[key], fileName, content);
+    _pendingWrites[key] = write;
+    await write;
+    if (_pendingWrites[key] == write) {
+      _pendingWrites.remove(key);
+    }
+  }
+
+  /// Writes in flight, keyed by [_writeKey].
+  ///
+  /// Static because several instances can point at the same file (for
+  /// example the un-namespaced storage of the SDK and of the sticky bucket
+  /// service), and their writes must not share its temp file.
+  static final Map<String, Future<void>> _pendingWrites = {};
+
+  /// Key of a cache entry that is known without an await, unlike its path,
+  /// which needs the cache directory from `path_provider`. Instances with the
+  /// same prefix but different directories share a key; that only serialises
+  /// their writes.
+  String _writeKey(String fileName) =>
+      '$_instancePrefix/${fileName.replaceAll('.txt', '')}';
+
+  Future<void> _writeFile(
+      Future<void>? previousWrite, String fileName, Uint8List content) async {
+    await previousWrite;
     final targetPath = await getTargetFile(fileName);
     final tempFile = File('$targetPath.tmp');
 
     try {
-      tempFile.writeAsBytesSync(content, flush: true);
-      tempFile.renameSync(targetPath);
+      // Write to temp file first
+      await tempFile.writeAsBytes(content, flush: true);
+
+      // Atomic rename — replaces target file safely
+      await tempFile.rename(targetPath);
+
       logger.i('Content saved successfully to: $fileName');
     } catch (e) {
       logger.e('Failed to save content: $e');
       try {
-        if (tempFile.existsSync()) {
-          tempFile.deleteSync();
+        if (await tempFile.exists()) {
+          await tempFile.delete();
         }
       } catch (_) {}
     }
@@ -127,13 +160,10 @@ class FileCacheStorage extends CacheStorage {
   Future<String> getTargetFile(String fileName) async {
     final cacheDirectoryPath = await _resolveCacheDirectory();
     final targetFolderPath = '$cacheDirectoryPath/$_instancePrefix';
-    final directory = Directory(targetFolderPath);
-    if (!directory.existsSync()) {
-      try {
-        directory.createSync(recursive: true);
-      } catch (e) {
-        logger.e('Failed to create directory: $e');
-      }
+    try {
+      await Directory(targetFolderPath).create(recursive: true);
+    } catch (e) {
+      logger.e('Failed to create directory: $e');
     }
     final file = fileName.replaceAll('.txt', '');
     return '$targetFolderPath/$file.txt';
@@ -150,6 +180,7 @@ class FileCacheStorage extends CacheStorage {
     }
 
     try {
+      await _pendingWrites[_writeKey(fileName)];
       final filePath = await getTargetFile(fileName);
       final file = File(filePath);
       if (await file.exists()) {
@@ -193,6 +224,7 @@ class FileCacheStorage extends CacheStorage {
     }
 
     try {
+      await _pendingWrites[_writeKey(fileName)];
       final filePath = await getTargetFile(fileName);
       final file = File(filePath);
       if (await file.exists()) {
@@ -219,6 +251,10 @@ class FileCacheStorage extends CacheStorage {
       await Future.wait(scopedKeys.map(prefs.remove));
       return;
     }
+
+    // Deleting files while a write is still running in the folder fails or
+    // lets the write put a file back after the clear.
+    await Future.wait(_pendingWrites.values);
 
     final cacheDirectoryPath = await _resolveCacheDirectory();
     final targetFolderPath = '$cacheDirectoryPath/$_instancePrefix';
