@@ -3,15 +3,15 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
+import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
 
 /// Regression tests: `saveContent` used `writeAsBytesSync(flush: true)` +
 /// `renameSync`, which blocks the main isolate on `fsync` and causes
 /// "ANR triggered by slow IO operations" on Android
 /// (`dart::bin::Builtin_File_Flush`).
 void main() {
-  group('CachingManager.saveContent async write', () {
-    final manager = CachingManager();
+  group('FileCacheStorage.saveContent async write', () {
+    final manager = FileCacheStorage();
 
     tearDown(() async {
       await manager.clearCache();
@@ -59,22 +59,23 @@ void main() {
           reason: 'temp file must not be left behind');
     });
 
-    test('a read right after an unawaited putData returns the new content',
+    test('a read right after an unawaited saveContent returns the new content',
         () async {
       const fileName = 'async-write-read-after-write';
       final content = Uint8List.fromList(utf8.encode('{"v":3}'));
 
-      manager.putData(fileName: fileName, content: content);
+      manager.saveContent(fileName: fileName, content: content);
       final saved = await manager.getContent(fileName: fileName);
 
       expect(saved, equals(content));
     });
 
-    test('removeContent after an unawaited putData leaves no file', () async {
+    test('removeContent after an unawaited saveContent leaves no file',
+        () async {
       const fileName = 'async-write-then-remove';
       final content = Uint8List.fromList(utf8.encode('{"v":4}'));
 
-      manager.putData(fileName: fileName, content: content);
+      manager.saveContent(fileName: fileName, content: content);
       await manager.removeContent(fileName: fileName);
 
       final targetPath = await manager.getTargetFile(fileName);

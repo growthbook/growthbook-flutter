@@ -13,11 +13,13 @@ dependencies:
   flutter:
     sdk: flutter
   json_annotation: ^4.9.0
+  path_provider: ^2.1.0
   pointycastle: ^4.0.0
   shared_preferences: ^2.2.3
   tuple: ^2.0.2
   quiver: ^3.2.1
   logger: ^2.0.0
+
 
 dev_dependencies:
   flutter_test:

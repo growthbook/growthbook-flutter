@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growthbook_sdk_flutter/growthbook_sdk_flutter.dart';
-import 'package:growthbook_sdk_flutter/src/Cache/caching_manager.dart';
 
 import '../Helper/gb_test_helper.dart';
 import '../mocks/network_mock.dart';
@@ -63,7 +64,9 @@ void main() {
   });
 
   group('GrowthBookSDK remote group ids', () {
-    final cachingManager = CachingManager();
+    final testCacheDir =
+        Directory.systemTemp.createTempSync('gb_cache_test_').path;
+    final cachingManager = FileCacheStorage(cacheDirectory: testCacheDir);
 
     // "flag" is on for members of grp_vip; "excluded" is on for resolved
     // non-members, with the $exists guard GrowthBook adds to "not in group"
@@ -112,6 +115,7 @@ void main() {
         growthBookTrackingCallBack: (_) {},
         backgroundSync: false,
         remoteEval: remoteEval,
+        cacheDirectory: testCacheDir,
       );
       if (remoteGroupIds != null) builder.setRemoteGroupIds(remoteGroupIds);
       return builder.initialize();
