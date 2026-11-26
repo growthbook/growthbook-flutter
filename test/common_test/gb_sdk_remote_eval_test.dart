@@ -9,7 +9,8 @@ import '../mocks/network_mock.dart';
 void main() {
   group('GrowthBookSDK — remote eval flow', () {
     const testApiKey = '<API_KEY>';
-    const testHostURL = 'https://example.growthbook.io';
+    // A self-hosted host: remote evaluation is rejected on GrowthBook Cloud.
+    const testHostURL = 'https://gb-proxy.example.com';
     final cachingManager = CachingManager();
 
     Future<GrowthBookSDK> buildSdk({

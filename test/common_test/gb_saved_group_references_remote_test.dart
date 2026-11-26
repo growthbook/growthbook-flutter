@@ -106,7 +106,8 @@ void main() {
     }) async {
       final builder = GBSDKBuilderApp(
         apiKey: '<API_KEY>',
-        hostURL: 'https://example.growthbook.io',
+        // Self-hosted: remote evaluation is rejected on GrowthBook Cloud.
+        hostURL: 'https://gb-proxy.example.com',
         attributes: {'account_id': 'a1'},
         client: client,
         growthBookTrackingCallBack: (_) {},

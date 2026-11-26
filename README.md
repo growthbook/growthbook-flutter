@@ -470,6 +470,20 @@ final sdk = await GBSDKBuilderApp(
 // Sensitive targeting rules never reach the client
 ```
 
+`initialize()` throws an `ArgumentError` for a remote-evaluation configuration that cannot work:
+
+- an empty `apiKey`;
+- an `encryptionKey` (remote evaluation responses are not encrypted);
+- a `hostURL` on GrowthBook Cloud (any `*.growthbook.io` host), which serves no remote-evaluation endpoint.
+
+A sticky bucket service and `backgroundSync` are supported alongside remote evaluation; a streamed update triggers a fresh evaluation.
+
+Changing the evaluation inputs (`setAttributes`, `setForcedFeatures`, `setForcedVariations`, `setRemoteGroupIds`, `setUrl`) sends a new evaluation request. The current URL is part of the request, so URL-targeting rules work too:
+
+```dart
+await sdk.setUrl('https://example.com/pricing');
+```
+
 ### Remote Saved Groups
 
 A **remote** saved group keeps its members outside the payload, for lists too large to ship (millions of ids). The payload only says which attribute the group is about, `{"type": "remote", "attributeKey": "account_id"}`, so the SDK can't work out membership itself: your app resolves the user's groups, typically from its own back end, and passes their ids.
