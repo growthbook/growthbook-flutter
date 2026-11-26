@@ -13,11 +13,15 @@ class DataSourceMock extends FeaturesFlowDelegate {
   bool _isNotModified = false;
   bool get isNotModified => _isNotModified;
 
+  /// Times features were applied from the on-disk cache rather than the network.
+  int counterCacheCall = 0;
+
   void reset() {
     _isSuccess = false;
     _isError = false;
     _isNotModified = false;
     counterNetworkCall = 0;
+    counterCacheCall = 0;
   }
 
   @override
@@ -25,6 +29,8 @@ class DataSourceMock extends FeaturesFlowDelegate {
       {required GBFeatures gbFeatures, required bool isRemote}) {
     if (isRemote) {
       counterNetworkCall++;
+    } else {
+      counterCacheCall++;
     }
     _isSuccess = true;
     _isError = false;
