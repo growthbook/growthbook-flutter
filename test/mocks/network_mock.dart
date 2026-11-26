@@ -10,7 +10,8 @@ class MockNetworkClient implements BaseClient {
 
   @override
   Future<void> consumeGetRequest(
-      String url, OnSuccess onSuccess, OnError onError) async {
+      String url, OnSuccess onSuccess, OnError onError,
+      {Map<String, String>? headers}) async {
     if (notModified) {
       // Simulate 304 Not Modified: neither callback is called
       return;
@@ -34,7 +35,8 @@ class MockNetworkClient implements BaseClient {
 
   @override
   Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
-      OnSuccess onSuccess, OnError onError) async {
+      OnSuccess onSuccess, OnError onError,
+      {Map<String, String>? headers}) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
       await onSuccess(pseudoResponse);
@@ -54,7 +56,8 @@ class MockNetworkClient implements BaseClient {
 
   @override
   Future<void> consumeSseConnections(
-      String url, OnSuccess onSuccess, OnError onError) async {
+      String url, OnSuccess onSuccess, OnError onError,
+      {Map<String, String>? headers}) async {
     if (!error) {
       final pseudoResponse = jsonDecode(MockResponse.successResponse);
       await onSuccess(pseudoResponse);

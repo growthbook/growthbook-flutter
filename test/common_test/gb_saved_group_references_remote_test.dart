@@ -234,8 +234,10 @@ class _CapturingClient extends MockNetworkClient {
 
   @override
   Future<void> consumePostRequest(String baseUrl, Map<String, dynamic> params,
-      OnSuccess onSuccess, OnError onError) {
+      OnSuccess onSuccess, OnError onError,
+      {Map<String, String>? headers}) {
     lastPostParams = params;
-    return super.consumePostRequest(baseUrl, params, onSuccess, onError);
+    return super.consumePostRequest(baseUrl, params, onSuccess, onError,
+        headers: headers);
   }
 }
