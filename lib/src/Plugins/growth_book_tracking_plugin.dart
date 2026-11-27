@@ -20,7 +20,7 @@ class GrowthBookTrackingPluginConfig {
     this.enableFeatureUsageEvents = true,
   });
 
-  static const String defaultIngestorHost = 'https://us1.gb-ingest.com';
+  static const String defaultIngestorHost = 'https://us-east-1.gb-ingest.com';
   static const int defaultBatchSize = 100;
   static const Duration defaultBatchTimeout = Duration(seconds: 10);
   static const int defaultDedupeCacheSize = 1000;

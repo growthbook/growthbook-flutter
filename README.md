@@ -524,7 +524,7 @@ Future<void> main() async {
 
 #### Custom configuration
 
-Events go to `https://us1.gb-ingest.com` by default. Override `ingestorHost` to
+Events go to `https://us-east-1.gb-ingest.com` by default. Override `ingestorHost` to
 send them to another region, for example `https://eu-west-1.gb-ingest.com`:
 
 ```dart
