@@ -358,6 +358,7 @@ void main() {
       plugin.onExperimentViewed(exp(), expResult(), null);
 
       final req = await completer.future.timeout(const Duration(seconds: 3));
+      expect(req.uri.origin, equals('https://us-east-1.gb-ingest.com'));
       expect(req.uri.queryParameters['client_key'], equals('sdk-test'));
       expect(req.uri.path, equals('/track'));
       expect(req.method, equals('POST'));
